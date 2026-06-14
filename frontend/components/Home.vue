@@ -3,7 +3,7 @@
   <User ref="userRef" />
   <Achievements ref="achievementsRef" />
   <Preferences ref="preferencesRef" />
-  <div id="mainpart" class="mx-auto w-full px-4 jn-container">
+  <main id="mainpart" class="mx-auto w-full px-4 jn-container">
     <div class="rounded-md" tabindex="0">
       <IPCheck ref="IPCheckRef" />
       <Connectivity ref="connectivityRef" />
@@ -12,7 +12,7 @@
       <SpeedTest ref="speedTestRef" />
       <AdvancedTools ref="advancedToolsRef" />
     </div>
-  </div>
+  </main>
   <FloatingDock>
     <InfoMask :showMaskButton.value="showMaskButton" :infoMaskLevel.value="infoMaskLevel"
       :toggleInfoMask="toggleInfoMask" />
