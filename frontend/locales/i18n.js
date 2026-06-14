@@ -6,22 +6,15 @@ import en from './en.json' with { type: 'json' };
 import zh from './zh.json' with { type: 'json' };
 import fr from './fr.json' with { type: 'json' };
 import tr from './tr.json' with { type: 'json' };
-import enSecurity from './security-checklist/en.json' with { type: 'json' };
-import zhSecurity from './security-checklist/zh.json' with { type: 'json' };
-import frSecurity from './security-checklist/fr.json' with { type: 'json' };
-import trSecurity from './security-checklist/tr.json' with { type: 'json' };
 
+// NOTE: the security-checklist datasets (security-checklist/*.json, ~30 KB gzipped
+// each, ~131 KB for all four) are intentionally NOT merged here. Baking them into
+// the initial i18n bundle put them on the first-paint critical path even though
+// only the SecurityChecklist advanced tool reads them. That tool now loads its
+// own locale's dataset on demand — see SecurityChecklist.vue.
 
 const messages = { en, zh, fr, tr };
 const supportedLanguages = Object.keys(messages);
-
-// 引入安全检查清单
-function mergeMessagesSync() {
-  messages.en = { ...messages.en, securitychecklistdata: enSecurity };
-  messages.zh = { ...messages.zh, securitychecklistdata: zhSecurity };
-  messages.fr = { ...messages.fr, securitychecklistdata: frSecurity };
-  messages.tr = { ...messages.tr, securitychecklistdata: trSecurity };
-}
 
 // 设置语言
 function setLanguage() {
@@ -51,18 +44,12 @@ function setLanguage() {
   return locale;
 }
 
-// 合并语言包
-const messagesLoader = () => {
-  mergeMessagesSync();
-  return messages;
-};
-
 // 创建 i18n 实例
 const i18n = createI18n({
   legacy: false,
   locale: setLanguage(),
   fallbackLocale: 'en',
-  messages: messagesLoader(),
+  messages,
 });
 
 // 更新 meta 标签
