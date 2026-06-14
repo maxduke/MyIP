@@ -116,9 +116,16 @@ const { loadShortcuts } = useShortcuts({
 // Scroll monitoring + section tracking (logic from widgets/Patch.vue)
 useSectionTracking();
 
-// Reset the head to the homepage defaults (matters when SPA-navigating back
-// from a /tools/:slug page, which had overridden title / canonical / OG).
-useDocumentMeta(() => ({ canonical: `${window.location.origin}/` }));
+// Localized homepage head. Provide title/description explicitly via t() rather
+// than leaning on use-document-meta's DEFAULT_META snapshot: that snapshot is
+// taken at module load, before the (now async) locale messages land, so it would
+// pin the head to index.html's English title. Reactive t() also re-applies the
+// right copy when SPA-navigating back from a /tools/:slug page.
+useDocumentMeta(() => ({
+    title: t('page.title'),
+    description: t('page.description'),
+    canonical: `${window.location.origin}/`,
+}));
 
 onMounted(() => {
     loadingControl();
