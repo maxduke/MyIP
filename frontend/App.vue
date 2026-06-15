@@ -46,11 +46,11 @@ const revealApp = () => {
 
 if (loadingElement) {
     requestAnimationFrame(() => loadingElement.classList.add('jn-loading-stage-1'));
-    setTimeout(() => loadingElement.classList.add('jn-loading-stage-2'), 160);
+    loadingElement.classList.add('jn-loading-stage-2');
     setTimeout(() => {
         loadingElement.remove();
         revealApp();
-    }, 380);
+    }, 200);
 } else {
     // Overlay already gone (e.g. HMR remount) — still reveal the app.
     revealApp();
