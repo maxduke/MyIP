@@ -141,6 +141,7 @@
     "Navigation": "Navigasyon",
     "IPInfo": "IP Bilgileri",
     "Connectivity": "Bağlantı",
+    "ServiceStatus": "Servis Durumu",
     "WebRTC": "WebRTC Sızıntı Testi",
     "DNSLeakTest": "DNS Sızıntı Testi",
     "SpeedTest": "Hız Testi",
@@ -389,6 +390,8 @@
     }
   },
   "advancedtools": {
+    "OpenInNewTab": "Yeni sekmede aç",
+    "BackToHome": "Ana sayfaya dön",
     "Title": "Gelişmiş Araçlar",
     "Note": "Nispeten seyrek kullanılan ancak ağ testi yaparken çok faydalı olan araçlar.",
     "PingTestNote": "Global Ping değeri testi",
@@ -397,6 +400,7 @@
     "EnhancedDnsLeakTest": "Tüm yinelemeli çözümleyicileri yakalar, ECS ve DNSSEC analizi ile",
     "RuleTestNote": "Proxy yazılımının kural ayarlarını kontrol edin",
     "CensorshipCheck": "Bir web sitesinin bazı ülkelerde engellenip engellenmediğini kontrol edin",
+    "ServiceStatus": "Tanınmış yapay zeka ve geliştirici servislerinin anlık erişilebilirliğini ve yaşadığınız kesintinin nedeninin yakın zamanlı bir arıza olup olmadığını kontrol edin",
     "Whois": "Alan adı/IP kayıt bilgilerini arayın",
     "InvisibilityTest": "Proxy veya VPN kullanıp kullanmadığınızı kontrol edin",
     "MacChecker": "Bir fiziksel adresin bilgilerini sorgulayın",
@@ -600,9 +604,54 @@
       "nativenessTooltip": "ASN'nin kayıtlı ülkesinin IP'nin coğrafi konum ülkesiyle eşleşip eşleşmediğini gösterir"
     }
   },
+  "serviceStatus": {
+    "Title": "Servis Durumu",
+    "Note": "Bir servis açılmadığında sorun sizde olmayabilir — servisin kendisi çökmüş olabilir. Mevcutta, insanlar çok fazla AI ürünü kullanıyor ve AI ürünü yanıt vermediğinde, kendi sorunu mı yoksa servisin sorunu mu olduğunu bilmiyorlar. Bu bölüm, tanınmış AI servislerin canlı kullanılabilirliğini gösterir; her alt servisin durumunu ve son olayları görmek için bir kartı genişletin.",
+    "Refresh": "Servis Durumunu Yenile",
+    "LastChecked": "Son kontrol",
+    "AllOperational": "Tüm Sistemler Çalışıyor",
+    "ComponentsTitle": "Servisler",
+    "IncidentsTitle": "Son Olaylar",
+    "NoComponents": "Servis ayrıntısı yok.",
+    "NoRecentIncidents": "Yakın zamanda olay yok.",
+    "Loading": "Yükleniyor…",
+    "Checking": "Kontrol ediliyor…",
+    "IncidentsError": "Olaylar yüklenemedi.",
+    "ComponentsError": "Servisler yüklenemedi.",
+    "indicator": {
+      "minor": "Küçük Sorunlar",
+      "major": "Büyük Kesinti",
+      "critical": "Kritik Kesinti",
+      "maintenance": "Bakımda",
+      "unknown": "Durum alınamadı"
+    },
+    "component": {
+      "operational": "Çalışıyor",
+      "degraded_performance": "Düşük Performans",
+      "partial_outage": "Kısmi Kesinti",
+      "major_outage": "Büyük Kesinti",
+      "under_maintenance": "Bakım"
+    },
+    "incidentStatus": {
+      "investigating": "İnceleniyor",
+      "identified": "Tespit Edildi",
+      "monitoring": "İzleniyor",
+      "resolved": "Çözüldü",
+      "postmortem": "Değerlendirme",
+      "scheduled": "Planlandı",
+      "in_progress": "Sürüyor",
+      "verifying": "Doğrulanıyor",
+      "completed": "Tamamlandı"
+    }
+  },
   "connectivity": {
     "Title": "Ağ Bağlantısı",
-    "Note": "Test, ilgili web sitelerinden küçük resimler yüklenerek yapılır. Gecikme değerleri yalnızca referans amaçlıdır ve gerçekte daha küçük olacaktır. Sık kullandığınız diğer web sitelerini test listesine ekleyerek hızlı testler yapabilirsiniz.",
+    "Note": "Bu test, belirli bir web sitesine ulaşıp ulaşamadığınızı kontrol eder. İlgili siteden küçük bir resim yüklenerek çalışır. Gecikme değerleri yalnızca referans amaçlıdır ve gerçekte daha küçük olacaktır. Sık kullandığınız diğer web sitelerini test listesine ekleyerek hızlı testler yapabilirsiniz.",
+    "ServiceStatusBanner": {
+      "Title": "Bir servis açılmıyor mu?",
+      "Note": "Yukarıdaki testte ChatGPT veya Claude gibi bir yapay zeka ürünü başarısız olduysa, sorun ağınızda olmayabilir — servisin kendisi çökmüş olabilir. Anlık erişilebilirliğini ve son arızalarını kontrol edin.",
+      "CTA": "Servis Durumunu Aç"
+    },
     "StatusWait": "Test Bekleniyor",
     "StatusAvailable": "Tamam",
     "StatusUnavailable": "Kullanılamıyor",
@@ -681,6 +730,9 @@
     }
   },
   "pingtest": {
+    "EnterIPLabel": "Test edilecek bir IP girin",
+    "EnterIPPlaceholder": "örn. 1.1.1.1",
+    "UseStored": "Bilinen IP kullan",
     "id": "pingtest",
     "Title": "Global Gecikme Testi",
     "Note": "Ping testi, veri paketlerinin cihazınızdan belirli hedeflere (bu durumda, farklı kıtalarda ve bölgelerde bulunan sunucularımıza) gidiş-dönüş süresini ölçmek için kullanılan bir ağ aracıdır. Ağ performansını değerlendirmek için önemli bir metriktir.",
@@ -698,6 +750,9 @@
     "Error": "Test başarısız oldu, görünüşe göre IP'nizin Ping testi yapmasına izin verilmiyor."
   },
   "mtrtest": {
+    "EnterIPLabel": "Test edilecek bir IP girin",
+    "EnterIPPlaceholder": "örn. 1.1.1.1",
+    "UseStored": "Bilinen IP kullan",
     "Title": "MTR Testi",
     "Note": "MTR (My Traceroute) testi, dünyanın farklı kıtalarında ve bölgelerinde bulunan sunuculardan IP adresinize ayrıntılı rota takibi yapar. MTR, ağ bağlantılarının kalitesini ve performansını gerçek zamanlı olarak teşhis etmek için geleneksel traceroute ve ping komutlarının işlevselliğini birleştirir.",
     "Note2": "Bu süreç, çeşitli coğrafi konumlardan ağ ortamınıza giden tüm yolu kapsar ve her atlama (hop) için gecikme ve paket kaybı hakkında bilgi sağlar. İster yönlendirme yolundaki tıkanıklık, ister belirli bir düğümdeki gecikme sorunları veya iletim sırasındaki paket kaybı olsun, MTR testi kritik teşhis bilgileri sağlar.",
@@ -752,6 +807,7 @@
     "Preferences": "Tercihleri Aç",
     "About": "Hakkında panelini aç",
     "Whois": "Whois Araması panelini aç",
+    "ServiceStatus": "Servis Durumu panelini aç",
     "InvisibilityTest": "Görünmezlik Testi panelini aç",
     "EnhancedDnsLeakTest": "Derinlemesine DNS Sızıntı Testi panelini aç",
     "MacChecker": "MAC arama panelini aç",

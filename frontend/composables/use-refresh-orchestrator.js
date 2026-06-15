@@ -43,16 +43,16 @@ export function useRefreshOrchestrator({ refs, store, t, userPreferences, infoMa
         const { IPCheckRef, connectivityRef, webRTCRef, dnsLeaksRef } = refs;
         scheduleTimedTasks([
             { action: () => IPCheckRef.value.checkAllIPs(), delay: 0 },
-            { action: () => connectivityRef.value.handelCheckStart(true), delay: 2000 },
-            { action: () => webRTCRef.value.checkAllWebRTC(true), delay: 3000 },
-            { action: () => dnsLeaksRef.value.checkAllDNSLeakTest(true), delay: 2500 },
-            { action: () => refreshingAlert(), delay: 500 },
+            { action: () => connectivityRef.value.handelCheckStart(true), delay: 300 },
+            { action: () => webRTCRef.value.checkAllWebRTC(true), delay: 200 },
+            { action: () => dnsLeaksRef.value.checkAllDNSLeakTest(true), delay: 100 },
+            { action: () => refreshingAlert(), delay: 300 },
         ]);
         infoMaskLevel.value = 0;
         store.setRefreshEveryThing(false);
     };
 
-    const loadingControl = (t1 = 0, t2 = 2000, t3 = 3000, t4 = 2500) => {
+    const loadingControl = (t1 = 0, t2 = 300, t3 = 200, t4 = 100) => {
         const { IPCheckRef, connectivityRef, webRTCRef, dnsLeaksRef } = refs;
         const mountedStatus = Object.values(store.mountingStatus).every(Boolean);
         if (mountedStatus) {
@@ -67,7 +67,7 @@ export function useRefreshOrchestrator({ refs, store, t, userPreferences, infoMa
                 store.setLoadingStatus('DNSLeakTest', true);
             }
         } else {
-            setTimeout(() => loadingControl(t1, t2, t3, t4), 1000);
+            setTimeout(() => loadingControl(t1, t2, t3, t4), 100);
         }
     };
 

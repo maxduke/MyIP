@@ -141,6 +141,7 @@
     "Navigation": "Navigation",
     "IPInfo": "Infos IP",
     "Connectivity": "Connectivité",
+    "ServiceStatus": "État des services",
     "WebRTC": "Test WebRTC Leak",
     "DNSLeakTest": "Test de fuite DNS",
     "SpeedTest": "Test de vitesse",
@@ -389,6 +390,8 @@
     "ControlGroup": "Groupe Témoin"
   },
   "advancedtools": {
+    "OpenInNewTab": "Ouvrir dans un nouvel onglet",
+    "BackToHome": "Retour à l'accueil",
     "Title": "Outils avancés",
     "Note": "Certains outils sont utilisés relativement rarement, mais sont très utiles lors des tests de réseaux.",
     "PingTestNote": "Test de la valeur Ping mondiale",
@@ -397,6 +400,7 @@
     "EnhancedDnsLeakTest": "Capture tous les résolveurs récursifs avec analyse ECS et DNSSEC",
     "RuleTestNote": "Vérifiez les paramètres de règles du logiciel de proxy",
     "CensorshipCheck": "Vérifier si un site est bloqué dans certains pays",
+    "ServiceStatus": "Vérifiez la disponibilité en temps réel des services d'IA et de développement connus, et si un incident récent explique la panne que vous constatez",
     "Whois": "Recherche d'informations sur l'enregistrement de domaine/IP",
     "InvisibilityTest": "Vérifiez si vous utilisez un proxy ou un VPN",
     "MacChecker": "Requête d'informations d'une adresse physique",
@@ -600,9 +604,54 @@
       "nativenessTooltip": "Indique si le pays d'enregistrement de l'ASN correspond au pays de géolocalisation de l'IP"
     }
   },
+  "serviceStatus": {
+    "Title": "État des services",
+    "Note": "Quand un service ne s'ouvre pas, le problème ne vient pas forcément de vous — le service lui-même peut être en panne. Actuellement, les gens utilisent beaucoup de produits AI, et quand le produit AI ne répond pas, ils ne savent pas si c'est leur problème ou celui du service. Cette section affiche la disponibilité en temps réel de services AI populaires ; dépliez une carte pour voir l'état de chaque sous-service et les incidents récents.",
+    "Refresh": "Actualiser l'état des services",
+    "LastChecked": "Dernière vérification",
+    "AllOperational": "Tous les systèmes sont opérationnels",
+    "ComponentsTitle": "Services",
+    "IncidentsTitle": "Incidents récents",
+    "NoComponents": "Aucun détail de service disponible.",
+    "NoRecentIncidents": "Aucun incident récent.",
+    "Loading": "Chargement…",
+    "Checking": "Vérification…",
+    "IncidentsError": "Impossible de charger les incidents.",
+    "ComponentsError": "Impossible de charger les services.",
+    "indicator": {
+      "minor": "Problèmes mineurs",
+      "major": "Panne majeure",
+      "critical": "Panne critique",
+      "maintenance": "En maintenance",
+      "unknown": "Statut indisponible"
+    },
+    "component": {
+      "operational": "Opérationnel",
+      "degraded_performance": "Dégradé",
+      "partial_outage": "Panne partielle",
+      "major_outage": "Panne majeure",
+      "under_maintenance": "Maintenance"
+    },
+    "incidentStatus": {
+      "investigating": "Enquête en cours",
+      "identified": "Identifié",
+      "monitoring": "Surveillance",
+      "resolved": "Résolu",
+      "postmortem": "Post-mortem",
+      "scheduled": "Planifié",
+      "in_progress": "En cours",
+      "verifying": "Vérification",
+      "completed": "Terminé"
+    }
+  },
   "connectivity": {
     "Title": "Connectivité réseau",
-    "Note": "Tests via chargement d'images à partir des sites correspondants. Les valeurs de délai sont données à titre indicatif seulement et seront plus petites en réalité. Vous pouvez ajouter d'autres sites web que vous utilisez fréquemment à la liste de tests pour des tests rapides.",
+    "Note": "Ce test vérifie si vous pouvez atteindre un site web donné. Il fonctionne en chargeant une petite image depuis ce site. Les valeurs de délai sont données à titre indicatif seulement et seront plus petites en réalité. Vous pouvez ajouter d'autres sites web que vous utilisez fréquemment à la liste de tests pour des tests rapides.",
+    "ServiceStatusBanner": {
+      "Title": "Un service ne se charge pas ?",
+      "Note": "Si un produit d'IA comme ChatGPT ou Claude a échoué au test ci-dessus, le problème ne vient peut-être pas de votre réseau — le service lui-même peut être en panne. Vérifiez sa disponibilité en temps réel et ses incidents récents.",
+      "CTA": "Ouvrir l'état des services"
+    },
     "StatusWait": "En attente du test",
     "StatusAvailable": "OK",
     "StatusUnavailable": "Non disponible",
@@ -681,6 +730,9 @@
     }
   },
   "pingtest": {
+    "EnterIPLabel": "Saisissez une IP à tester",
+    "EnterIPPlaceholder": "ex. 1.1.1.1",
+    "UseStored": "Utiliser une IP connue",
     "id": "pingtest",
     "Title": "Test de latence mondiale",
     "Note": "Le test de ping est un outil réseau utilisé pour mesurer le temps aller-retour des paquets de données de votre appareil vers des cibles spécifiques (dans ce cas, nos serveurs situés sur différents continents et régions). Il s'agit d'une mesure clé pour évaluer les performances du réseau.",
@@ -698,6 +750,9 @@
     "Error": "Échec du test, il semble que votre IP ne soit pas autorisée à effectuer le test de ping."
   },
   "mtrtest": {
+    "EnterIPLabel": "Saisissez une IP à tester",
+    "EnterIPPlaceholder": "ex. 1.1.1.1",
+    "UseStored": "Utiliser une IP connue",
     "Title": "Test MTR",
     "Note": "Le test MTR (My Traceroute) effectue une traçabilité détaillée de votre adresse IP à partir de serveurs situés sur différents continents et régions du monde. Le test MTR combine les fonctionnalités des commandes de traceroute traditionnelles et de ping pour diagnostiquer la qualité et les performances des connexions réseau en temps réel.",
     "Note2": "Ce processus couvre le chemin complet depuis différentes localisations géographiques jusqu'à votre environnement réseau, fournissant des informations sur la latence et la perte de paquets pour chaque saut. Qu'il s'agisse de congestion dans le chemin de routage, de problèmes de latence à un nœud spécifique ou de perte de paquets pendant la transmission, le test MTR fournit des informations de diagnostic essentielles.",
@@ -752,6 +807,7 @@
     "Preferences": "Ouvrir les Préférences",
     "About": "Ouvrir À propos",
     "Whois": "Ouvrir la Recherche Whois",
+    "ServiceStatus": "Ouvrir l'état des services",
     "InvisibilityTest": "Ouvrir le Test d'invisibilité",
     "EnhancedDnsLeakTest": "Ouvrir le Test de fuite DNS approfondi",
     "MacChecker": "Ouvrir le Recherche de MAC",

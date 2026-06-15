@@ -141,6 +141,7 @@
     "Navigation": "Navigation",
     "IPInfo": "IP Infos",
     "Connectivity": "Connectivity",
+    "ServiceStatus": "Service Status",
     "WebRTC": "WebRTC Leak Test",
     "DNSLeakTest": "DNS Leak Test",
     "SpeedTest": "Speed Test",
@@ -389,6 +390,8 @@
     }
   },
   "advancedtools": {
+    "OpenInNewTab": "Open in new tab",
+    "BackToHome": "Back to Home",
     "Title": "Advanced Tools",
     "Note": "Tools that are used relatively infrequently, but are very useful when performing network testing.",
     "PingTestNote": "Global Ping value test",
@@ -397,6 +400,7 @@
     "EnhancedDnsLeakTest": "Captures every recursive resolver, with ECS and DNSSEC analysis",
     "RuleTestNote": "Check the rule settings of proxy software",
     "CensorshipCheck": "Check if a website is blocked in some countries",
+    "ServiceStatus": "Check the live availability of well-known AI and developer services, and whether a recent incident explains the outage you're seeing",
     "Whois": "Search for domain/IP registration information",
     "InvisibilityTest": "Check if you are using a proxy or VPN",
     "MacChecker": "Query information of a physical address",
@@ -600,9 +604,54 @@
       "nativenessTooltip": "Whether the ASN's registered country matches the IP's geolocation country"
     }
   },
+  "serviceStatus": {
+    "Title": "Service Status",
+    "Note": "When a service won't open, it might not be your problem — the service itself could be down. Currently, people are using a lot of AI products, and when the AI product doesn't reply, they don't know if it's their problem or the service's problem. This section shows the live availability of well-known AI services; expand a card to see each sub-service's status and recent incidents.",
+    "Refresh": "Refresh Service Status",
+    "LastChecked": "Last checked",
+    "AllOperational": "All Systems Operational",
+    "ComponentsTitle": "Services",
+    "IncidentsTitle": "Recent Incidents",
+    "NoComponents": "No service details available.",
+    "NoRecentIncidents": "No recent incidents.",
+    "Loading": "Loading…",
+    "Checking": "Checking…",
+    "IncidentsError": "Couldn't load incidents.",
+    "ComponentsError": "Couldn't load services.",
+    "indicator": {
+      "minor": "Minor Issues",
+      "major": "Major Outage",
+      "critical": "Critical Outage",
+      "maintenance": "Under Maintenance",
+      "unknown": "Status unavailable"
+    },
+    "component": {
+      "operational": "Operational",
+      "degraded_performance": "Degraded",
+      "partial_outage": "Partial Outage",
+      "major_outage": "Major Outage",
+      "under_maintenance": "Maintenance"
+    },
+    "incidentStatus": {
+      "investigating": "Investigating",
+      "identified": "Identified",
+      "monitoring": "Monitoring",
+      "resolved": "Resolved",
+      "postmortem": "Postmortem",
+      "scheduled": "Scheduled",
+      "in_progress": "In Progress",
+      "verifying": "Verifying",
+      "completed": "Completed"
+    }
+  },
   "connectivity": {
     "Title": "Network Connectivity",
-    "Note": "Testing is done by loading small images from corresponding websites. Delay values are for reference only and will be smaller in reality. You can add other websites you frequently use to the test list for quick testing.",
+    "Note": "This test checks whether you can reach a given website. It works by loading a small image from that site. Delay values are for reference only and will be smaller in reality. You can add other websites you frequently use to the test list for quick testing.",
+    "ServiceStatusBanner": {
+      "Title": "A service not loading?",
+      "Note": "If an AI product like ChatGPT or Claude failed the test above, it might not be your network — the service itself could be down. Check its live availability and recent incidents.",
+      "CTA": "Open Service Status"
+    },
     "StatusWait": "Awaiting Test",
     "StatusAvailable": "OK",
     "StatusUnavailable": "Unavailable",
@@ -681,6 +730,9 @@
     }
   },
   "pingtest": {
+    "EnterIPLabel": "Enter an IP to test",
+    "EnterIPPlaceholder": "e.g. 1.1.1.1",
+    "UseStored": "Use a stored IP",
     "id": "pingtest",
     "Title": "Global Latency Test",
     "Note": "Ping test is a network tool used to measure the round-trip time of data packets from your device to specific targets (in this case, our servers located in different continents and regions). It is a key metric for evaluating network performance.",
@@ -698,6 +750,9 @@
     "Error": "Test failed, it looks like your IP is not allowed to perform Ping test."
   },
   "mtrtest": {
+    "EnterIPLabel": "Enter an IP to test",
+    "EnterIPPlaceholder": "e.g. 1.1.1.1",
+    "UseStored": "Use a stored IP",
     "Title": "MTR Test",
     "Note": "The MTR (My Traceroute) test performs detailed route tracing of your IP address from servers located in different continents and regions around the world. MTR combines the functionality of traditional traceroute and ping commands to diagnose the quality and performance of network connections in real-time.",
     "Note2": "This process covers the complete path from various geographical locations to your network environment, providing information on latency and packet loss for each hop. Whether it's congestion in the routing path, latency issues at a specific node, or packet loss during transmission, the MTR test provides critical diagnostic information.",
@@ -752,6 +807,7 @@
     "Preferences": "Open Preferences",
     "About": "Open About panel",
     "Whois": "Open Whois Search panel",
+    "ServiceStatus": "Open Service Status panel",
     "InvisibilityTest": "Open Invisibility Test panel",
     "EnhancedDnsLeakTest": "Open In-depth DNS Leak Test panel",
     "MacChecker": "Open MAC lookup panel",

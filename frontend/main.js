@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia';
 import { useMainStore } from './store';
 import App from './App.vue'
-import i18n from './locales/i18n';
+import i18n, { loadActiveLocaleMessages } from './locales/i18n';
 import router from './router';
 import { analytics } from './utils/analytics';
 import { unregisterLegacyServiceWorker } from './utils/unregister-service-worker';
@@ -75,11 +75,14 @@ unregisterLegacyServiceWorker();
 // Check Firebase environment
 store.checkFirebaseEnv();
 
-// Fetch backend configs and user preferences
+// Fetch backend configs and user preferences. loadActiveLocaleMessages() loads
+// just the active locale (+ en fallback) and runs in parallel here, so it adds no
+// serial latency over the auth/config waits the mount already gates on.
 Promise.all([
     store.isFireBaseSet ? store.initializeAuthListener() : Promise.resolve(),
     store.loadPreferences(), // Load user preferences
-    store.fetchConfigs()      // Fetch backend configs
+    store.fetchConfigs(),     // Fetch backend configs
+    loadActiveLocaleMessages() // Load the active language pack before first render
 ]).then(() => {
     app.mount('#app');
 }).catch(error => {

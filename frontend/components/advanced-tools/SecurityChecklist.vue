@@ -246,7 +246,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
@@ -305,9 +305,29 @@ const toggleChecklistInfo = (index) => {
     checklistInfoOpen.value[index] = !checklistInfoOpen.value[index];
 };
 
-const { t, tm } = useI18n();
+const { t, locale } = useI18n();
 
-const securityChecklist = ref(tm('securitychecklistdata'));
+// The checklist dataset is large (~30 KB gzipped per language) and only this tool
+// reads it, so it's loaded on demand for the active locale instead of being baked
+// into the initial i18n bundle (see frontend/locales/i18n.js).
+const securityDataLoaders = {
+    en: () => import('@/locales/security-checklist/en.json'),
+    zh: () => import('@/locales/security-checklist/zh.json'),
+    fr: () => import('@/locales/security-checklist/fr.json'),
+    tr: () => import('@/locales/security-checklist/tr.json'),
+};
+
+const securityChecklist = ref(null);
+
+// Fetch the active locale's dataset and (re)build the list. Nulling fullList first
+// surfaces the template's existing loading state during the swap.
+const loadSecurityChecklist = async () => {
+    fullList.value = null;
+    const load = securityDataLoaders[locale.value] || securityDataLoaders.en;
+    const { default: data } = await load();
+    securityChecklist.value = data;
+    fullList.value = initSecurityList(securityChecklist.value);
+};
 
 const store = useMainStore();
 const isDarkMode = computed(() => store.isDarkMode);
@@ -519,8 +539,14 @@ const updateAchievement = () => {
     }
 };
 
-onMounted(() => {
-    fullList.value = initSecurityList(securityChecklist.value);
+onMounted(async () => {
+    await loadSecurityChecklist();
     setTimeout(() => { changeList('authentication', false); }, 300);
+});
+
+// Switching language while the tool is open swaps to that locale's dataset.
+watch(locale, async () => {
+    await loadSecurityChecklist();
+    changeList(currentList.value, false);
 });
 </script>

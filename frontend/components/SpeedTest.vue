@@ -20,14 +20,15 @@
         <div class="flex justify-end mb-5">
           <div class="inline-flex items-stretch">
             <!-- Download addon -->
-            <span class="flex items-center px-3 border border-input rounded-l-md bg-muted" aria-label="Download Bytes">
+            <span class="flex items-center px-3 border border-input rounded-l-md bg-muted" aria-hidden="true">
               <CloudDownload class="size-4 text-muted-foreground" />
             </span>
             <!-- Download select -->
             <Select :model-value="String(state.config.package.download.bytes)"
               @update:model-value="(v) => v && (state.config.package.download.bytes = Number(v))"
               :disabled="isRunning || isPaused">
-              <SelectTrigger class="rounded-none border-l-0 shadow-none gap-1.5 w-auto min-w-[100px]">
+              <SelectTrigger aria-label="Download size"
+                class="rounded-none border-l-0 shadow-none gap-1.5 w-auto min-w-[100px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -37,14 +38,15 @@
               </SelectContent>
             </Select>
             <!-- Upload addon -->
-            <span class="flex items-center px-3 border border-input border-l-0 bg-muted" aria-label="Upload Bytes">
+            <span class="flex items-center px-3 border border-input border-l-0 bg-muted" aria-hidden="true">
               <CloudUpload class="size-4 text-muted-foreground" />
             </span>
             <!-- Upload select -->
             <Select :model-value="String(state.config.package.upload.bytes)"
               @update:model-value="(v) => v && (state.config.package.upload.bytes = Number(v))"
               :disabled="isRunning || isPaused">
-              <SelectTrigger class="rounded-none border-l-0 shadow-none gap-1.5 w-auto min-w-[100px]">
+              <SelectTrigger aria-label="Upload size"
+                class="rounded-none border-l-0 shadow-none gap-1.5 w-auto min-w-[100px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

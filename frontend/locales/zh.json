@@ -141,6 +141,7 @@
     "Navigation": "导航",
     "IPInfo": "IP 信息",
     "Connectivity": "网络连通性",
+    "ServiceStatus": "服务可用性",
     "WebRTC": "WebRTC 泄露测试",
     "DNSLeakTest": "DNS 泄漏测试",
     "SpeedTest": "网速测试",
@@ -389,6 +390,8 @@
     "ControlGroup": "控制组"
   },
   "advancedtools": {
+    "OpenInNewTab": "在新标签页打开",
+    "BackToHome": "回到首页",
     "Title": "高级工具",
     "Note": "一些使用频率相对较低，但在进行网络测试时，非常有用的工具。",
     "PingTestNote": "全球的 Ping 值测试",
@@ -397,6 +400,7 @@
     "EnhancedDnsLeakTest": "捕获所有递归解析器，并分析 ECS 与 DNSSEC",
     "RuleTestNote": "检查代理软件的规则设置",
     "CensorshipCheck": "检查一个网站在某些国家是否被封锁",
+    "ServiceStatus": "查看知名 AI 与开发者服务的实时可用性，确认你遇到的中断是不是对方的故障",
     "Whois": "对域名或 IP 进行 Whois 查询",
     "InvisibilityTest": "猜猜看我是否知道你挂了代理",
     "MacChecker": "查询物理地址的归属信息",
@@ -600,9 +604,54 @@
       "nativenessTooltip": "判断 ASN 的注册国家是否与 IP 的归属国家一致"
     }
   },
+  "serviceStatus": {
+    "Title": "服务可用性",
+    "Note": "当你打不开某些服务的时候，可能并不是你的问题，而是这些服务出故障了。当前，人们大量使用 AI 产品，并在 AI 产品没有回复的时候，不确定是自己的问题还是服务的问题。本板块展示一些知名 AI 服务的实时可用状态，展开卡片可查看各子服务的状态与最近的事故。",
+    "Refresh": "刷新服务状态",
+    "LastChecked": "最后检查",
+    "AllOperational": "所有系统正常",
+    "ComponentsTitle": "服务项",
+    "IncidentsTitle": "最近事故",
+    "NoComponents": "暂无服务详情。",
+    "NoRecentIncidents": "近期无事故。",
+    "Loading": "加载中…",
+    "Checking": "查询中…",
+    "IncidentsError": "无法加载事故信息。",
+    "ComponentsError": "无法加载服务项。",
+    "indicator": {
+      "minor": "部分异常",
+      "major": "重大故障",
+      "critical": "严重故障",
+      "maintenance": "维护中",
+      "unknown": "状态获取失败"
+    },
+    "component": {
+      "operational": "正常",
+      "degraded_performance": "性能下降",
+      "partial_outage": "部分中断",
+      "major_outage": "重大中断",
+      "under_maintenance": "维护中"
+    },
+    "incidentStatus": {
+      "investigating": "调查中",
+      "identified": "已定位",
+      "monitoring": "监控中",
+      "resolved": "已解决",
+      "postmortem": "复盘",
+      "scheduled": "已计划",
+      "in_progress": "进行中",
+      "verifying": "验证中",
+      "completed": "已完成"
+    }
+  },
   "connectivity": {
     "Title": "网络连通性",
-    "Note": "通过加载对应网站上的小图片进行测试，延迟值仅供参考，实际会更小。你可以添加其它你常用的网站到测试列表中，方便快速测试。",
+    "Note": "本测试用于测试你是否能够连通到某个网站。测试方法是通过加载对应网站上的小图片进行的。延迟值仅供参考，实际会更小。你可以添加其它你常用的网站到测试列表中，方便快速测试。",
+    "ServiceStatusBanner": {
+      "Title": "某个服务打不开？",
+      "Note": "如果上面 ChatGPT、Claude 等 AI 产品测试失败，未必是你的网络问题——可能是服务本身挂了。看看它们的实时可用性和近期故障。",
+      "CTA": "打开服务可用性"
+    },
     "StatusWait": "待检测",
     "StatusAvailable": "可用",
     "StatusUnavailable": "不可用",
@@ -681,6 +730,9 @@
     }
   },
   "pingtest": {
+    "EnterIPLabel": "输入要测试的 IP",
+    "EnterIPPlaceholder": "例如 1.1.1.1",
+    "UseStored": "使用已知 IP",
     "id": "pingtest",
     "Title": "全球延迟测试",
     "Note": "Ping 测试是一种网络工具，用于测量数据包从你的设备到特定目标（在这里是我们分布在全球各个大洲和地区的服务器）的往返时间。是评估网络性能的关键指标。",
@@ -698,6 +750,9 @@
     "Error": "测试失败，看起来你的 IP 不允许进行 Ping 测试。"
   },
   "mtrtest": {
+    "EnterIPLabel": "输入要测试的 IP",
+    "EnterIPPlaceholder": "例如 1.1.1.1",
+    "UseStored": "使用已知 IP",
     "Title": "MTR 测试",
     "Note": "MTR (My Traceroute) 测试会从遍布全球不同大洲和地区的服务器出发，对你的 IP 地址进行详细的路由跟踪。MTR 结合了传统 traceroute 和 ping 命令的功能，能够实时地诊断网络连接的质量和性能。",
     "Note2": "这个过程涵盖了从各个地理位置到你的网络环境的完整路径，提供关于每一跳的延迟和数据包丢失信息。无论是路由路径的拥堵、某个特定节点的延迟问题，还是数据包在传输过程中的丢失，MTR 测试都能提供关键的诊断信息。",
@@ -752,6 +807,7 @@
     "Preferences": "打开偏好设置面板",
     "About": "打开关于页面",
     "Whois": "打开 Whois 查询面板",
+    "ServiceStatus": "打开服务可用性面板",
     "InvisibilityTest": "打开隐身测试面板",
     "EnhancedDnsLeakTest": "打开深度 DNS 泄漏测试面板",
     "MacChecker": "打开物理地址查询面板",
