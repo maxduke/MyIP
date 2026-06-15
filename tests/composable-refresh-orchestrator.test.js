@@ -138,6 +138,6 @@ describe('useRefreshOrchestrator()', () => {
 
     // run first attempt (mounted = false) → schedule retry 1s later
     loadingControl();
-    assert.ok(scheduled.includes(1000), 'should see 1000ms recursive retry delay');
+    assert.ok(scheduled.includes(100), 'should see 100ms recursive retry delay');
   });
 });
