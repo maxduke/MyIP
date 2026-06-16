@@ -126,26 +126,60 @@ const fetchStatus = reactive([]);
 let pendingIPDetailsRequests = new Map();
 let ipDataCache = new Map();
 
-// Shared method to get IP address
-const fetchIP = async (cardID, getFromSource) => {
-  const { ip, source } = await getFromSource(configs.value.originalSite);
-  let fetchingStatus = false;
+// IP acquisition runs in two phases: resolveIP paints the IP the moment it
+// resolves; loadCardDetails fills in geo data. checkAllIPs runs phase 1 for all
+// cards in parallel, then phase 2 probe-then-fan-out; refreshCard reuses both.
+
+// Settle a card's fetch status — drives the global IPInfo loading indicator.
+const markFetched = (cardID) => {
+  fetchStatus[cardID] = { [cardID]: true };
+  trackFetchStatus(fetchStatus);
+};
+
+// Phase 1 — resolve one card's IP and render it immediately.
+const resolveIP = async (cardID, getFromSource) => {
+  let ip = null;
+  let source = null;
+  try {
+    ({ ip, source } = await getFromSource(configs.value.originalSite));
+  } catch (error) {
+    // getips helpers shouldn't throw, but one must not sink the parallel batch.
+    console.error('Error resolving IP for card ' + cardID + ':', error);
+  }
   if (ip !== null) {
     ipDataCards[cardID].ip = ip;
     ipDataCards[cardID].source = source;
-    IPArray.value = [...IPArray.value, ip];
-    await fetchIPDetails(cardID, ip);
-  } else if (cardID === 1 || cardID === 3) {
-    // v6 cards in the new order: ipchecking_v6 (1), cloudflare_v6 (3)
-    ipDataCards[cardID].ip = t('ipInfos.IPv6Error');
+    // Record the IP now for the Globalping picker; country back-filled later.
+    IPArray.value = [...IPArray.value, { ip, country: '' }];
   } else {
-    ipDataCards[cardID].ip = t('ipInfos.IPv4Error');
+    // v6 cards: ipchecking_v6 (1), cloudflare_v6 (3).
+    ipDataCards[cardID].ip = (cardID === 1 || cardID === 3)
+      ? t('ipInfos.IPv6Error')
+      : t('ipInfos.IPv4Error');
+    markFetched(cardID); // no IP → no detail phase
   }
-  // Always return true, even if fetching IP fails
-  // for tracking fetch status
-  fetchingStatus = true;
-  fetchStatus[cardID] = { [cardID]: fetchingStatus };
-  trackFetchStatus(fetchStatus);
+  return { cardID, ip };
+};
+
+// Phase 2 — geo details for a resolved IP. finally-settles so a fully-failed
+// card still clears the loading indicator.
+const loadCardDetails = async (cardID, ip) => {
+  try {
+    await fetchIPDetails(cardID, ip);
+    if (ipDataCards[cardID].country_code) {
+      IPArray.value = [...IPArray.value, { ip, country: ipDataCards[cardID].country_code }];
+    }
+  } catch {
+    // fetchIPDetails already logged; swallow so it can't reject the batch.
+  } finally {
+    markFetched(cardID);
+  }
+};
+
+// Single-card path (refresh button).
+const fetchIP = async (cardID, getFromSource) => {
+  const { ip } = await resolveIP(cardID, getFromSource);
+  if (ip !== null) await loadCardDetails(cardID, ip);
 };
 
 // Report data fetch status, and send to store
@@ -163,29 +197,26 @@ const trackFetchStatus = (status) => {
   }
 };
 
-// Check all IP addresses
+// Resolve all IPs in parallel (no stagger), then load details probe-then-fan-out:
+// await the first valid card so a dead source fails over once, then parallelize.
 const checkAllIPs = async () => {
-  const ipFunctions = [
-    () => fetchIP(0, getIPFromIPChecking4),
-    () => fetchIP(1, getIPFromIPChecking6),
-    () => fetchIP(2, getIPFromCloudflare_V4),
-    () => fetchIP(3, getIPFromCloudflare_V6),
-    () => fetchIP(4, getIPFromIPIP),
-    () => fetchIP(5, getIPFromIPChecking64),
-  ];
+  const ipSources = [
+    [0, getIPFromIPChecking4],
+    [1, getIPFromIPChecking6],
+    [2, getIPFromCloudflare_V4],
+    [3, getIPFromCloudflare_V6],
+    [4, getIPFromIPIP],
+    [5, getIPFromIPChecking64],
+  ].slice(0, ipCardsToShow.value);
 
-  // Limit the number of functions to execute to the length of ipCardsToShow
-  const maxIndex = ipCardsToShow.value;
+  const resolved = await Promise.all(
+    ipSources.map(([cardID, getFromSource]) => resolveIP(cardID, getFromSource))
+  );
 
-  let index = 0;
-  const interval = setInterval(() => {
-    if (index < maxIndex && index < ipFunctions.length) {
-      ipFunctions[index].call(this);
-      index++;
-    } else {
-      clearInterval(interval);
-    }
-  }, 500);
+  const pending = resolved.filter((r) => r.ip !== null);
+  const probe = pending.shift();
+  if (probe) await loadCardDetails(probe.cardID, probe.ip);
+  await Promise.allSettled(pending.map((r) => loadCardDetails(r.cardID, r.ip)));
 };
 
 // Get IP details from IP address
@@ -261,32 +292,31 @@ const fetchIPDetails = async (cardIndex, ip, sourceID = null) => {
   }
 };
 
-// When the IP database source is reselected, update the IP geographic data
-const selectIPGeoSource = () => {
-  // Clear partial data
+// Re-fetch geo details for every card when the user picks a new IP database.
+// Same probe-then-fan-out as checkAllIPs, no stagger.
+const selectIPGeoSource = async () => {
+  // Clear stale detail fields, keep IP + map.
   ipDataCards.forEach((card) => {
     const { ip, mapUrl, mapUrl_dark } = card;
     Object.assign(card, createDefaultCard(), { ip, mapUrl, mapUrl_dark });
   });
-
   ipDataCache.clear();
 
-  // Try to update once, then get other IP data
-  let runningSource = fetchIPDetails(0, ipDataCards[0].ip, ipGeoSource.value);
+  // Cards that actually hold an IP, in display order.
+  const cards = ipDataCards
+    .map((card, index) => ({ card, index }))
+    .filter(({ card }) => isValidIP(card.ip));
 
-  // Re-fetch IP data
-  let index = 1;
-  const interval = setInterval(() => {
-    if (index < ipDataCards.length) {
-      const card = ipDataCards[index];
-      if (isValidIP(card.ip)) {
-        fetchIPDetails(index, card.ip, parseInt(runningSource));
-      }
-      index++;
-    } else {
-      clearInterval(interval);
-    }
-  }, 500);
+  // Probe the first card so a failed source fails over once, then reuse the
+  // settled source for the rest in parallel.
+  const probe = cards.shift();
+  if (!probe) return;
+  await fetchIPDetails(probe.index, probe.card.ip, ipGeoSource.value);
+  const settledSource = ipGeoSource.value;
+
+  await Promise.allSettled(
+    cards.map(({ card, index }) => fetchIPDetails(index, card.ip, settledSource))
+  );
 };
 
 // Refresh a card

@@ -30,7 +30,9 @@
         </button>
         <CardContent class="p-4">
           <!-- Brand icon (built-in) or first-letter tile (custom) + name -->
-          <div class="flex items-center gap-2 mb-3">
+          <div class="flex items-center gap-2 mb-3 cursor-pointer"
+            @click.prevent="checkConnectivityHandler(test, onTestComplete, true)"
+            :title="t('connectivity.RefreshThisTest')">
             <Icon v-if="test.icon" :icon="test.icon" class="size-6 text-muted-foreground" />
             <span v-else
               class="size-6 shrink-0 rounded-lg inline-flex items-center justify-center text-xs font-semibold text-muted-foreground border-2 border-muted-foreground">
@@ -40,9 +42,7 @@
           </div>
           <!-- Status + ms. Multi mode pins these to the best round (see checkConnectivityHandler). -->
           <div class="flex items-center justify-between gap-2">
-            <span class="flex items-center gap-1.5 text-base min-w-0 cursor-pointer"
-              @click.prevent="checkConnectivityHandler(test, onTestComplete, true)"
-              :title="t('connectivity.RefreshThisTest')">
+            <span class="flex items-center gap-1.5 text-base min-w-0">
               <span v-if="toneOf(test) === 'wait'" class="relative flex shrink-0">
                 <span class="absolute inline-flex size-2 rounded-full bg-info opacity-75 animate-ping"></span>
                 <span class="relative inline-flex size-2 rounded-full" :class="dotClass(toneOf(test))"></span>
@@ -61,7 +61,8 @@
           <div v-if="multipleTests" class="flex items-center gap-1 mt-2">
             <JnTooltip v-for="i in totalRounds" :key="i" :text="roundTooltipText(test, i - 1)" side="top">
               <span class="group/dot inline-flex items-center justify-center p-1 -m-1 cursor-default">
-                <span class="size-1.5 rounded-full md:transition-transform md:duration-200 md:group-hover/dot:scale-[2.0]"
+                <span
+                  class="size-1.5 rounded-full md:transition-transform md:duration-200 md:group-hover/dot:scale-[2.0]"
                   :class="progressDotClass(test, i - 1)"></span>
               </span>
             </JnTooltip>
@@ -80,6 +81,32 @@
         </CardContent>
       </Card>
     </div>
+
+    <!-- Service Status banner — once a pass settles, point users to the
+         Service Status advanced tool: a failed AI-product check is often the
+         service being down, not the user's connection. fade-slide entrance
+         mirrors the DNS Leak / Censorship conclusion banners. -->
+    <Transition name="fade-slide">
+      <div v-if="showServiceStatusBanner"
+        class="mt-3 flex flex-col md:flex-row items-start gap-3 rounded-lg border border-info/30 bg-info/5 p-4 md:p-5">
+
+        <div class="flex-1 min-w-0 space-y-1.5">
+          <h3 class="text-sm font-semibold m-0 flex items-center gap-2 mb-2">
+            <Activity class="size-4 text-info shrink-0" />
+            {{ t('connectivity.ServiceStatusBanner.Title') }}
+          </h3>
+          <p class="text-sm text-muted-foreground leading-relaxed m-0">
+            {{ t('connectivity.ServiceStatusBanner.Note') }}
+          </p>
+        </div>
+        <div class="w-full md:w-auto md:self-stretch flex justify-end items-end md:items-center">
+          <Button variant="action" size="sm" @click="openServiceStatus" class="shrink-0 cursor-pointer">
+            <span>{{ t('connectivity.ServiceStatusBanner.CTA') }}</span>
+            <ArrowRight class="size-4 ml-1" />
+          </Button>
+        </div>
+      </div>
+    </Transition>
 
     <!-- Add custom test dialog -->
     <Dialog :open="addDialogOpen" @update:open="onAddDialogChange">
@@ -115,6 +142,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, reactive, watch, nextTick } from 'vue';
+import { useRouter } from 'vue-router';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
@@ -126,12 +154,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useStatusTone, ipFieldTone } from '@/composables/use-status-tone.js';
 import {
-  Play, CirclePlus, Frown, Meh, RotateCw, Smile, X,
+  Play, CirclePlus, Frown, Meh, RotateCw, Smile, X, Activity, ArrowRight,
 } from '@lucide/vue';
 import { Icon } from '@iconify/vue';
 
 const { t } = useI18n();
 const store = useMainStore();
+const router = useRouter();
 const userPreferences = computed(() => store.userPreferences);
 const isSimpleMode = computed(() => userPreferences.value.simpleMode);
 const alertToShow = ref(false);
@@ -142,6 +171,17 @@ const alertMessage = ref("");
 const multipleTests = ref(userPreferences.value.connectivityMultipleTests);
 const autoShowAltert = ref(userPreferences.value.popupConnectivityNotifications);
 const isStarted = ref(false);
+// Sticky flag: once any connectivity pass has settled, surface the Service
+// Status banner — a connectivity failure on an AI product is often the
+// service being down, not the user's network.
+const hasEverSettled = ref(false);
+const showServiceStatusBanner = computed(() => hasEverSettled.value);
+
+const openServiceStatus = () => {
+  trackEvent('Section', 'BannerClick', 'ServiceStatus');
+  // Open the Service Status tool's in-page drawer (tools are query-driven now).
+  router.push({ path: '/', query: { tool: 'servicestatus' } });
+};
 const counter = ref(0);
 const maxCounts = ref(9);
 const manualRun = ref(false);
@@ -159,18 +199,18 @@ const MAX_CUSTOM_TARGETS = 9;
 // independent of the best-of-N face/text. `time` powers the per-dot hover
 // tooltip; for `tone: 'fail'` rounds it stays 0. Bootstrap-only writer.
 const connectivityTests = reactive([
-  { id: 'wechat', name: 'WeChat', icon: 'ri:wechat-line', url: 'https://res.wx.qq.com/a/wx_fed/assets/res/NTI4MWU5.ico', status: t('connectivity.StatusWait'), time: 0, mintime: 0, roundResults: [] },
-  { id: 'taobao', name: 'Taobao', icon: 'ri:taobao-line', url: 'https://www.taobao.com/favicon.ico', status: t('connectivity.StatusWait'), time: 0, mintime: 0, roundResults: [] },
   { id: 'google', name: 'Google', icon: 'ri:google-line', url: 'https://www.google.com/favicon.ico', status: t('connectivity.StatusWait'), time: 0, mintime: 0, roundResults: [] },
+  { id: 'youtube', name: 'YouTube', icon: 'ri:youtube-line', url: 'https://www.youtube.com/favicon.ico', status: t('connectivity.StatusWait'), time: 0, mintime: 0, roundResults: [] },
+  { id: 'github', name: 'GitHub', icon: 'ri:github-line', url: 'https://github.com/favicon.ico', status: t('connectivity.StatusWait'), time: 0, mintime: 0, roundResults: [] },
   // Use speed.cloudflare.com (not www.cloudflare.com): the marketing site
   // attaches `Link: rel=preload` headers for its brand fonts to every response
   // — including /favicon.ico — which the browser honors regardless of fetch
   // mode, then fails CORS on the woff2 files. speed.cloudflare.com serves a
   // plain favicon with no preload headers.
-  { id: 'cloudflare', name: 'Cloudflare', icon: 'ri:cloud-line', url: 'https://speed.cloudflare.com/favicon.ico', status: t('connectivity.StatusWait'), time: 0, mintime: 0, roundResults: [] },
-  { id: 'youtube', name: 'YouTube', icon: 'ri:youtube-line', url: 'https://www.youtube.com/favicon.ico', status: t('connectivity.StatusWait'), time: 0, mintime: 0, roundResults: [] },
-  { id: 'github', name: 'GitHub', icon: 'ri:github-line', url: 'https://github.com/favicon.ico', status: t('connectivity.StatusWait'), time: 0, mintime: 0, roundResults: [] },
+  { id: 'cloudflare', name: 'Cloudflare', icon: 'simple-icons:cloudflare', url: 'https://speed.cloudflare.com/favicon.ico', status: t('connectivity.StatusWait'), time: 0, mintime: 0, roundResults: [] },
+  { id: 'claude', name: 'Claude', icon: 'ri:claude-line', url: 'https://claude.com/favicon.ico', status: t('connectivity.StatusWait'), time: 0, mintime: 0, roundResults: [] },
   { id: 'chatgpt', name: 'ChatGPT', icon: 'ri:openai-line', url: 'https://chatgpt.com/favicon.ico', status: t('connectivity.StatusWait'), time: 0, mintime: 0, roundResults: [] },
+  { id: 'wechat', name: 'WeChat', icon: 'ri:wechat-line', url: 'https://res.wx.qq.com/a/wx_fed/assets/res/NTI4MWU5.ico', status: t('connectivity.StatusWait'), time: 0, mintime: 0, roundResults: [] },
 ]);
 
 // Reconcile custom targets by id (not wipe-and-refill) so existing cards
@@ -253,7 +293,7 @@ const roundTooltipText = (test, idx) => {
   if (!entry) return '';
   const n = idx + 1;
   if (entry.tone === 'fail') return t('connectivity.RoundCount', { n }) + t('connectivity.StatusUnavailable');
-  return t('connectivity.RoundCount', { n}) + entry.time + ' ms';
+  return t('connectivity.RoundCount', { n }) + entry.time + ' ms';
 };
 
 // Reachable: Smile <200ms, Meh ≥200ms. Unreachable: Frown. Wait: no face.
@@ -339,6 +379,8 @@ const checkAllConnectivity = (isAlertToShow, isRefresh, isManualRun) => {
     Promise.allSettled(testPromises).then(() => {
       // Multi mode overwrites this with finalizeMultiTestAlert before the toast fires.
       updateConnectivityAlert(successCount === totalTests ? 'success' : 'error');
+      // Sticky flag for the Service Status banner — set once the first pass lands.
+      hasEverSettled.value = true;
       resolve();
     });
 
@@ -514,3 +556,23 @@ watch(allRoundsDone, (v) => { if (v) sendAlert(); });
 
 defineExpose({ checkAllConnectivity, handelCheckStart });
 </script>
+
+<style scoped>
+/* fade-slide — same shape as DnsLeaksTest.vue's enhanced-test banner */
+.fade-slide-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.fade-slide-leave-active {
+  transition: all 0.2s ease-out;
+}
+
+.fade-slide-enter-from {
+  transform: translateY(10px);
+  opacity: 0;
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+}
+</style>

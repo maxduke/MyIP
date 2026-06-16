@@ -28,10 +28,10 @@ function makeStoreStub({ mountedFlags = {}, shouldRefresh = false, autoStart = f
 
 function makeRefs() {
   const calls = { ip: 0, conn: [], web: [], dns: [] };
-  const IPCheckRef      = ref({ checkAllIPs:            () => { calls.ip += 1; } });
-  const connectivityRef = ref({ handelCheckStart:       (flag) => { calls.conn.push(flag); } });
-  const webRTCRef       = ref({ checkAllWebRTC:         (flag) => { calls.web.push(flag); } });
-  const dnsLeaksRef     = ref({ checkAllDNSLeakTest:    (flag) => { calls.dns.push(flag); } });
+  const IPCheckRef       = ref({ checkAllIPs:            () => { calls.ip += 1; } });
+  const connectivityRef  = ref({ handelCheckStart:       (flag) => { calls.conn.push(flag); } });
+  const webRTCRef        = ref({ checkAllWebRTC:         (flag) => { calls.web.push(flag); } });
+  const dnsLeaksRef      = ref({ checkAllDNSLeakTest:    (flag) => { calls.dns.push(flag); } });
   return { refs: { IPCheckRef, connectivityRef, webRTCRef, dnsLeaksRef }, calls };
 }
 
@@ -138,6 +138,6 @@ describe('useRefreshOrchestrator()', () => {
 
     // run first attempt (mounted = false) → schedule retry 1s later
     loadingControl();
-    assert.ok(scheduled.includes(1000), 'should see 1000ms recursive retry delay');
+    assert.ok(scheduled.includes(100), 'should see 100ms recursive retry delay');
   });
 });

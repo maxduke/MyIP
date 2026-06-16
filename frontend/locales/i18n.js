@@ -1,27 +1,23 @@
 import { createI18n } from 'vue-i18n';
 
-// 引入语言文件
-// Node ESM 必须显式声明 JSON 导入属性；Vite 也支持这种写法，前后端一致
-import en from './en.json' with { type: 'json' };
-import zh from './zh.json' with { type: 'json' };
-import fr from './fr.json' with { type: 'json' };
-import tr from './tr.json' with { type: 'json' };
-import enSecurity from './security-checklist/en.json' with { type: 'json' };
-import zhSecurity from './security-checklist/zh.json' with { type: 'json' };
-import frSecurity from './security-checklist/fr.json' with { type: 'json' };
-import trSecurity from './security-checklist/tr.json' with { type: 'json' };
+// Locale messages are loaded on demand so the first-paint path carries only the
+// language actually in use. Bundling all four eagerly cost ~44 KB gzipped of dead
+// weight (three unused locales). Switching language persists the choice and
+// re-boots the app (Preferences.prefLanguage → setLanguage() on next load), so
+// only ONE locale is ever active per page load — main.js loads it before mount.
+//
+// NOTE: the security-checklist datasets (security-checklist/*.json) are likewise
+// kept off this path — that tool loads its own locale's dataset on demand
+// (see SecurityChecklist.vue).
+const localeLoaders = {
+  en: () => import('./en.json'),
+  zh: () => import('./zh.json'),
+  fr: () => import('./fr.json'),
+  tr: () => import('./tr.json'),
+};
 
-
-const messages = { en, zh, fr, tr };
-const supportedLanguages = Object.keys(messages);
-
-// 引入安全检查清单
-function mergeMessagesSync() {
-  messages.en = { ...messages.en, securitychecklistdata: enSecurity };
-  messages.zh = { ...messages.zh, securitychecklistdata: zhSecurity };
-  messages.fr = { ...messages.fr, securitychecklistdata: frSecurity };
-  messages.tr = { ...messages.tr, securitychecklistdata: trSecurity };
-}
+const supportedLanguages = Object.keys(localeLoaders);
+const FALLBACK_LOCALE = 'en';
 
 // 设置语言
 function setLanguage() {
@@ -51,21 +47,37 @@ function setLanguage() {
   return locale;
 }
 
-// 合并语言包
-const messagesLoader = () => {
-  mergeMessagesSync();
-  return messages;
-};
+const activeLocale = setLanguage();
 
-// 创建 i18n 实例
+// 创建 i18n 实例（messages 启动时为空，由 loadActiveLocaleMessages 注入）
 const i18n = createI18n({
   legacy: false,
-  locale: setLanguage(),
-  fallbackLocale: 'en',
-  messages: messagesLoader(),
+  locale: activeLocale,
+  fallbackLocale: FALLBACK_LOCALE,
+  messages: {},
 });
 
-// 更新 meta 标签
+// Load one locale's messages into the instance (memoized).
+const loaded = new Set();
+async function loadOne(locale) {
+  if (loaded.has(locale) || !localeLoaders[locale]) return;
+  const { default: msgs } = await localeLoaders[locale]();
+  i18n.global.setLocaleMessage(locale, msgs);
+  loaded.add(locale);
+}
+
+// Load the active locale (plus the fallback, so a missing key still resolves to
+// English instead of showing the raw key). Awaited in main.js before mount so the
+// first render is already translated. The two loads run in parallel.
+export async function loadActiveLocaleMessages() {
+  await Promise.all([
+    loadOne(activeLocale),
+    activeLocale === FALLBACK_LOCALE ? null : loadOne(FALLBACK_LOCALE),
+  ]);
+  updateMeta();
+}
+
+// 更新 meta 标签（依赖 messages，故在 loadActiveLocaleMessages 之后调用）
 function updateMeta() {
   document.title = i18n.global.t('page.title');
 
@@ -79,5 +91,4 @@ function updateMeta() {
   }
 }
 
-updateMeta();
 export default i18n;
