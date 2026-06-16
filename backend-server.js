@@ -31,6 +31,7 @@ import { getSessionResult as dnsLeakGetResult } from './api/dns-leak-test.js';
 import getWhois from './api/get-whois.js';
 import invisibilitytestHandler from './api/invisibility-test.js';
 import macChecker from './api/mac-checker.js';
+import githubStarsHandler from './api/github-stars.js';
 // User
 import validateConfigs from './api/configs.js';
 import getUserinfo from './api/get-user-info.js';
@@ -210,6 +211,7 @@ app.get('/api/ipapiis', requireValidIP(), cacheable(ONE_HOUR_CACHE), ipapiisHand
 app.get('/api/ip2location', requireValidIP(), cacheable(ONE_HOUR_CACHE), ip2locationHandler);
 app.get('/api/macchecker', cacheable(THIRTY_DAYS_CACHE), macChecker);
 app.get('/api/maxmind', requireValidIP(), cacheable(ONE_DAY_CACHE), maxmindHandler);
+app.get('/api/github-stars', cacheable(ONE_DAY_CACHE), githubStarsHandler);
 app.get('/api/service-status', cacheable(FIVE_MIN_CACHE), serviceStatusHandler);
 app.get('/api/service-status/detail', requireValidProviderId(), cacheable(FIVE_MIN_CACHE), serviceStatusDetailHandler);
 

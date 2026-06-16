@@ -22,6 +22,8 @@ api/
 │   ipcheck-ing.js, maxmind.js   ← IP geolocation source handlers (route per source)
 ├── invisibility-test.js         ← /api/invisibility — proxy to private IPCheck.ing endpoint
 ├── mac-checker.js               ← /api/macchecker — MAC vendor lookup
+├── github-stars.js              ← /api/github-stars — repo star count via no-token
+│                                  GitHub fetch (edge-cached; replaces shields.io)
 ├── get-whois.js                 ← /api/whois — whoiser primary + RDAP fallback for new gTLDs
 ├── cf-radar.js                  ← /api/cfradar — ASN details via Cloudflare Radar
 ├── dns-resolver.js              ← /api/dnsresolver — DNS + DoH parallel query

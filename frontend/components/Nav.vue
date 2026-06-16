@@ -63,21 +63,22 @@
             {{ t(`nav.${item}`) }}
           </a>
         </template>
+        <!-- GitHub repo link + star count. Count comes from our own backend
+             (/api/github-stars, edge-cached) instead of shields.io, which kept
+             failing on token-pool exhaustion. The count is hidden until it
+             lands / on error, so the link itself never depends on the fetch. -->
+             <Badge variant="outline" v-if="githubStarsLabel">
         <a :href="t('page.footerLink')" target="_blank" rel="noopener"
-          class="ml-2 inline-flex items-center hover:opacity-80 transition-opacity" aria-label="View source on GitHub">
-          <img src="https://img.shields.io/github/stars/jason5ng32/MyIP" alt="GitHub stars" class="h-5">
+        class="inline-flex items-center gap-1"
+          aria-label="View source on GitHub">
+          <Icon icon="ri:github-line" class="size-3.5" />
+            <span class="tabular-nums">{{ githubStarsLabel }}</span>
         </a>
+      </Badge>
       </div>
 
       <!-- Right: Action area (ml-auto push to the right) -->
       <div class="ml-auto flex items-center gap-2">
-        <!-- Mobile: GitHub icon -->
-        <Button v-if="isMobile" variant="ghost" size="icon" class="size-8" as-child>
-          <a :href="t('page.footerLink')" target="_blank" rel="noopener" aria-label="View source on GitHub">
-            <Icon icon="ri:github-line" />
-          </a>
-        </Button>
-
         <!-- Preferences -->
         <JnTooltip :text="t('shortcutKeys.Preferences')">
           <Button variant="ghost" size="icon" class="size-8 cursor-pointer" aria-label="Open preferences" @click="OpenPreferences">
@@ -213,9 +214,14 @@
             </a>
           </template>
           <a :href="t('page.footerLink')" target="_blank" rel="noopener"
-            class="mt-3 inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-muted">
+            class="mt-3 flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-muted">
             <Icon icon="ri:github-line" class="size-4" />
             <span>Star on GitHub</span>
+            <!-- Same /api/github-stars count as the desktop badge (fetched on
+                 mount); hidden until it lands / on error. -->
+            <span v-if="githubStarsLabel" class="ml-auto tabular-nums text-muted-foreground">
+              {{ githubStarsLabel }}
+            </span>
           </a>
         </nav>
       </SheetContent>
@@ -252,12 +258,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import {
   Award, ChevronDown, HeartHandshake,
-  LogOut, Menu,Cog
+  LogOut, Menu, Cog,
 } from '@lucide/vue';
 import { Icon } from '@iconify/vue';
 import brandIcon from './svgicons/Brand.vue';
 import { SECTION_IDS } from '@/data/sections';
 import { ADVANCED_TOOLS } from '@/data/tools.js';
+import { fetchWithTimeout } from '@/utils/fetch-with-timeout.js';
+import { formatStarCount } from '@/utils/format-star-count.js';
 import { isRunningAsPwa } from '@/utils/pwa.js';
 
 const { t } = useI18n();
@@ -284,6 +292,21 @@ const advancedTools = computed(() =>
 
 // Mobile: Advanced Tools sub-list expanded by default for discoverability.
 const mobileToolsOpen = ref(true);
+
+// GitHub star count for the repo badge. Fetched from our own edge-cached
+// endpoint; stays null (badge hides the count) if the request fails.
+const githubStars = ref(null);
+const githubStarsLabel = computed(() => formatStarCount(githubStars.value));
+const fetchGithubStars = async () => {
+  try {
+    const res = await fetchWithTimeout('/api/github-stars');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (typeof data.stars === 'number') githubStars.value = data.stars;
+  } catch {
+    /* leave the badge without a count */
+  }
+};
 
 // nav link style — current section highlight use bg-accent instead of only bold
 const navLinkClass = (item, { block = false } = {}) => {
@@ -418,6 +441,7 @@ onMounted(() => {
     lastScrollY = window.scrollY;
     window.addEventListener('scroll', onScroll, { passive: true });
   }
+  fetchGithubStars();
 });
 
 onBeforeUnmount(() => {
