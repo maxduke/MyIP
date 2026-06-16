@@ -37,7 +37,7 @@
                 <!-- Monitor is inline inside FitText so it rides the IP's
                     first line; Copy stays a flex sibling so ellipsis
                     never clips it. -->
-                <div class="px-4 py-3 flex items-start gap-2 min-w-0" data-mask="ip">
+                <div class="px-4 py-3 flex items-start gap-2 min-w-0" :data-mask="maskAttr(card.ip)">
                     <FitText :text="card.ip" :tiers="HERO_TIERS" :max-lines="2" :title="card.ip"
                         class="font-mono font-semibold min-w-0 items-start"/>
                     <CopyButton v-if="isValidIP(card.ip)" :value="card.ip"
@@ -73,6 +73,7 @@ import { useI18n } from 'vue-i18n';
 import { isValidIP } from '@/utils/valid-ip.js';
 import FitText from '@/components/widgets/FitText.vue';
 import { HERO_TIERS } from '@/composables/use-fit-text.js';
+import { createMaskGate } from '@/composables/use-info-mask.js';
 import IPErrorIcon from '../svgicons/IPError.vue';
 import IpDetailPanel from './IpDetailPanel.vue';
 import { JnTooltip } from '@/components/ui/tooltip';
@@ -85,6 +86,8 @@ import {
 } from '@lucide/vue';
 
 const { t } = useI18n();
+// Skip the info-mask blur on the IPv4/IPv6 error placeholders (not a real IP).
+const maskAttr = createMaskGate(t);
 
 const placeholderSizes = [12, 8, 6, 8, 4];
 

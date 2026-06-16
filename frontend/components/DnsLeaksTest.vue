@@ -50,7 +50,7 @@
               <span class="relative inline-flex size-2 rounded-full" :class="dotClass(toneOf(leak))"></span>
             </span>
             <FitText :text="leak.ip" :tiers="INLINE_TIERS" :title="leak.ip" class="font-mono min-w-0"
-              :class="textClass(toneOf(leak))" data-mask="ip" />
+              :class="textClass(toneOf(leak))" :data-mask="maskAttr(leak.ip)" />
           </div>
 
           <!-- ISP + Country sub-block -->
@@ -122,6 +122,7 @@ import { JnTooltip } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useStatusTone, ipFieldTone, isFieldPending as isFieldPendingShared } from '@/composables/use-status-tone.js';
+import { createMaskGate } from '@/composables/use-info-mask.js';
 import { useMaxmind } from '@/composables/use-maxmind.js';
 import { EthernetPort, Play, MapPin, RotateCw, Sparkles, ArrowRight, DoorOpen } from '@lucide/vue';
 import { Icon } from '@iconify/vue';
@@ -140,6 +141,8 @@ const { t } = useI18n();
 const store = useMainStore();
 const router = useRouter();
 const { lookupMaxmind } = useMaxmind();
+// Skip the info-mask blur on waiting/error placeholders (not a real IP).
+const maskAttr = createMaskGate(t);
 const isStarted = ref(false);
 const userPreferences = computed(() => store.userPreferences);
 const isSimpleMode = computed(() => userPreferences.value.simpleMode);
