@@ -6,7 +6,7 @@
             <!-- Header -->
             <header class="flex items-center justify-between gap-2 px-4 py-3 border-b shrink-0">
                 <h2 class="flex items-center gap-2 text-base font-semibold m-0">
-                    <SlidersHorizontal class="size-4 text-muted-foreground" />
+                    <Cog class="size-4 text-muted-foreground" />
                     {{ t('nav.preferences.title') }}
                 </h2>
                 <SheetClose
@@ -141,7 +141,7 @@ import {
     LayoutGrid,
     Moon,
     Palette,
-    SlidersHorizontal,
+    Cog,
     Sun,
 } from '@lucide/vue';
 

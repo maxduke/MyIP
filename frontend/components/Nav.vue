@@ -31,10 +31,38 @@
 
       <!-- Middle: Desktop nav links + GitHub star badge (left aligned, next to brand) -->
       <div v-if="!isMobile" class="flex items-center gap-0.5">
-        <a v-for="item in navItems" :key="item" href="#" class="" :class="navLinkClass(item)"
-          @click.prevent="scrollToSection(item); trackEvent('Nav', 'NavClick', item)">
-          {{ t(`nav.${item}`) }}
-        </a>
+        <template v-for="item in navItems" :key="item">
+          <!-- Advanced Tools: hover reveals the sub-tools, click scrolls to the
+               section (disable-click-trigger frees the click from toggling the
+               menu; viewport=false anchors the panel under the trigger). -->
+          <NavigationMenu v-if="item === 'AdvancedTools'" as="div" :viewport="false"
+            :disable-click-trigger="true" class="flex-none">
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger :class="['h-auto bg-transparent', navLinkClass(item)]"
+                  @click="scrollToSection('AdvancedTools'); trackEvent('Nav', 'NavClick', item)">
+                  {{ t(`nav.${item}`) }}
+                </NavigationMenuTrigger>
+                <NavigationMenuContent class="z-50">
+                  <ul class="grid truncate min-w-30 gap-0.5">
+                    <li v-for="tool in advancedTools" :key="tool.slug">
+                      <NavigationMenuLink as-child class="cursor-pointer">
+                        <button type="button" class="w-full text-left" @click="openTool(tool.slug)">
+                          {{ t(tool.titleKey) }}
+                        </button>
+                      </NavigationMenuLink>
+                    </li>
+                  </ul>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
+          <!-- All other sections stay plain smooth-scroll anchors. -->
+          <a v-else href="#" :class="navLinkClass(item)"
+            @click.prevent="scrollToSection(item); trackEvent('Nav', 'NavClick', item)">
+            {{ t(`nav.${item}`) }}
+          </a>
+        </template>
         <a :href="t('page.footerLink')" target="_blank" rel="noopener"
           class="ml-2 inline-flex items-center hover:opacity-80 transition-opacity" aria-label="View source on GitHub">
           <img src="https://img.shields.io/github/stars/jason5ng32/MyIP" alt="GitHub stars" class="h-5">
@@ -53,7 +81,7 @@
         <!-- Preferences -->
         <JnTooltip :text="t('shortcutKeys.Preferences')">
           <Button variant="ghost" size="icon" class="size-8 cursor-pointer" aria-label="Open preferences" @click="OpenPreferences">
-            <SlidersHorizontal />
+            <Cog />
           </Button>
         </JnTooltip>
 
@@ -156,10 +184,34 @@
           <SheetClose />
         </div>
         <nav class="flex flex-col gap-0.5 p-3">
-          <a v-for="item in navItems" :key="item" href="#" :class="navLinkClass(item, { block: true })"
-            @click.prevent="scrollToSection(item); trackEvent('Nav', 'NavClick', item); store.setOpenSheet(null)">
-            {{ t(`nav.${item}`) }}
-          </a>
+          <template v-for="item in navItems" :key="item">
+            <!-- Advanced Tools expands inline into its sub-tools (open by default)
+                 so they're discoverable, not hidden behind a bare label. -->
+            <Collapsible v-if="item === 'AdvancedTools'" v-model:open="mobileToolsOpen">
+              <CollapsibleTrigger as-child>
+                <button type="button"
+                  :class="[navLinkClass(item, { block: true }), 'flex w-full items-center justify-between']">
+                  <span>{{ t(`nav.${item}`) }}</span>
+                  <ChevronDown class="size-4 shrink-0 opacity-60 transition-transform duration-200"
+                    :class="{ 'rotate-180': mobileToolsOpen }" />
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div class="my-0.5 ml-3 flex flex-col gap-0.5 border-l pl-3">
+                  <button v-for="tool in advancedTools" :key="tool.slug" type="button"
+                    class="block w-full truncate rounded-md px-3 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+                    @click="openTool(tool.slug)">
+                    {{ t(tool.titleKey) }}
+                  </button>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+            <!-- All other sections stay plain smooth-scroll anchors. -->
+            <a v-else href="#" :class="navLinkClass(item, { block: true })"
+              @click.prevent="scrollToSection(item); trackEvent('Nav', 'NavClick', item); store.setOpenSheet(null)">
+              {{ t(`nav.${item}`) }}
+            </a>
+          </template>
           <a :href="t('page.footerLink')" target="_blank" rel="noopener"
             class="mt-3 inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-muted">
             <Icon icon="ri:github-line" class="size-4" />
@@ -173,11 +225,21 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import { useRouter } from 'vue-router';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
 import unixToDateTime from '@/utils/timestamp-to-date';
 import { Sheet, SheetContent, SheetClose } from '@/components/ui/sheet';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
+import {
+  NavigationMenu,
+  NavigationMenuList,
+  NavigationMenuItem,
+  NavigationMenuTrigger,
+  NavigationMenuContent,
+  NavigationMenuLink,
+} from '@/components/ui/navigation-menu';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { JnTooltip } from '@/components/ui/tooltip';
@@ -190,15 +252,17 @@ import {
 } from '@/components/ui/dropdown-menu';
 import {
   Award, ChevronDown, HeartHandshake,
-  LogOut, Menu, SlidersHorizontal,
+  LogOut, Menu,Cog
 } from '@lucide/vue';
 import { Icon } from '@iconify/vue';
 import brandIcon from './svgicons/Brand.vue';
 import { SECTION_IDS } from '@/data/sections';
+import { ADVANCED_TOOLS } from '@/data/tools.js';
 import { isRunningAsPwa } from '@/utils/pwa.js';
 
 const { t } = useI18n();
 const store = useMainStore();
+const router = useRouter();
 
 const isDarkMode = computed(() => store.isDarkMode);
 const isMobile = computed(() => store.isMobile);
@@ -210,6 +274,16 @@ const loaded = ref(false);
 const isPwa = isRunningAsPwa();
 
 const navItems = SECTION_IDS;
+
+// Tools shown in the nav, mirroring Advanced.vue's enabledCards: original-site-
+// only tools stay hidden on self-hosted instances. Reactive on configs.
+const configs = computed(() => store.configs);
+const advancedTools = computed(() =>
+  ADVANCED_TOOLS.filter((tool) => !tool.requiresOriginalSite || configs.value.originalSite),
+);
+
+// Mobile: Advanced Tools sub-list expanded by default for discoverability.
+const mobileToolsOpen = ref(true);
 
 // nav link style — current section highlight use bg-accent instead of only bold
 const navLinkClass = (item, { block = false } = {}) => {
@@ -279,6 +353,23 @@ const scrollToSection = (el, offset = 70) => {
   window.scrollTo({ top: y, behavior: 'smooth' });
 };
 
+// Open a tool from the nav: scroll to the Advanced Tools section, then raise the
+// drawer (driven by the `?tool=` query Advanced.vue watches). Scrolls twice — the
+// mobile nav Sheet locks body scroll until it closes, so the first scroll is a
+// no-op there and the deferred one lands after the Sheet is gone.
+let openToolTimer = null;
+const openTool = (slug) => {
+  store.setOpenSheet(null);            // close the mobile nav Sheet (no-op on desktop)
+  scrollToSection('AdvancedTools');
+  clearTimeout(openToolTimer);
+  openToolTimer = setTimeout(() => {
+    scrollToSection('AdvancedTools');
+    router.push({ path: '/', query: { tool: slug } });
+  }, 300);
+  const name = slug.charAt(0).toUpperCase() + slug.slice(1);
+  trackEvent('Nav', 'NavClick', name);
+};
+
 watch(() => store.allHasLoaded, (newValue) => { loaded.value = newValue; });
 
 // Mobile: hide nav on scroll-down, show on scroll-up.
@@ -331,6 +422,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('scroll', onScroll);
+  clearTimeout(openToolTimer);
 });
 
 defineExpose({ OpenPreferences });
