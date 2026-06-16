@@ -176,14 +176,15 @@
       </div>
     </nav>
 
-    <!-- Mobile navigation drawer -->
+    <!-- Mobile navigation drawer. Flex column so the link list scrolls instead
+         of clipping on short screens when Advanced Tools is expanded. -->
     <Sheet v-if="isMobile" :open="isNavMenuOpen" @update:open="onNavMenuChange">
-      <SheetContent side="left" class="w-72 p-0" :title="t('nav.Navigation')">
-        <div class="flex items-center justify-between border-b px-4 py-3">
+      <SheetContent side="left" class="w-72 p-0 flex flex-col gap-0" :title="t('nav.Navigation')">
+        <div class="flex shrink-0 items-center justify-between border-b px-4 py-3">
           <h5 class="m-0 text-base font-semibold">{{ t('nav.Navigation') }}</h5>
           <SheetClose />
         </div>
-        <nav class="flex flex-col gap-0.5 p-3">
+        <nav class="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto p-3">
           <template v-for="item in navItems" :key="item">
             <!-- Advanced Tools expands inline into its sub-tools (open by default)
                  so they're discoverable, not hidden behind a bare label. -->
