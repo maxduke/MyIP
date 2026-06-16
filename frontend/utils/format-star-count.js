@@ -1,8 +1,7 @@
-// Compact formatter for the GitHub star count shown in the nav badge.
-// Mirrors the shields.io style we replaced: < 1000 stays exact, larger values
-// collapse to a one-decimal "k" / "M" (trailing ".0" dropped). Returns '' for
-// anything that isn't a usable non-negative number, so the caller can simply
-// hide the count when the fetch fails or hasn't landed yet.
+// Compact formatter for the GitHub star count in the nav badge: < 1000 stays
+// exact, larger values collapse to a one-decimal "k" / "M" (trailing ".0"
+// dropped). Returns '' for anything that isn't a usable non-negative number, so
+// the caller can hide the count when the fetch fails or hasn't landed.
 
 const UNITS = [
   { value: 1e6, suffix: 'M' },

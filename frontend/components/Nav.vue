@@ -63,10 +63,9 @@
             {{ t(`nav.${item}`) }}
           </a>
         </template>
-        <!-- GitHub repo link + star count. Count comes from our own backend
-             (/api/github-stars, edge-cached) instead of shields.io, which kept
-             failing on token-pool exhaustion. The count is hidden until it
-             lands / on error, so the link itself never depends on the fetch. -->
+        <!-- GitHub repo link + star count from our own /api/github-stars
+             (edge-cached). The count is hidden until it lands / on error, so the
+             link itself never depends on the fetch. -->
              <Badge variant="outline" v-if="githubStarsLabel">
         <a :href="t('page.footerLink')" target="_blank" rel="noopener"
         class="inline-flex items-center gap-1"

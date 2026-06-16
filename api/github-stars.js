@@ -1,11 +1,8 @@
-// /api/github-stars — stargazer count for this project's repo.
-//
-// Fetched from GitHub's public REST API without a token: `stargazers_count` is
-// available unauthenticated, which sidesteps shields.io's token-pool outages
-// ("Unable to select the next GitHub token from pool"). The route is edge-cached
-// for a day (see backend-server.js), so behind Cloudflare the origin queries
-// GitHub at most once per cache window — far under the 60 req/hour
-// unauthenticated limit — and every other request is served from the CF edge.
+// /api/github-stars — stargazer count for this repo, fetched from GitHub's
+// public REST API without a token (`stargazers_count` is available
+// unauthenticated). Edge-cached for a day (see backend-server.js), so behind
+// Cloudflare the origin hits GitHub at most once per cache window — well under
+// the 60 req/hour unauthenticated limit.
 import { fetchUpstream } from '../common/fetch-with-timeout.js';
 import logger from '../common/logger.js';
 

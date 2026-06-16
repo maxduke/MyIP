@@ -81,6 +81,7 @@ This project uses **pnpm** as its package manager (pinned via the `packageManage
 
 - **Every new file opens with a header comment** stating its purpose. One or two lines is usually enough; enough that a reader opening the file cold understands what it is.
 - **Large templates or functions carry block comments** on each meaningful section — enough for a maintainer six months later to orient quickly. Not every line, but every region / branch / step.
+- **Comments describe the code as it is now, not how it got here.** Explain the current "why" — don't narrate past states or read like a changelog (`previously…`, `replaced X in v7`, `this used to…`, `…fixes that`). Git history covers the past. A comment should stay shorter than the code it explains; if it's growing into a story, cut it.
 
 ### i18n coverage
 
