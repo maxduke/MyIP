@@ -35,8 +35,8 @@
           <!-- Advanced Tools: hover reveals the sub-tools, click scrolls to the
                section (disable-click-trigger frees the click from toggling the
                menu; viewport=false anchors the panel under the trigger). -->
-          <NavigationMenu v-if="item === 'AdvancedTools'" as="div" :viewport="false"
-            :disable-click-trigger="true" class="flex-none">
+          <NavigationMenu v-if="item === 'AdvancedTools'" as="div" :viewport="false" :disable-click-trigger="true"
+            class="flex-none">
             <NavigationMenuList>
               <NavigationMenuItem>
                 <NavigationMenuTrigger :class="['h-auto bg-transparent', navLinkClass(item)]"
@@ -66,21 +66,22 @@
         <!-- GitHub repo link + star count from our own /api/github-stars
              (edge-cached). The count is hidden until it lands / on error, so the
              link itself never depends on the fetch. -->
-             <Badge variant="outline" v-if="githubStarsLabel">
-        <a :href="t('page.footerLink')" target="_blank" rel="noopener"
-        class="inline-flex items-center gap-1"
-          aria-label="View source on GitHub">
-          <Icon icon="ri:github-line" class="size-3.5" />
+        <Badge variant="outline" v-if="githubStarsLabel">
+          <a :href="t('page.footerLink')" target="_blank" rel="noopener" class="inline-flex items-center gap-1"
+            aria-label="Star on GitHub" title="Star on GitHub">
+            <Icon icon="ri:star-fill" class="size-3.5 text-yellow-400" />
             <span class="tabular-nums">{{ githubStarsLabel }}</span>
-        </a>
-      </Badge>
+            <Icon icon="ri:github-line" class="size-3.5" />
+          </a>
+        </Badge>
       </div>
 
       <!-- Right: Action area (ml-auto push to the right) -->
       <div class="ml-auto flex items-center gap-2">
         <!-- Preferences -->
         <JnTooltip :text="t('shortcutKeys.Preferences')">
-          <Button variant="ghost" size="icon" class="size-8 cursor-pointer" aria-label="Open preferences" @click="OpenPreferences">
+          <Button variant="ghost" size="icon" class="size-8 cursor-pointer" aria-label="Open preferences"
+            @click="OpenPreferences">
             <Cog />
           </Button>
         </JnTooltip>
@@ -219,7 +220,8 @@
             <span>Star on GitHub</span>
             <!-- Same /api/github-stars count as the desktop badge (fetched on
                  mount); hidden until it lands / on error. -->
-            <span v-if="githubStarsLabel" class="ml-auto tabular-nums text-muted-foreground">
+            <span v-if="githubStarsLabel" class="ml-auto tabular-nums text-muted-foreground inline-flex items-center gap-1">
+              <Icon icon="ri:star-fill" class="size-3.5 text-yellow-400" />
               {{ githubStarsLabel }}
             </span>
           </a>
@@ -259,6 +261,7 @@ import {
 import {
   Award, ChevronDown, HeartHandshake,
   LogOut, Menu, Cog,
+  Star,
 } from '@lucide/vue';
 import { Icon } from '@iconify/vue';
 import brandIcon from './svgicons/Brand.vue';
