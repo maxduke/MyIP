@@ -6,12 +6,18 @@ import { useRefreshOrchestrator } from '../frontend/composables/use-refresh-orch
 
 const t = (k) => `<${k}>`;
 
-function makeStoreStub({ mountedFlags = {}, shouldRefresh = false, autoStart = false } = {}) {
+function makeStoreStub({ mountedFlags = {}, shouldRefresh = false, autoRun = {} } = {}) {
   const state = reactive({
     mountingStatus: { IPInfo: false, Connectivity: false, WebRTC: false, DNSLeakTest: false, ...mountedFlags },
     loadingStatus: { IPInfo: false, Connectivity: false, WebRTC: false, DNSLeakTest: false },
     shouldRefreshEveryThing: shouldRefresh,
-    userPreferences: { autoStart },
+    // Per-module auto-run switches (default all off unless overridden).
+    userPreferences: {
+      autoRunConnectivity: false,
+      autoRunWebRTC: false,
+      autoRunDnsLeak: false,
+      ...autoRun,
+    },
     alertHistory: [],
   });
   return {
@@ -46,10 +52,10 @@ describe('useRefreshOrchestrator()', () => {
     globalThis.setTimeout = realSetTimeout;
   });
 
-  it('loadingControl: all cards mounted + autoStart=true triggers all four checks', () => {
+  it('loadingControl: all cards mounted + every module on triggers all four checks', () => {
     const store = makeStoreStub({
       mountedFlags: { IPInfo: true, Connectivity: true, WebRTC: true, DNSLeakTest: true },
-      autoStart: true,
+      autoRun: { autoRunConnectivity: true, autoRunWebRTC: true, autoRunDnsLeak: true },
     });
     const userPreferences = computed(() => store.state.userPreferences);
     const infoMaskLevel = ref(0);
@@ -64,22 +70,19 @@ describe('useRefreshOrchestrator()', () => {
     assert.deepEqual(calls.dns, [false]);
   });
 
-  it('loadingControl: autoStart=false skips auto checks and flags loading complete', () => {
+  it('loadingControl: every module off skips auto checks and flags loading complete', () => {
     const store = makeStoreStub({
       mountedFlags: { IPInfo: true, Connectivity: true, WebRTC: true, DNSLeakTest: true },
-      autoStart: false,
+      autoRun: { autoRunConnectivity: false, autoRunWebRTC: false, autoRunDnsLeak: false },
     });
     const userPreferences = computed(() => store.state.userPreferences);
     const infoMaskLevel = ref(0);
     const { refs, calls } = makeRefs();
 
-    useRefreshOrchestrator({ refs, store, t, userPreferences, infoMaskLevel });
-
-    // Need to instantiate + call loadingControl — return value carries the action
     const { loadingControl } = useRefreshOrchestrator({ refs, store, t, userPreferences, infoMaskLevel });
     loadingControl();
 
-    assert.equal(calls.ip, 1);
+    assert.equal(calls.ip, 1, 'IP info always runs');
     assert.deepEqual(calls.conn, [], 'connectivity should not auto-run');
     assert.deepEqual(calls.web, [], 'webrtc should not auto-run');
     assert.deepEqual(calls.dns, [], 'dns leak test should not auto-run');
@@ -88,8 +91,32 @@ describe('useRefreshOrchestrator()', () => {
     assert.equal(store.state.loadingStatus.DNSLeakTest, true);
   });
 
+  it('loadingControl: per-module — only the enabled modules run, the rest flag loaded', () => {
+    const store = makeStoreStub({
+      mountedFlags: { IPInfo: true, Connectivity: true, WebRTC: true, DNSLeakTest: true },
+      autoRun: { autoRunConnectivity: true, autoRunWebRTC: false, autoRunDnsLeak: false },
+    });
+    const userPreferences = computed(() => store.state.userPreferences);
+    const infoMaskLevel = ref(0);
+    const { refs, calls } = makeRefs();
+
+    const { loadingControl } = useRefreshOrchestrator({ refs, store, t, userPreferences, infoMaskLevel });
+    loadingControl();
+
+    assert.equal(calls.ip, 1);
+    assert.deepEqual(calls.conn, [undefined], 'connectivity runs');
+    assert.deepEqual(calls.web, [], 'webrtc stays off');
+    assert.deepEqual(calls.dns, [], 'dns stays off');
+    // Connectivity flags itself loaded when its check resolves (not here);
+    // the two disabled modules are flagged loaded immediately.
+    assert.equal(store.state.loadingStatus.WebRTC, true);
+    assert.equal(store.state.loadingStatus.DNSLeakTest, true);
+  });
+
   it('watch: shouldRefreshEveryThing=true triggers full refresh, resets flag + mask', async () => {
-    const store = makeStoreStub({ autoStart: true });
+    // Manual "refresh everything" runs every module regardless of the per-module
+    // auto-run switches, so the prefs here are irrelevant (left at defaults).
+    const store = makeStoreStub();
     const userPreferences = computed(() => store.state.userPreferences);
     const infoMaskLevel = ref(2);
     const { refs, calls } = makeRefs();
@@ -101,7 +128,7 @@ describe('useRefreshOrchestrator()', () => {
     await nextTick();
 
     assert.equal(calls.ip, 1, 'ipcheck refreshes');
-    assert.deepEqual(calls.conn, [true], 'connectivity refresh with forced flag');
+    assert.deepEqual(calls.conn, ['refresh'], 'connectivity refresh via the refresh trigger');
     assert.deepEqual(calls.web, [true]);
     assert.deepEqual(calls.dns, [true]);
     assert.equal(infoMaskLevel.value, 0, 'info mask reset on refresh');
@@ -128,7 +155,6 @@ describe('useRefreshOrchestrator()', () => {
     const store = makeStoreStub({
       // initially no card mounted
       mountedFlags: { IPInfo: false, Connectivity: false, WebRTC: false, DNSLeakTest: false },
-      autoStart: false,
     });
     const userPreferences = computed(() => store.state.userPreferences);
     const infoMaskLevel = ref(0);

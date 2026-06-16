@@ -113,7 +113,7 @@ function buildShortcutConfig({ refs, store, t, configs, userPreferences, isSigne
             keys: 'c',
             action: () => {
                 scrollToElement('Connectivity', 80);
-                connectivityRef.value.handelCheckStart(true);
+                connectivityRef.value.handelCheckStart('manual');
                 trackEvent('ShortCut', 'ShortCut', 'Connectivity');
             },
             description: t('shortcutKeys.RefreshConnectivityTests'),

@@ -5,21 +5,10 @@ import { auth } from './firebase-init.js';
 import i18n from './locales/i18n.js';
 import { createInitialAchievementsState } from './data/achievements.js';
 import { createInitialIpDBs, buildDbUrl } from './data/ip-databases.js';
-import { createDefaultPreferences } from './data/default-preferences.js';
+import { createDefaultPreferences, migrateLegacyPreferences, PREFS_STORAGE_KEY, LEGACY_PREFS_KEYS } from './data/default-preferences.js';
 import { createMountingStatus, createLoadingStatus, DEFAULT_SECTION } from './data/sections.js';
 import { fetchWithTimeout } from './utils/fetch-with-timeout.js';
 const { t } = i18n.global;
-
-// Versioned localStorage key for userPreferences.
-//
-// When a release changes a default in a way that would be disruptive if
-// merged on top of older stored overrides (e.g. repurposing an option, or
-// when we simply want everyone to see the freshly-tuned defaults), bump
-// this suffix. The mismatch leaves old stored values "orphaned" — the
-// loader below won't find anything at the new key, falls back to defaults,
-// and removes the legacy key(s) so browsers don't accumulate dead data.
-const PREFS_STORAGE_KEY = 'userPreferences_v6';
-const LEGACY_PREFS_KEYS = ['userPreferences'];
 
 export const useMainStore = defineStore('main', {
 
@@ -159,11 +148,17 @@ export const useMainStore = defineStore('main', {
         const currentPreferences = JSON.parse(storedPreferences);
         preferencesToStore = { ...defaultPreferences, ...currentPreferences };
       } else {
-        preferencesToStore = defaultPreferences;
-        // First load on the current schema version — purge any older keys
-        // so we don't leave zombie entries in the browser forever. Running
-        // this only in the "fresh install" branch avoids racing users who
-        // have already migrated on another tab.
+        // No prefs at the current key yet: carry over the newest legacy
+        // snapshot (migrating retired keys), then purge the old keys. Purging
+        // only here avoids racing a tab that already migrated.
+        const legacyRaw = LEGACY_PREFS_KEYS
+          .map((key) => localStorage.getItem(key))
+          .find((value) => value !== null);
+        let legacy = null;
+        if (legacyRaw) {
+          try { legacy = JSON.parse(legacyRaw); } catch { legacy = null; }
+        }
+        preferencesToStore = { ...defaultPreferences, ...migrateLegacyPreferences(legacy) };
         for (const legacyKey of LEGACY_PREFS_KEYS) {
           if (localStorage.getItem(legacyKey) !== null) {
             localStorage.removeItem(legacyKey);

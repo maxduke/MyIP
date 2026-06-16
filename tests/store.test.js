@@ -146,19 +146,19 @@ describe('store — trigger* actions', () => {
 describe('store — preferences', () => {
   it('setPreferences persists to localStorage', () => {
     const s = useMainStore();
-    s.setPreferences({ lang: 'zh', autoStart: false });
-    assert.deepEqual(s.userPreferences, { lang: 'zh', autoStart: false });
-    const fromStorage = JSON.parse(globalThis.localStorage.getItem('userPreferences_v6'));
-    assert.deepEqual(fromStorage, { lang: 'zh', autoStart: false });
+    s.setPreferences({ lang: 'zh', simpleMode: false });
+    assert.deepEqual(s.userPreferences, { lang: 'zh', simpleMode: false });
+    const fromStorage = JSON.parse(globalThis.localStorage.getItem('userPreferences_v7'));
+    assert.deepEqual(fromStorage, { lang: 'zh', simpleMode: false });
   });
 
   it('updatePreference mutates a single key AND persists', () => {
     const s = useMainStore();
-    s.setPreferences({ lang: 'en', autoStart: true });
-    s.updatePreference('autoStart', false);
-    assert.equal(s.userPreferences.autoStart, false);
-    const fromStorage = JSON.parse(globalThis.localStorage.getItem('userPreferences_v6'));
-    assert.equal(fromStorage.autoStart, false);
+    s.setPreferences({ lang: 'en', autoRunConnectivity: true });
+    s.updatePreference('autoRunConnectivity', false);
+    assert.equal(s.userPreferences.autoRunConnectivity, false);
+    const fromStorage = JSON.parse(globalThis.localStorage.getItem('userPreferences_v7'));
+    assert.equal(fromStorage.autoRunConnectivity, false);
   });
 
   it('loadPreferences seeds defaults when nothing stored', () => {
@@ -168,16 +168,33 @@ describe('store — preferences', () => {
     // just assert the result is a non-empty object and gets persisted.
     assert.equal(typeof s.userPreferences, 'object');
     assert.ok(Object.keys(s.userPreferences).length > 0);
-    assert.ok(globalThis.localStorage.getItem('userPreferences_v6'));
+    assert.ok(globalThis.localStorage.getItem('userPreferences_v7'));
   });
 
   it('loadPreferences merges stored over defaults (stored keys win)', () => {
-    globalThis.localStorage.setItem('userPreferences_v6', JSON.stringify({ lang: 'zh' }));
+    globalThis.localStorage.setItem('userPreferences_v7', JSON.stringify({ lang: 'zh' }));
     const s = useMainStore();
     s.loadPreferences();
     assert.equal(s.userPreferences.lang, 'zh', 'stored lang wins');
-    // A default key still present (autoStart exists in defaults)
-    assert.ok('autoStart' in s.userPreferences, 'default keys fill in missing slots');
+    // A default key still present (autoRunConnectivity exists in defaults)
+    assert.ok('autoRunConnectivity' in s.userPreferences, 'default keys fill in missing slots');
+  });
+
+  it('loadPreferences migrates a legacy v6 autoStart onto the per-module switches', () => {
+    globalThis.localStorage.setItem(
+      'userPreferences_v6',
+      JSON.stringify({ lang: 'fr', autoStart: false }),
+    );
+    const s = useMainStore();
+    s.loadPreferences();
+    assert.equal(s.userPreferences.lang, 'fr', 'other legacy keys carry over');
+    assert.equal(s.userPreferences.autoRunConnectivity, false);
+    assert.equal(s.userPreferences.autoRunWebRTC, false);
+    assert.equal(s.userPreferences.autoRunDnsLeak, false);
+    assert.ok(!('autoStart' in s.userPreferences), 'retired key dropped');
+    // Legacy key purged, value re-saved under the current key.
+    assert.equal(globalThis.localStorage.getItem('userPreferences_v6'), null);
+    assert.ok(globalThis.localStorage.getItem('userPreferences_v7'));
   });
 });
 

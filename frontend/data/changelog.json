@@ -1267,5 +1267,47 @@
         }
       }
     ]
+  },
+  {
+    "version": "v6.6.0",
+    "date": "Beta",
+    "content": [
+      {
+        "type": "add",
+        "change": {
+          "en": "Network Connectivity Test can now be set to multiple refreshes and display the minimum latency value",
+          "zh": "网络连通性测试可以设置多次刷新，并显示最小延迟值",
+          "fr": "Le test de connectivité réseau peut maintenant être configuré pour plusieurs rafraîchissements et afficher la valeur de latence minimale",
+          "tr": "Ağ bağlantı testi birden fazla yenileme ayarlanabilir ve minimum gecikme değeri görüntülenebilir"
+        }
+      },
+      {
+        "type": "improve",
+        "change": {
+          "en": "Navigation bar now shows all advanced tools",
+          "zh": "导航栏展示所有高级工具的入口",
+          "fr": "La barre de navigation affiche désormais tous les outils avancés",
+          "tr": "Navigasyon çubuğu artık tüm gelişmiş araçları gösterir"
+        }
+      },
+      {
+        "type": "improve",
+        "change": {
+          "en": "All modules on the homepage can now be individually controlled whether to run automatically",
+          "zh": "首页的所有模块现在可以单独控制是否自动运行",
+          "fr": "Tous les modules de la page d'accueil peuvent maintenant être contrôlés individuellement pour déterminer s'ils doivent être exécutés automatiquement",
+          "tr": "Ana sayfanın tüm modülleri artık bireysel olarak otomatik çalıştırılıp çalıştırılmayacağı kontrol edilebilir"
+        }
+      },
+      {
+        "type": "fix",
+        "change": {
+          "en": "Fixed some issues",
+          "zh": "修复一些问题",
+          "fr": "Correction de petits problèmes",
+          "tr": "Birkaç küçük sorun düzeltildi"
+        }
+      }
+    ]
   }
 ]

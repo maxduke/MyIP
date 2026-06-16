@@ -160,7 +160,7 @@
       "ipSourcesToCheckTips": "IP adresinizi kontrol etmek için sunucu sayısını seçin. Ne kadar çok sunucu seçerseniz, kontrolün tamamlanması o kadar uzun sürer.",
       "appSettings": "Program Ayarları",
       "autoRun": "Otomatik Çalıştır",
-      "autoRunTips": "Devre dışı bırakılırsa, uygulama yalnızca yerel IP'yi kontrol eder ve testleri otomatik olarak çalıştırmaz.",
+      "autoRunTips": "Sayfa yüklendiğinde IP bilgileri her zaman denetlenir. Diğer modüllerin başlangıçta otomatik çalışıp çalışmayacağını seçin.",
       "simpleMode": "Basit Mod",
       "simpleModeTips": "Her modülün açıklamasını gizler. Yalnızca mobil cihazlarda etkilidir.",
       "connectivityMultipleTests": "Çoklu Bağlantı Yenilemeleri",
