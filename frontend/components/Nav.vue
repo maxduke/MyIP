@@ -44,10 +44,13 @@
                   {{ t(`nav.${item}`) }}
                 </NavigationMenuTrigger>
                 <NavigationMenuContent class="z-50">
-                  <ul class="grid truncate min-w-30 gap-0.5">
+                  <!-- Two-column grid on PC -->
+                  <ul class="relative grid grid-cols-2 gap-x-4 gap-y-0.5 min-w-[24rem]">
+                    <span aria-hidden="true"
+                      class="pointer-events-none absolute inset-y-1 left-1/2 w-px -translate-x-1/2 bg-border"></span>
                     <li v-for="tool in advancedTools" :key="tool.slug">
                       <NavigationMenuLink as-child class="cursor-pointer">
-                        <button type="button" class="w-full text-left" @click="openTool(tool.slug)">
+                        <button type="button" class="w-full truncate text-left" @click="openTool(tool.slug)">
                           {{ t(tool.titleKey) }}
                         </button>
                       </NavigationMenuLink>
