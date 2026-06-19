@@ -1,5 +1,7 @@
 # Pull Request Template
 
+> ⚠️ **Please open this PR against the `dev` branch, not `main`.** All contributions go through `dev`; `main` only receives release merges.
+
 ## Description
 Please include a summary of the change and which issue is fixed. 
 
@@ -10,6 +12,7 @@ Please include a summary of the change and which issue is fixed.
 - [ ] Documentation update
 
 ## Checklist:
+- [ ] This PR targets the `dev` branch, not `main`.
 - [ ] I have followed the contribution guidelines.
 - [ ] My code follows the style guidelines of this project.
 - [ ] I have performed a self-review of my own code.
