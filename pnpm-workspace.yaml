@@ -3,3 +3,5 @@ allowBuilds:
   core-js: true
   protobufjs: true
   vue-demi: true
+minimumReleaseAgeExclude:
+  - vite@8.1.0
