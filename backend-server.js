@@ -151,9 +151,9 @@ const rateLimiter = rateLimit({
 });
 
 const speedLimiter = slowDown({
-	windowMs: 60 * 60 * 1000,
-	delayAfter: speedLimitSet,
-	delayMs: (hits) => hits * 400,
+    windowMs: 60 * 60 * 1000,
+    delayAfter: speedLimitSet,
+    delayMs: (hits) => hits * 400,
 })
 
 if (rateLimitSet !== 0) {
@@ -176,13 +176,15 @@ app.use('/api', (req, res, next) => {
 });
 
 // Cache-Control middleware factory. Hooks res.json so the header is only
-// attached on 2xx — CF must not cache 4xx/5xx error pages. Binary streams
-// (res.send) bypass this and must set their own header if needed.
+// attached on 2xx — CF must not cache 4xx/5xx error pages. The intended cache
+// value is also stashed on res.locals.cacheControl so binary-stream handlers
+// (which bypass res.json) can apply it themselves on their own 2xx path.
 const cacheable = (maxAgeSeconds) => (req, res, next) => {
+    res.locals.cacheControl = `public, max-age=${maxAgeSeconds}`;
     const originalJson = res.json.bind(res);
     res.json = function (body) {
         if (res.statusCode < 400) {
-            res.setHeader('Cache-Control', `public, max-age=${maxAgeSeconds}`);
+            res.setHeader('Cache-Control', res.locals.cacheControl);
         }
         return originalJson(body);
     };
@@ -198,25 +200,29 @@ const ONE_HOUR_CACHE = 60 * 60;
 const ONE_DAY_CACHE = 24 * 60 * 60;
 const ONE_WEEK_CACHE = 7 * 24 * 60 * 60;
 const THIRTY_DAYS_CACHE = 30 * 24 * 60 * 60;
+const ONE_YEAR_CACHE = 365 * 24 * 60 * 60;
 
 // Cacheable routes — TTLs picked against each upstream's natural refresh cadence.
-app.get('/api/ipinfo', requireValidIP(), cacheable(ONE_HOUR_CACHE), ipinfoHandler);
-app.get('/api/ipapicom', requireValidIP(), cacheable(ONE_HOUR_CACHE), ipapicomHandler);
-app.get('/api/ipsb', requireValidIP(), cacheable(ONE_HOUR_CACHE), ipsbHandler);
+// Short Cache
+app.get('/api/service-status', cacheable(FIVE_MIN_CACHE), serviceStatusHandler);
+app.get('/api/service-status/detail', requireValidProviderId(), cacheable(FIVE_MIN_CACHE), serviceStatusDetailHandler);
+// Cache for 1 day
+app.get('/api/ipinfo', requireValidIP(), cacheable(ONE_DAY_CACHE), ipinfoHandler);
+app.get('/api/ipapicom', requireValidIP(), cacheable(ONE_DAY_CACHE), ipapicomHandler);
+app.get('/api/ipsb', requireValidIP(), cacheable(ONE_DAY_CACHE), ipsbHandler);
+app.get('/api/ipapiis', requireValidIP(), cacheable(ONE_DAY_CACHE), ipapiisHandler);
+app.get('/api/ip2location', requireValidIP(), cacheable(ONE_DAY_CACHE), ip2locationHandler);
+app.get('/api/maxmind', requireValidIP(), cacheable(ONE_DAY_CACHE), maxmindHandler);
+app.get('/api/whois', cacheable(ONE_DAY_CACHE), getWhois);
+app.get('/api/github-stars', cacheable(ONE_DAY_CACHE), githubStarsHandler);
+// Cache for 1 week
 app.get('/api/cfradar', cacheable(ONE_WEEK_CACHE), cfHander);
 app.get('/api/asn-history', requireValidPrefix(), cacheable(ONE_WEEK_CACHE), asnHistoryHandler);
 app.get('/api/asn-connectivity', requireValidASN(), cacheable(ONE_WEEK_CACHE), asnConnectivityHandler);
-app.get('/api/whois', cacheable(ONE_HOUR_CACHE), getWhois);
-app.get('/api/ipapiis', requireValidIP(), cacheable(ONE_HOUR_CACHE), ipapiisHandler);
-app.get('/api/ip2location', requireValidIP(), cacheable(ONE_HOUR_CACHE), ip2locationHandler);
-app.get('/api/macchecker', cacheable(THIRTY_DAYS_CACHE), macChecker);
-app.get('/api/maxmind', requireValidIP(), cacheable(ONE_DAY_CACHE), maxmindHandler);
-app.get('/api/github-stars', cacheable(ONE_DAY_CACHE), githubStarsHandler);
-app.get('/api/service-status', cacheable(FIVE_MIN_CACHE), serviceStatusHandler);
-app.get('/api/service-status/detail', requireValidProviderId(), cacheable(FIVE_MIN_CACHE), serviceStatusDetailHandler);
-
+app.get('/api/macchecker', cacheable(ONE_WEEK_CACHE), macChecker);
+// Long Cache
+app.get('/api/map', cacheable(ONE_YEAR_CACHE), mapHandler);
 // Non-cacheable routes — auth-context, debug tools, or per-request lookups.
-app.get('/api/map', mapHandler);
 app.get('/api/ipchecking', requireValidIP(), ipCheckingHandler);
 app.get('/api/dnsresolver', dnsResolver);
 app.get('/api/dnsleaktest/session/:token', dnsLeakGetResult);
