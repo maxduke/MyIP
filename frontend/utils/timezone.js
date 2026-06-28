@@ -4,16 +4,16 @@
 
 // Format a UTC offset given in minutes (east-positive) as "+08:00" / "-05:00".
 // 480 → "+08:00", -300 → "-05:00", 0 → "+00:00".
-export function formatUtcOffset(offsetMinutes) {
+export const formatUtcOffset = (offsetMinutes) => {
     const sign = offsetMinutes >= 0 ? '+' : '-';
     const abs = Math.abs(offsetMinutes);
     const hh = String(Math.floor(abs / 60)).padStart(2, '0');
     const mm = String(abs % 60).padStart(2, '0');
     return `${sign}${hh}:${mm}`;
-}
+};
 
 // Read the browser's timezone
-export function getTimezoneInfo() {
+export const getTimezoneInfo = () => {
     let timezone = '';
     let offset = '';
     try {
@@ -25,4 +25,4 @@ export function getTimezoneInfo() {
         offset = formatUtcOffset(-new Date().getTimezoneOffset());
     } catch { /* leave empty */ }
     return { timezone, offset };
-}
+};

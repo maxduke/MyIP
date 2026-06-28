@@ -50,6 +50,9 @@ frontend/
 └── components/
     ├── Home.vue                 ← the homepage (`/` route): all top-level sections + the drawer
     ├── StandaloneTool.vue       ← `/tools/:slug` page: one tool in a minimal full-page layout
+    ├── PrivacyPolicy.vue        ← `/privacy` page (standalone layout)
+    ├── StandalonePageHeader.vue ← slim header shared by StandaloneTool + PrivacyPolicy
+    │                              (brand → home + breadcrumb + back link; NOT Nav.vue)
     ├── *.vue                    ← top-level sections (IpInfos / Connectivity / WebRTC / DnsLeaks
     │                              / SpeedTest / Advanced / Footer / Nav / Achievements / User /
     │                              Additional)

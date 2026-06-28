@@ -77,6 +77,10 @@ This project uses **pnpm** as its package manager (pinned via the `packageManage
 - **JavaScript only.** New files are `.js` / `.vue`; `<script setup>` has no `lang="ts"`. Do not rename `jsconfig.json` to `tsconfig.json` or otherwise introduce TypeScript.
 - **English by default** for source-code comments , commit messages and AGENTS.md files. Planning docs can be in other languages. Locale packs are obviously the exception — they contain user-facing copy in their respective language.
 
+### Functions
+
+- **New functions use `const` arrow syntax** — `const fn = (...) => {}` / `const fn = async (...) => {}`, not `function fn()` / `async function fn()` declarations. Object methods (store actions, the `analytics` API, etc.) keep their shorthand. Mind that arrow consts aren't hoisted: declare one before the code that uses it. This applies to **new / rewritten** code — don't mass-convert existing `function` declarations just to match; leave surrounding style intact when making an unrelated edit.
+
 ### Comments
 
 - **Every new file opens with a header comment** stating its purpose. One or two lines is usually enough; enough that a reader opening the file cold understands what it is.
