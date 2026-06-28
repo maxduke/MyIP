@@ -3,6 +3,10 @@
 // Use optional chaining to fallback, avoid TypeError when evaluating at module top level
 const MEASUREMENT_ID = import.meta.env?.VITE_GOOGLE_ANALYTICS_ID || '';
 
+// True only when a GA measurement id is configured. The privacy page reads this
+// so self-hosted deployments without GA don't show an inaccurate analytics notice.
+export const isAnalyticsEnabled = !!MEASUREMENT_ID;
+
 // Global state
 let scriptInjected = false;
 let eventQueue = [];
@@ -40,7 +44,8 @@ function initialiseGtag() {
     window.gtag = gtag;
 
     gtag('js', new Date());
-    gtag('config', MEASUREMENT_ID);
+    // debug_mode surfaces events in GA's DebugView — keep it to the Vite dev
+    gtag('config', MEASUREMENT_ID, { debug_mode: import.meta.env?.DEV === true });
 
     flushQueue();
 }
@@ -82,6 +87,14 @@ const analytics = {
     /** analytics.identify(userId, traits) */
     identify(userId, traits = {}) {
         pushEvent('config', MEASUREMENT_ID, { user_id: userId, ...traits });
+    },
+
+    /**
+     * analytics.setUserProperties({ key: value, ... })
+     * Sets GA4 user-scoped properties that persist across the session's events.
+     */
+    setUserProperties(props = {}) {
+        pushEvent('set', 'user_properties', props);
     }
 };
 

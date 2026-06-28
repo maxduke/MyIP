@@ -1282,6 +1282,15 @@
         }
       },
       {
+        "type": "add",
+        "change": {
+          "en": "Added Privacy Policy page",
+          "zh": "新增隐私政策页面",
+          "fr": "Ajout de la page Politique de confidentialité",
+          "tr": "Gizlilik Politikası sayfası eklendi"
+        }
+      },
+      {
         "type": "improve",
         "change": {
           "en": "Navigation bar now shows all advanced tools",

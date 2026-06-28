@@ -1,0 +1,60 @@
+{
+  "privacy": {
+    "Title": "Privacy",
+    "UpdatedLabel": "Last updated",
+    "Intro": "IPCheck.ing is a free, open-source IP toolbox. We built it to help you see what your network and browser reveal about you, so respecting your own privacy matters to us. This page explains what happens to your data when you use the site.",
+    "sections": {
+      "tools": {
+        "title": "How the tools work",
+        "paragraphs": [
+          "Most of what the tools show you — your IP details, browser fingerprint, DNS, connectivity and speed-test results — is computed in your browser or looked up live and shown only to you. We do not keep these results on our servers.",
+          "To look up IP geolocation, the IP being queried is sent to third-party providers (such as ipinfo.io, ip-api.com and similar). Those lookups are governed by each provider's own privacy policy."
+        ]
+      },
+      "analytics": {
+        "title": "What we collect through analytics",
+        "paragraphs": [
+          "We use Google Analytics to understand how the site is used. Through it, the following is collected:"
+        ],
+        "bullets": [
+          "An approximate location derived from your IP address (country / region / city). Google does not share your full IP address with us.",
+          "Your browser language (for example en or zh).",
+          "Standard analytics data: pages visited, device and browser type, the referring site, and a randomly generated visitor ID stored in a cookie."
+        ]
+      },
+      "account": {
+        "title": "What we collect when you sign in",
+        "paragraphs": [
+          "Signing in is optional — you can use every tool on the site without an account. We use Google Firebase Authentication to manage your login and to sync your achievements and preferences. When you are signed in, the following is collected:"
+        ],
+        "bullets": [
+          "Your sign-in email, used to identify your account so we can provide the features that require logging in.",
+          "Your usage count of advanced features, used to calculate your achievements."
+        ]
+      },
+      "why": {
+        "title": "Why we collect it",
+        "analytics": "We use the analytics data to understand how the site is used and to improve the user experience. This data is not used to personally identify you, and we never sell it.",
+        "account": "Your account data (email and advanced-feature usage count) is used only to identify your account, to provide the features that require signing in, and to calculate your achievements. We do not use it for advertising and never sell it."
+      },
+      "cookies": {
+        "title": "Cookies & local storage",
+        "analytics": "Google Analytics stores a cookie to recognise returning visitors.",
+        "local": "Your own settings (theme, language, tool preferences) are kept in your browser's local storage and never leave your device."
+      },
+      "eu": {
+        "title": "If you are in the EU/EEA or UK",
+        "paragraphs": [
+          "We currently do not show a cookie consent banner. If you would rather not be measured by analytics, you can opt out at any time using the methods below — blocking the analytics cookie does not affect any tool on the site.",
+          "To opt out: use a content blocker (such as uBlock Origin) or Google's official opt-out browser add-on, block third-party cookies, or clear this site's cookies. Self-hosted copies of IPCheck.ing only run analytics if their operator configures it."
+        ]
+      },
+      "retention": {
+        "title": "Data retention",
+        "paragraphs": [
+          "Analytics data is kept according to Google Analytics' retention settings (up to 14 months) and is then deleted automatically. Account data is kept while your account exists."
+        ]
+      }
+    }
+  }
+}

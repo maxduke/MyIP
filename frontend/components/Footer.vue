@@ -13,17 +13,23 @@
       </JnTooltip>
     </div>
 
-    <!-- Sponsor / About entry -->
+    <!-- Sponsor / About / Privacy entry -->
     <div class="flex items-center justify-center gap-2 mb-3">
       <Button variant="link" size="default" as-child class="text-[#d63384] hover:text-[#d63384]">
         <a href="https://github.com/sponsors/jason5ng32" target="_blank" rel="noopener">
-          {{ t('about.Sponsor') }} 💖
+          {{ t('about.Sponsor') }} <HeartHandshake class="size-3.5" />
         </a>
       </Button>
-      <Button variant="ghost" size="default" @click="openAbout" class="cursor-pointer">
+      <Button variant="link" size="default" as-child class="cursor-pointer">
+        <RouterLink to="/privacy" @click="trackEvent('Footer', 'FooterClick', 'Privacy')">
+          {{ t('about.Privacy') }} <Lock class="size-3.5" />
+        </RouterLink>
+      </Button>
+      <Button variant="link" size="default" @click="openAbout" class="cursor-pointer">
         {{ t('about.Title') }}
         <ArrowLeftCircle class="size-3.5" />
       </Button>
+
     </div>
 
     <!-- Copyright -->
@@ -151,7 +157,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeftCircle, Compass, ExternalLink, Smile, SquareArrowOutUpRight, CircleFadingArrowUp, CirclePlus, BugOff} from '@lucide/vue';
+import { ArrowLeftCircle, Compass, ExternalLink, Smile, SquareArrowOutUpRight, CircleFadingArrowUp, CirclePlus, BugOff, Lock, HeartHandshake} from '@lucide/vue';
 import { Icon } from '@iconify/vue';
 
 const { t, locale } = useI18n();

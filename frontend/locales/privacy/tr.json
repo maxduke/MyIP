@@ -1,0 +1,60 @@
+{
+  "privacy": {
+    "Title": "Gizlilik",
+    "UpdatedLabel": "Son güncelleme",
+    "Intro": "IPCheck.ing ücretsiz ve açık kaynaklı bir IP araç kutusudur. Ağınızın ve tarayıcınızın sizinle ilgili neleri açığa çıkardığını görmenize yardımcı olmak için geliştirdik; bu nedenle gizliliğinize saygı duymak bizim için önemli. Bu sayfa, siteyi kullanırken verilerinize ne olduğunu açıklar.",
+    "sections": {
+      "tools": {
+        "title": "Araçlar nasıl çalışır",
+        "paragraphs": [
+          "Araçların size gösterdiği çoğu şey — IP ayrıntılarınız, tarayıcı parmak iziniz, DNS, bağlantı ve hız testi sonuçları — tarayıcınızda hesaplanır veya canlı olarak sorgulanıp yalnızca size gösterilir. Bu sonuçları sunucularımızda saklamayız.",
+          "IP coğrafi konumunu sorgulamak için, sorgulanan IP üçüncü taraf sağlayıcılara (ipinfo.io, ip-api.com ve benzerleri gibi) gönderilir. Bu sorgular her sağlayıcının kendi gizlilik politikasına tabidir."
+        ]
+      },
+      "analytics": {
+        "title": "Analiz yoluyla ne topluyoruz",
+        "paragraphs": [
+          "Sitenin nasıl kullanıldığını anlamak için Google Analytics kullanıyoruz. Bunun aracılığıyla aşağıdakiler toplanır:"
+        ],
+        "bullets": [
+          "IP adresinizden çıkarılan yaklaşık bir konum (ülke / bölge / şehir). Google, tam IP adresinizi bizimle paylaşmaz.",
+          "Tarayıcı diliniz (örneğin en veya zh).",
+          "Standart analiz verileri: ziyaret edilen sayfalar, cihaz ve tarayıcı türü, yönlendiren site ve bir çerezde saklanan rastgele oluşturulmuş bir ziyaretçi kimliği."
+        ]
+      },
+      "account": {
+        "title": "Oturum açtığınızda ne topluyoruz",
+        "paragraphs": [
+          "Oturum açmak isteğe bağlıdır — sitedeki tüm araçları hesap olmadan kullanabilirsiniz. Girişinizi yönetmek ve başarımlarınızı ve tercihlerinizi senkronize etmek için Google Firebase Authentication kullanırız. Oturum açtığınızda aşağıdakiler toplanır:"
+        ],
+        "bullets": [
+          "Oturum açma e-postanız; hesabınızı tanımlamak ve oturum açma gerektiren özellikleri sunmak için kullanılır.",
+          "Gelişmiş özellikleri kullanım sayınız; başarımlarınızı hesaplamak için kullanılır."
+        ]
+      },
+      "why": {
+        "title": "Neden topluyoruz",
+        "analytics": "Analiz verilerini kullanarak site nasıl kullanıldığını anlamak ve kullanıcı deneyimini iyileştirmek için kullanırız. Bu veriler sizi kişisel olarak tanımlamak için kullanılmaz ve asla satılmaz.",
+        "account": "Hesap verileriniz (e-posta ve gelişmiş özellik kullanım sayısı) yalnızca hesabınızı tanımlamak, oturum açma gerektiren özellikleri sunmak ve başarımlarınızı hesaplamak için kullanılır. Bunları reklam için kullanmayız ve asla satmayız."
+      },
+      "cookies": {
+        "title": "Çerezler ve yerel depolama",
+        "analytics": "Google Analytics, geri dönen ziyaretçileri tanımak için bir çerez saklar.",
+        "local": "Kendi ayarlarınız (tema, dil, araç tercihleri) tarayıcınızın yerel depolamasında tutulur ve cihazınızdan asla ayrılmaz."
+      },
+      "eu": {
+        "title": "AB/AEA veya Birleşik Krallık'taysanız",
+        "paragraphs": [
+          "Şu anda bir çerez onayı bildirimi göstermiyoruz. Analiz tarafından ölçülmek istemiyorsanız, aşağıdaki yöntemleri kullanarak istediğiniz zaman vazgeçebilirsiniz — analiz çerezini engellemek sitedeki hiçbir aracı etkilemez.",
+          "Vazgeçmek için: bir içerik engelleyici (uBlock Origin gibi) veya Google'ın resmi devre dışı bırakma tarayıcı eklentisini kullanın, üçüncü taraf çerezleri engelleyin ya da bu sitenin çerezlerini temizleyin. IPCheck.ing'in kendi sunucusunda barındırılan kopyaları yalnızca işletmecisi yapılandırırsa analiz çalıştırır."
+        ]
+      },
+      "retention": {
+        "title": "Veri saklama",
+        "paragraphs": [
+          "Analiz verileri Google Analytics'in saklama ayarlarına göre (en fazla 14 ay) tutulur ve ardından otomatik olarak silinir. Hesap verileri, hesabınız var olduğu sürece saklanır."
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "privacy": {
+    "Title": "Confidentialité",
+    "UpdatedLabel": "Dernière mise à jour",
+    "Intro": "IPCheck.ing est une boîte à outils IP gratuite et open source. Nous l'avons conçue pour vous aider à voir ce que votre réseau et votre navigateur révèlent sur vous ; à ce titre, le respect de votre vie privée nous tient à cœur. Cette page explique ce qu'il advient de vos données lorsque vous utilisez le site.",
+    "sections": {
+      "tools": {
+        "title": "Comment fonctionnent les outils",
+        "paragraphs": [
+          "La plupart de ce que les outils vous affichent — détails de votre IP, empreinte du navigateur, DNS, connectivité et résultats de test de débit — est calculé dans votre navigateur ou interrogé en direct et affiché à vous seul. Nous ne conservons pas ces résultats sur nos serveurs.",
+          "Pour rechercher la géolocalisation d'une IP, l'IP interrogée est envoyée à des fournisseurs tiers (tels qu'ipinfo.io, ip-api.com et similaires). Ces recherches sont régies par la politique de confidentialité propre à chaque fournisseur."
+        ]
+      },
+      "analytics": {
+        "title": "Ce que nous collectons via l'analyse",
+        "paragraphs": [
+          "Nous utilisons Google Analytics pour comprendre l'utilisation du site. Par ce biais, les éléments suivants sont collectés :"
+        ],
+        "bullets": [
+          "Une localisation approximative déduite de votre adresse IP (pays / région / ville). Google ne nous communique pas votre adresse IP complète.",
+          "La langue de votre navigateur (par exemple en ou zh).",
+          "Des données d'analyse standard : pages consultées, type d'appareil et de navigateur, site référent, et un identifiant de visiteur généré aléatoirement et stocké dans un cookie."
+        ]
+      },
+      "account": {
+        "title": "Ce que nous collectons lorsque vous vous connectez",
+        "paragraphs": [
+          "La connexion est facultative — vous pouvez utiliser tous les outils du site sans compte. Nous utilisons Google Firebase Authentication pour gérer votre connexion et synchroniser vos succès et préférences. Lorsque vous êtes connecté, les éléments suivants sont collectés :"
+        ],
+        "bullets": [
+          "Votre adresse e-mail de connexion, utilisée pour identifier votre compte afin de fournir les fonctionnalités nécessitant une connexion.",
+          "Votre nombre d'utilisations des fonctionnalités avancées, utilisé pour calculer vos succès."
+        ]
+      },
+      "why": {
+        "title": "Pourquoi nous les collectons",
+        "analytics": "Nous utilisons les données d'analyse pour comprendre l'utilisation du site et améliorer l'expérience utilisateur. Ces données ne servent pas à vous identifier personnellement et ne sont jamais vendues.",
+        "account": "Les données de votre compte (e-mail et nombre d'utilisations des fonctionnalités avancées) servent uniquement à identifier votre compte, à fournir les fonctionnalités nécessitant une connexion et à calculer vos succès. Nous ne les utilisons pas à des fins publicitaires et ne les vendons jamais."
+      },
+      "cookies": {
+        "title": "Cookies et stockage local",
+        "analytics": "Google Analytics stocke un cookie pour reconnaître les visiteurs récurrents.",
+        "local": "Vos propres réglages (thème, langue, préférences des outils) sont conservés dans le stockage local de votre navigateur et ne quittent jamais votre appareil."
+      },
+      "eu": {
+        "title": "Si vous êtes dans l'UE/EEE ou au Royaume-Uni",
+        "paragraphs": [
+          "Nous n'affichons pas actuellement de bannière de consentement aux cookies. Si vous préférez ne pas être mesuré par les outils d'analyse, vous pouvez vous y opposer à tout moment via les méthodes ci-dessous — bloquer le cookie d'analyse n'affecte aucun outil du site.",
+          "Pour vous désinscrire : utilisez un bloqueur de contenu (tel qu'uBlock Origin) ou le module complémentaire officiel de désactivation de Google, bloquez les cookies tiers, ou effacez les cookies de ce site. Les copies auto-hébergées d'IPCheck.ing n'exécutent l'analyse que si leur exploitant la configure."
+        ]
+      },
+      "retention": {
+        "title": "Conservation des données",
+        "paragraphs": [
+          "Les données d'analyse sont conservées selon les paramètres de conservation de Google Analytics (jusqu'à 14 mois), puis supprimées automatiquement. Les données de compte sont conservées tant que votre compte existe."
+        ]
+      }
+    }
+  }
+}
