@@ -281,7 +281,7 @@ const router = useRouter();
 const isDarkMode = computed(() => store.isDarkMode);
 const isMobile = computed(() => store.isMobile);
 const currentSection = computed(() => store.currentSection);
-const loaded = ref(false);
+const loaded = computed(() => store.allHasLoaded);
 
 // Running as an installed PWA (chromeless window). Distinct from the app's
 // "standalone tool pages" — see utils/pwa.js.
@@ -398,8 +398,6 @@ const openTool = (slug) => {
   const name = slug.charAt(0).toUpperCase() + slug.slice(1);
   trackEvent('Nav', 'NavClick', name);
 };
-
-watch(() => store.allHasLoaded, (newValue) => { loaded.value = newValue; });
 
 // Mobile: hide nav on scroll-down, show on scroll-up.
 // SCROLL_DELTA filters out micro-jitter; SHOW_AT_TOP forces the nav
