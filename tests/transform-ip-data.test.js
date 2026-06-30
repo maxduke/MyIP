@@ -64,8 +64,12 @@ describe('transformDataFromIPapi()', () => {
 
   it('builds map URLs with language + dark variant when lat/lon present', () => {
     const out = transformDataFromIPapi(basicRaw, 1, t, 'zh');
-    assert.match(out.mapUrl, /^\/api\/map\?latitude=35\.6938&longitude=139\.7034&language=zh$/);
+    // Map request coords are quantized to 1 decimal for CF edge-cache sharing,
+    // while the displayed lat/lon keep full precision.
+    assert.match(out.mapUrl, /^\/api\/map\?latitude=35\.7&longitude=139\.7&language=zh$/);
     assert.match(out.mapUrl_dark, /CanvasMode=Dark$/);
+    assert.equal(out.latitude, '35.6938');
+    assert.equal(out.longitude, '139.7034');
   });
 
   it("treats country='N/A' as empty country_code", () => {

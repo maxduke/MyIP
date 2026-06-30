@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it, beforeEach } from 'node:test';
 import { reactive, nextTick } from 'vue';
 
-import { useInfoMask } from '../frontend/composables/use-info-mask.js';
+import { useInfoMask, createMaskGate } from '../frontend/composables/use-info-mask.js';
 
 // minimal i18n stub: return key with prefix for assertions
 const t = (key) => `<${key}>`;
@@ -63,5 +63,24 @@ describe('useInfoMask()', () => {
       composable.toggleInfoMask();
       composable.toggleInfoMask();
     });
+  });
+});
+
+describe('createMaskGate()', () => {
+  const maskAttr = createMaskGate(t);
+
+  it("masks a real IP value with the 'ip' attribute", () => {
+    assert.equal(maskAttr('1.2.3.4'), 'ip');
+    assert.equal(maskAttr('2001:db8::1'), 'ip');
+  });
+
+  it('leaves waiting / error placeholders unmasked (undefined attr)', () => {
+    for (const key of [
+      'webrtc.StatusWait', 'webrtc.StatusError',
+      'dnsleaktest.StatusWait', 'dnsleaktest.StatusError',
+      'ipInfos.IPv4Error', 'ipInfos.IPv6Error',
+    ]) {
+      assert.equal(maskAttr(t(key)), undefined, `${key} should not be masked`);
+    }
   });
 });

@@ -1,4 +1,5 @@
 import { createI18n } from 'vue-i18n';
+import { PREFS_STORAGE_KEY, LEGACY_PREFS_KEYS } from '../data/default-preferences.js';
 
 // Locale messages are loaded on demand so the first-paint path carries only the
 // language actually in use. Bundling all four eagerly cost ~44 KB gzipped of dead
@@ -19,18 +20,28 @@ const localeLoaders = {
 const supportedLanguages = Object.keys(localeLoaders);
 const FALLBACK_LOCALE = 'en';
 
+// Read the saved language from localStorage, trying the current prefs key then
+// the legacy ones (so a freshly bumped key still finds the choice before
+// loadPreferences migrates it). Keys come from default-preferences.js so they
+// stay in step with what store.js writes.
+function readStoredLang() {
+  for (const key of [PREFS_STORAGE_KEY, ...LEGACY_PREFS_KEYS]) {
+    const raw = localStorage.getItem(key);
+    if (!raw) continue;
+    try {
+      const prefs = JSON.parse(raw);
+      if (supportedLanguages.includes(prefs?.lang)) return prefs.lang;
+    } catch { /* ignore malformed entry, try the next key */ }
+  }
+  return null;
+}
+
 // 设置语言
 function setLanguage() {
+  const storedLang = readStoredLang();
+  if (storedLang) return storedLang;
+
   let locale = 'en';
-  // Keep in sync with PREFS_STORAGE_KEY in frontend/store.js — both must read
-  // from the same versioned key so an old value doesn't mislead the i18n
-  // initialization into a previously-chosen language after we bumped defaults.
-  let storedPreferences = localStorage.getItem('userPreferences_v6');
-  storedPreferences = storedPreferences ? JSON.parse(storedPreferences) : {};
-  if (supportedLanguages.includes(storedPreferences.lang)) {
-    locale = storedPreferences.lang;
-    return locale;
-  }
   const searchParams = new URLSearchParams(window.location.search);
   const browserLanguage = navigator.language || navigator.userLanguage;
   const hl = searchParams.get('hl');

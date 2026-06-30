@@ -43,7 +43,7 @@ export function useRefreshOrchestrator({ refs, store, t, userPreferences, infoMa
         const { IPCheckRef, connectivityRef, webRTCRef, dnsLeaksRef } = refs;
         scheduleTimedTasks([
             { action: () => IPCheckRef.value.checkAllIPs(), delay: 0 },
-            { action: () => connectivityRef.value.handelCheckStart(true), delay: 300 },
+            { action: () => connectivityRef.value.handelCheckStart('refresh'), delay: 300 },
             { action: () => webRTCRef.value.checkAllWebRTC(true), delay: 200 },
             { action: () => dnsLeaksRef.value.checkAllDNSLeakTest(true), delay: 100 },
             { action: () => refreshingAlert(), delay: 300 },
@@ -56,14 +56,25 @@ export function useRefreshOrchestrator({ refs, store, t, userPreferences, infoMa
         const { IPCheckRef, connectivityRef, webRTCRef, dnsLeaksRef } = refs;
         const mountedStatus = Object.values(store.mountingStatus).every(Boolean);
         if (mountedStatus) {
+            const prefs = userPreferences.value;
+            // IP info always runs on load — it has no per-module switch by design.
             setTimeout(() => IPCheckRef.value.checkAllIPs(), t1);
-            if (userPreferences.value.autoStart) {
+            // Each remaining module runs only if its switch is on; when off we
+            // flag it loaded immediately so allHasLoaded still resolves — it gates
+            // the info-mask button, the user-info fetch, and the brand shimmer.
+            if (prefs.autoRunConnectivity) {
                 setTimeout(() => connectivityRef.value.handelCheckStart(), t2);
-                setTimeout(() => webRTCRef.value.checkAllWebRTC(false), t3);
-                setTimeout(() => dnsLeaksRef.value.checkAllDNSLeakTest(false), t4);
             } else {
                 store.setLoadingStatus('Connectivity', true);
+            }
+            if (prefs.autoRunWebRTC) {
+                setTimeout(() => webRTCRef.value.checkAllWebRTC(false), t3);
+            } else {
                 store.setLoadingStatus('WebRTC', true);
+            }
+            if (prefs.autoRunDnsLeak) {
+                setTimeout(() => dnsLeaksRef.value.checkAllDNSLeakTest(false), t4);
+            } else {
                 store.setLoadingStatus('DNSLeakTest', true);
             }
         } else {

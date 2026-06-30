@@ -11,17 +11,13 @@
                 </span>
                 <span class="text-sm font-medium truncate">
                     <span class="text-muted-foreground">{{ t('ipInfos.Source') }}:
-                    {{ card.source }}</span>
+                        {{ card.source }}</span>
                 </span>
             </div>
             <div class="shrink-0 flex items-center gap-1" data-screenshot-exclude>
-                <ScreenshotButton
-                    filename-prefix="myip"
-                    :filename-label="card.source"
-                    :track-label="card.source || 'unknown'"
-                    :disabled="!hasData"
-                    :tooltip-text="t('Tooltips.SaveAsImage')"
-                    :aria-label="'Save ' + card.source + ' as image'" />
+                <ScreenshotButton filename-prefix="myip" :filename-label="card.source"
+                    :track-label="card.source || 'unknown'" :disabled="!hasData"
+                    :tooltip-text="t('Tooltips.SaveAsImage')" :aria-label="'Save ' + card.source + ' as image'" />
                 <JnTooltip :text="t('Tooltips.RefreshIPCard')" side="left">
                     <Button size="icon" variant="outline" class="size-8 cursor-pointer"
                         @click="$emit('refresh-card', card, index)" :aria-label="'Refresh ' + card.source">
@@ -37,18 +33,16 @@
                 <!-- Monitor is inline inside FitText so it rides the IP's
                     first line; Copy stays a flex sibling so ellipsis
                     never clips it. -->
-                <div class="px-4 py-3 flex items-start gap-2 min-w-0" data-mask="ip">
+                <div class="px-4 py-3 flex items-start gap-2 min-w-0" :data-mask="maskAttr(card.ip)">
                     <FitText :text="card.ip" :tiers="HERO_TIERS" :max-lines="2" :title="card.ip"
-                        class="font-mono font-semibold min-w-0 items-start"/>
-                    <CopyButton v-if="isValidIP(card.ip)" :value="card.ip"
-                        :tooltip="t('Tooltips.CopyIP')"
+                        class="font-mono font-semibold min-w-0 items-start" />
+                    <CopyButton v-if="isValidIP(card.ip)" :value="card.ip" :tooltip="t('Tooltips.CopyIP')"
                         :aria-label="'Copy ' + card.ip" />
                 </div>
 
                 <IpDetailPanel :data="card" :index="index" :ip-geo-source="ipGeoSource" :asn-infos="asnInfos"
                     :asn-history-infos="asnHistoryInfos" :asn-connectivity-infos="asnConnectivityInfos"
-                    :configs="configs" :is-dark-mode="isDarkMode"
-                    :enable-map="true" />
+                    :configs="configs" :is-dark-mode="isDarkMode" :enable-map="true" />
             </template>
 
             <!-- Error state -->
@@ -60,8 +54,8 @@
 
             <!-- Loading state: skeleton rows -->
             <div v-else class="flex-1 px-4 py-3 space-y-3">
-                <div v-for="(w, i) in placeholderSizes" :key="i" class="h-4 bg-muted rounded animate-pulse"
-                    :style="`width: ${(w / 12) * 100}%`"></div>
+                <div v-for="(w, i) in placeholderSizes.slice(0, ipGeoSource === 0 ? 12 : 7)" :key="i"
+                    class="h-4 bg-muted rounded animate-pulse" :style="`width: ${(w / 12) * 100}%`"></div>
             </div>
         </div>
     </Card>
@@ -73,6 +67,7 @@ import { useI18n } from 'vue-i18n';
 import { isValidIP } from '@/utils/valid-ip.js';
 import FitText from '@/components/widgets/FitText.vue';
 import { HERO_TIERS } from '@/composables/use-fit-text.js';
+import { createMaskGate } from '@/composables/use-info-mask.js';
 import IPErrorIcon from '../svgicons/IPError.vue';
 import IpDetailPanel from './IpDetailPanel.vue';
 import { JnTooltip } from '@/components/ui/tooltip';
@@ -85,8 +80,10 @@ import {
 } from '@lucide/vue';
 
 const { t } = useI18n();
+// Skip the info-mask blur on the IPv4/IPv6 error placeholders (not a real IP).
+const maskAttr = createMaskGate(t);
 
-const placeholderSizes = [12, 8, 6, 8, 4];
+const placeholderSizes = [12, 8, 6, 8, 4, 12, 8, 6, 2, 8, 4];
 
 const props = defineProps({
     card: { type: Object, required: true },

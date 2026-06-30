@@ -10,10 +10,12 @@ import Home from '@/components/Home.vue';
 // Home is imported eagerly (it's the default landing); the standalone layout is
 // lazy so it stays out of the homepage bundle.
 const StandaloneTool = () => import('@/components/StandaloneTool.vue');
+const PrivacyPolicy = () => import('@/components/PrivacyPolicy.vue');
 
 const routes = [
   { path: '/', name: 'home', component: Home },
   { path: '/tools/:slug', name: 'tool', component: StandaloneTool },
+  { path: '/privacy', name: 'privacy', component: PrivacyPolicy },
   // Unknown paths fall back to the homepage.
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ];

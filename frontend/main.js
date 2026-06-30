@@ -5,6 +5,7 @@ import App from './App.vue'
 import i18n, { loadActiveLocaleMessages } from './locales/i18n';
 import router from './router';
 import { analytics } from './utils/analytics';
+import { getTimezoneInfo } from './utils/timezone';
 import { unregisterLegacyServiceWorker } from './utils/unregister-service-worker';
 import { addCollection } from '@iconify/vue';
 
@@ -70,6 +71,10 @@ window.addEventListener('resize', handleResize);
 
 // Start Google Analytics
 analytics.page();
+const { timezone, offset } = getTimezoneInfo();
+if (timezone || offset) {
+    analytics.setUserProperties({ timezone, tz_offset: offset });
+}
 unregisterLegacyServiceWorker();
 
 // Check Firebase environment

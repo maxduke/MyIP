@@ -19,7 +19,8 @@
                     </div>
 
                     <!-- URL (secondary information) -->
-                    <p v-if="test.url" class="w-full min-w-0 mb-1 text-xs font-mono text-muted-foreground truncate" :title="test.url">
+                    <p v-if="test.url" class="w-full min-w-0 mb-1 text-xs font-mono text-muted-foreground truncate"
+                        :title="test.url">
                         {{ test.url }}
                     </p>
 
@@ -31,8 +32,7 @@
                             <span class="relative inline-flex size-2 rounded-full"
                                 :class="dotClass(toneOf(test))"></span>
                         </span>
-                        <FitText :text="test.ip" :tiers="INLINE_TIERS" :title="test.ip"
-                            class="font-mono min-w-0"
+                        <FitText :text="test.ip" :tiers="INLINE_TIERS" :title="test.ip" class="font-mono min-w-0"
                             :class="textClass(toneOf(test))" />
                     </div>
 
@@ -207,7 +207,7 @@ const checkAchievements = () => {
 };
 
 onMounted(() => {
-    setTimeout(() => { checkAllRuleTest(); }, 1000);
+    setTimeout(() => { checkAllRuleTest(); }, 300);
 });
 
 watch(IPArray, () => {

@@ -160,7 +160,7 @@
       "ipSourcesToCheckTips": "Sélectionnez le nombre de serveurs pour vérifier votre adresse IP. Plus vous en sélectionnez, plus cela prendra de temps pour terminer la vérification.",
       "appSettings": "Paramètres de l'App",
       "autoRun": "Exécution Automatique",
-      "autoRunTips": "Si désactivé, l'appli vérifiera seulement l'IP local et n'exécutera pas de tests automatiquement.",
+      "autoRunTips": "Les infos IP sont toujours vérifiées au chargement de la page. Choisissez quels autres modules s'exécutent automatiquement au démarrage.",
       "simpleMode": "Mode Simple",
       "simpleModeTips": "Masque le texte de description de chaque module. Effectif uniquement sur les appareils mobiles.",
       "connectivityMultipleTests": "Rafraîchissements Multiples de Connectivité",
@@ -841,9 +841,10 @@
     "contact": "Si vous avez des questions ou des suggestions, veuillez me contacter par email : jason[AT]kenengba.com.",
     "personal": "Site personnel",
     "blog": "Mon blog",
-    "retiremoney": "Planificateur futur",
+    "linkedIn": "LinkedIn",
     "twitter": "Twitter",
-    "Sponsor": "Sponsor"
+    "Sponsor": "Nous soutenir",
+    "Privacy": "Confidentialité"
   },
   "specialthanks": {
     "Title": "Merci spécial",

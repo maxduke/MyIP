@@ -19,6 +19,7 @@ import getWhoisHandler from '../api/get-whois.js';
 import cfRadarHandler from '../api/cf-radar.js';
 import invisibilityHandler from '../api/invisibility-test.js';
 import macCheckerHandler from '../api/mac-checker.js';
+import githubStarsHandler from '../api/github-stars.js';
 import updateAchievementHandler from '../api/update-user-achievement.js';
 import ipcheckIngHandler from '../api/ipcheck-ing.js';
 import { getSessionResult as dnsLeakGetResult } from '../api/dns-leak-test.js';
@@ -150,6 +151,17 @@ describe('get-whois handler', () => {
         await getWhoisHandler(createRequest({ query: { q: 'not an address' } }), res);
         assert.equal(res.statusCode, 400);
         assert.deepEqual(res.body, { error: 'Invalid IP or address' });
+    });
+});
+
+// -- github-stars handler -------------------------------------------------
+
+describe('github-stars handler', () => {
+    it('rejects non-GET with 405 before hitting GitHub', async () => {
+        const res = createResponse();
+        await githubStarsHandler(createRequest({ method: 'POST' }), res);
+        assert.equal(res.statusCode, 405);
+        assert.deepEqual(res.body, { message: 'Method Not Allowed' });
     });
 });
 
