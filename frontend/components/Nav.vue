@@ -264,7 +264,6 @@ import {
 import {
   Award, ChevronDown, HeartHandshake,
   LogOut, Menu, Cog,
-  Star,
 } from '@lucide/vue';
 import { Icon } from '@iconify/vue';
 import brandIcon from './svgicons/Brand.vue';
