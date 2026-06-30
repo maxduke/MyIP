@@ -196,9 +196,7 @@ const cacheable = (maxAgeSeconds) => (req, res, next) => {
 app.use('/api', requireReferer);
 
 const FIVE_MIN_CACHE = 5 * 60;
-const ONE_HOUR_CACHE = 60 * 60;
 const ONE_DAY_CACHE = 24 * 60 * 60;
-const ONE_WEEK_CACHE = 7 * 24 * 60 * 60;
 const THIRTY_DAYS_CACHE = 30 * 24 * 60 * 60;
 const ONE_YEAR_CACHE = 365 * 24 * 60 * 60;
 
@@ -215,11 +213,13 @@ app.get('/api/ip2location', requireValidIP(), cacheable(ONE_DAY_CACHE), ip2locat
 app.get('/api/maxmind', requireValidIP(), cacheable(ONE_DAY_CACHE), maxmindHandler);
 app.get('/api/whois', cacheable(ONE_DAY_CACHE), getWhois);
 app.get('/api/github-stars', cacheable(ONE_DAY_CACHE), githubStarsHandler);
-// Cache for 1 week
-app.get('/api/cfradar', cacheable(ONE_WEEK_CACHE), cfHander);
-app.get('/api/asn-history', requireValidPrefix(), cacheable(ONE_WEEK_CACHE), asnHistoryHandler);
-app.get('/api/asn-connectivity', requireValidASN(), cacheable(ONE_WEEK_CACHE), asnConnectivityHandler);
-app.get('/api/macchecker', cacheable(ONE_WEEK_CACHE), macChecker);
+// Cache for 30 days — registry / historical data that changes on a monthly
+// (or slower) cadence: IEEE OUI assignments, ASN metadata, ASN interconnection,
+// and append-only BGP routing history.
+app.get('/api/cfradar', cacheable(THIRTY_DAYS_CACHE), cfHander);
+app.get('/api/asn-history', requireValidPrefix(), cacheable(THIRTY_DAYS_CACHE), asnHistoryHandler);
+app.get('/api/asn-connectivity', requireValidASN(), cacheable(THIRTY_DAYS_CACHE), asnConnectivityHandler);
+app.get('/api/macchecker', cacheable(THIRTY_DAYS_CACHE), macChecker);
 // Long Cache
 app.get('/api/map', cacheable(ONE_YEAR_CACHE), mapHandler);
 // Non-cacheable routes — auth-context, debug tools, or per-request lookups.
