@@ -1,45 +1,54 @@
 <template>
-  <footer class="mt-10 pb-6 text-sm text-muted-foreground">
-    <!-- Author + Github -->
-    <div class="flex items-center justify-center gap-1.5 mb-3">
-      <span>Created by Jason Ng with love</span>
-      <JnTooltip :text="t('Tooltips.GithubLink')" side="top">
-        <Button variant="ghost" size="icon" as-child class="size-6 text-foreground/70 hover:text-foreground">
-          <a :href="t('page.footerLink')" target="_blank" rel="noopener" aria-label="Github"
-            @click="trackEvent('Footer', 'FooterClick', 'Github')">
-            <Icon icon="ri:github-line" />
-          </a>
-        </Button>
-      </JnTooltip>
-    </div>
-
-    <!-- Sponsor / About / Privacy entry -->
-    <div class="flex items-center justify-center gap-2 mb-3">
+  <footer class="pb-6 text-sm text-muted-foreground">
+    <!-- Primary footer links: Sponsor / Privacy / About / Changelog / Special
+         Thanks. The last three open the same About sheet on their own tab.
+         Text-only (no per-button icons) to keep the row calm. -->
+    <div class="flex flex-wrap items-center justify-center gap-x-3 mb-2 max-w-[70%] mx-auto">
       <Button variant="link" size="default" as-child class="text-[#d63384] hover:text-[#d63384]">
         <a href="https://github.com/sponsors/jason5ng32" target="_blank" rel="noopener">
-          {{ t('about.Sponsor') }} <HeartHandshake class="size-3.5" />
+          {{ t('about.Sponsor') }}
         </a>
       </Button>
       <Button variant="link" size="default" as-child class="cursor-pointer">
         <RouterLink to="/privacy" @click="trackEvent('Footer', 'FooterClick', 'Privacy')">
-          {{ t('about.Privacy') }} <Lock class="size-3.5" />
+          {{ t('about.Privacy') }}
         </RouterLink>
+      </Button>
+      <Button variant="link" size="default" @click="openAboutTab('changelog', 'Changelog')" class="cursor-pointer">
+        {{ t('changelog.Title') }}
+      </Button>
+      <Button variant="link" size="default" @click="openAboutTab('specialthanks', 'SpecialThanks')"
+        class="cursor-pointer">
+        {{ t('specialthanks.Title') }}
       </Button>
       <Button variant="link" size="default" @click="openAbout" class="cursor-pointer">
         {{ t('about.Title') }}
-        <ArrowLeftCircle class="size-3.5" />
       </Button>
-
     </div>
 
-    <!-- Copyright -->
-    <p v-if="!configs.originalSite" class="text-center text-xs opacity-70">
-      {{ t('page.copyRightName') }}
-      <a :href="t('page.copyRightLink')" target="_blank" rel="noopener"
-        class="text-foreground/80 hover:text-foreground hover:underline">
-        {{ t('page.copyRightLinkName') }}
-      </a>
-    </p>
+    <!-- Author + GitHub on one line, copyright dimmed beneath — low-emphasis signature block -->
+    <div class="flex flex-col items-center justify-center gap-y-1.5 text-xs opacity-70">
+      <div class="flex items-center justify-center gap-x-2">
+        <span>Created by Jason Ng with love</span>
+        <JnTooltip :text="t('Tooltips.GithubLink')" side="top">
+          <Button variant="ghost" size="icon" as-child class="size-5 text-foreground/70 hover:text-foreground">
+            <a :href="t('page.footerLink')" target="_blank" rel="noopener" aria-label="Github"
+              @click="trackEvent('Footer', 'FooterClick', 'Github')">
+              <Icon icon="ri:github-line" />
+            </a>
+          </Button>
+        </JnTooltip>
+      </div>
+      <template v-if="!configs.originalSite">
+        <span>
+          {{ t('page.copyRightName') }}
+          <a :href="t('page.copyRightLink')" target="_blank" rel="noopener"
+            class="text-foreground/80 hover:text-foreground hover:underline">
+            {{ t('page.copyRightLinkName') }}
+          </a>
+        </span>
+      </template>
+    </div>
 
     <!-- About Sheet -->
     <Sheet :open="isOpen" @update:open="onOpenChange">
@@ -105,9 +114,8 @@
                 <ul class="space-y-2">
                   <li v-for="(item, idx) in version.content" :key="idx" class="flex items-start gap-2 text-sm">
                     <Badge :class="changelogBadgeClass(item.type)"
-                      class="shrink-0 shadow-none! rounded-full justify-center text-secondary p-1" 
-                      :title="t('changelog.' + item.type)"
-                      >
+                      class="shrink-0 shadow-none! rounded-full justify-center text-secondary p-1"
+                      :title="t('changelog.' + item.type)">
                       <CircleFadingArrowUp v-if="item.type === 'improve'" class="size-3.5" />
                       <CirclePlus v-if="item.type === 'add'" class="size-3.5" />
                       <BugOff v-if="item.type === 'fix'" class="size-3.5" />
@@ -157,7 +165,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeftCircle, Compass, ExternalLink, Smile, SquareArrowOutUpRight, CircleFadingArrowUp, CirclePlus, BugOff, Lock, HeartHandshake} from '@lucide/vue';
+import { Compass, ExternalLink, Smile, SquareArrowOutUpRight, CircleFadingArrowUp, CirclePlus, BugOff } from '@lucide/vue';
 import { Icon } from '@iconify/vue';
 
 const { t, locale } = useI18n();
@@ -209,8 +217,18 @@ const onOpenChange = (val) => {
 };
 
 const openAbout = () => {
+  content.value = 'about';
   store.toggleSheet('about');
   trackEvent('Footer', 'FooterClick', 'About');
+};
+
+// Direct-entry shortcuts: open the same About sheet but jump straight to the
+// changelog / special-thanks tab. Plain open (not toggle) so a second click
+// from another tab just switches tabs instead of closing the sheet.
+const openAboutTab = (tab, trackLabel) => {
+  content.value = tab;
+  store.setOpenSheet('about');
+  trackEvent('Footer', 'FooterClick', trackLabel);
 };
 
 watch(content, () => {
