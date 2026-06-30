@@ -71,7 +71,9 @@ export default async (req, res) => {
     const minLen = MIN_PREFIX[family];
 
     try {
-        const apiRes = await fetchRoutingHistory(prefix);
+        // Push our peer floor down to RIPEstat so it drops sub-threshold rows
+        // during the scan — same MIN_PEERS we filter on below, single source.
+        const apiRes = await fetchRoutingHistory(prefix, { minPeersSeeing: MIN_PEERS });
         if (!apiRes.ok) {
             logger.warn({ prefix, status: apiRes.status }, 'RIPEstat routing-history non-2xx');
             return res.status(502).json({ error: 'Upstream error' });

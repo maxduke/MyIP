@@ -7,8 +7,8 @@ import { lookupAsOrgName } from './as-org-db.js';
 const BASE_URL = 'https://stat.ripe.net/data';
 const SOURCE_APP = process.env.RIPESTAT_SOURCE_APP || 'myip';
 
-function fetchRipestat(endpoint, resource, { timeoutMs = 8000 } = {}) {
-    const search = new URLSearchParams({ resource, sourceapp: SOURCE_APP });
+function fetchRipestat(endpoint, resource, { timeoutMs = 8000, params = {} } = {}) {
+    const search = new URLSearchParams({ resource, sourceapp: SOURCE_APP, ...params });
     return fetchUpstream(`${BASE_URL}/${endpoint}/data.json?${search}`, { timeoutMs });
 }
 
@@ -19,9 +19,16 @@ export function fetchAsOverview(asn, { timeoutMs = 3000 } = {}) {
 
 /** routing-history: historical AS announcements for a prefix or IP.
  *  Slow analytical endpoint — scans years of BGP data, regularly takes
- *  10–20s for prefixes with long history. */
-export function fetchRoutingHistory(resource, { timeoutMs = 25000 } = {}) {
-    return fetchRipestat('routing-history', resource, { timeoutMs });
+ *  10–20s for prefixes with long history.
+ *
+ *  Pass `minPeersSeeing` to push the caller's peer floor down to RIPEstat:
+ *  rows seen by fewer RIS peers are route noise the caller would discard
+ *  anyway, so dropping them during the scan trims the response without
+ *  changing the result. The threshold is owned by the caller (asn-history's
+ *  MIN_PEERS) — omit it and RIPEstat keeps its own default. */
+export function fetchRoutingHistory(resource, { timeoutMs = 25000, minPeersSeeing } = {}) {
+    const params = minPeersSeeing != null ? { min_peers_seeing: minPeersSeeing } : {};
+    return fetchRipestat('routing-history', resource, { timeoutMs, params });
 }
 
 /**
