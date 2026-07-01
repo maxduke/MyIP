@@ -45,7 +45,7 @@ We love to hear your ideas! Open an issue with the tag `feature request` and pro
 Before making any changes, please:
 
 1. Open a new issue discussing your proposed change.
-2. Fork the repository and make your changes in a new branch.
+2. Fork the repository and create your branch from **`dev`** — all contributions are based on `dev`, not `main`.
 
 ### Setting Up Your Environment
 
@@ -64,9 +64,10 @@ Ensure that all tests pass and, if applicable, add new tests for your changes. R
 
 When you're ready to submit your changes:
 
-1. Rebase your branch to the latest `dev` branch.
-2. Ensure your changes adhere to the coding standards and guidelines.
-3. Submit a pull request with a clear description of your changes.
+1. **Open your pull request against the `dev` branch — not `main`.** `main` only receives release merges from `dev`, so any PR targeting `main` will be asked to retarget.
+2. Rebase your branch onto the latest `dev` before submitting.
+3. Keep one concern per PR — don't bundle unrelated changes (e.g. a feature plus a dev-environment tweak) into the same pull request.
+4. Ensure your changes adhere to the coding standards and guidelines, with a clear description of what you changed.
 
 ### Code Review Process
 

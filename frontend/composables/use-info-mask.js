@@ -20,6 +20,24 @@ import { trackEvent } from '../utils/analytics.js';
 
 const MASK_ATTR = 'data-mask-level';
 
+// Localized placeholder strings shown in an IP slot that are never sensitive —
+// "detecting…" / "error" states. The blur should skip these: masking them just
+// hides a status word and looks broken in a shared screenshot.
+const NON_SENSITIVE_KEYS = [
+    'webrtc.StatusWait', 'webrtc.StatusError',
+    'dnsleaktest.StatusWait', 'dnsleaktest.StatusError',
+    'ipInfos.IPv4Error', 'ipInfos.IPv6Error',
+];
+
+// Build a `:data-mask` gate. Pass the component's i18n `t`; the returned fn maps
+// a displayed value to the attribute: 'ip' to blur a real address, or undefined
+// to leave waiting/error placeholders readable. Locale is fixed per page load
+// (switching language re-boots the app), so the placeholder set is built once.
+export function createMaskGate(t) {
+    const placeholders = new Set(NON_SENSITIVE_KEYS.map((key) => t(key)));
+    return (value) => (placeholders.has(value) ? undefined : 'ip');
+}
+
 const syncMaskAttribute = (level) => {
     if (typeof document === 'undefined') return;
     if (level === 0) {

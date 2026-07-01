@@ -18,8 +18,7 @@
         :id="'IPInfoCard-' + (index + 1)" class="flex"
         :class="{ 'opacity-60': !card.ip || card.ip === t('ipInfos.IPv4Error') || card.ip === t('ipInfos.IPv6Error') }">
         <IPCard class="w-full" :card="card" :index="index" :isDarkMode="isDarkMode" :isMobile="isMobile"
-          :ipGeoSource="ipGeoSource"
-          :configs="configs" :asnInfos="asnInfos" :asnHistoryInfos="asnHistoryInfos"
+          :ipGeoSource="ipGeoSource" :configs="configs" :asnInfos="asnInfos" :asnHistoryInfos="asnHistoryInfos"
           :asnConnectivityInfos="asnConnectivityInfos" @refresh-card="refreshCard" />
       </div>
     </div>
@@ -126,9 +125,10 @@ const fetchStatus = reactive([]);
 let pendingIPDetailsRequests = new Map();
 let ipDataCache = new Map();
 
-// IP acquisition runs in two phases: resolveIP paints the IP the moment it
-// resolves; loadCardDetails fills in geo data. checkAllIPs runs phase 1 for all
-// cards in parallel, then phase 2 probe-then-fan-out; refreshCard reuses both.
+// Each card is an independent pipeline: resolveIP paints the IP the moment it
+// resolves, then loadCardDetails fills in its geo data. fetchIP chains the two
+// for one card; checkAllIPs and refreshCard both drive cards through fetchIP, so
+// a slow or failing source only ever delays its own card — never the others.
 
 // Settle a card's fetch status — drives the global IPInfo loading indicator.
 const markFetched = (cardID) => {
@@ -197,8 +197,9 @@ const trackFetchStatus = (status) => {
   }
 };
 
-// Resolve all IPs in parallel (no stagger), then load details probe-then-fan-out:
-// await the first valid card so a dead source fails over once, then parallelize.
+// Drive every card through its own resolve→detail pipeline, all in parallel.
+// allSettled so one card can't sink the batch (fetchIP already swallows per-card
+// errors — this is belt-and-suspenders). Cards paint independently as they land.
 const checkAllIPs = async () => {
   const ipSources = [
     [0, getIPFromIPChecking4],
@@ -209,14 +210,9 @@ const checkAllIPs = async () => {
     [5, getIPFromIPChecking64],
   ].slice(0, ipCardsToShow.value);
 
-  const resolved = await Promise.all(
-    ipSources.map(([cardID, getFromSource]) => resolveIP(cardID, getFromSource))
+  await Promise.allSettled(
+    ipSources.map(([cardID, getFromSource]) => fetchIP(cardID, getFromSource))
   );
-
-  const pending = resolved.filter((r) => r.ip !== null);
-  const probe = pending.shift();
-  if (probe) await loadCardDetails(probe.cardID, probe.ip);
-  await Promise.allSettled(pending.map((r) => loadCardDetails(r.cardID, r.ip)));
 };
 
 // Get IP details from IP address
@@ -293,7 +289,8 @@ const fetchIPDetails = async (cardIndex, ip, sourceID = null) => {
 };
 
 // Re-fetch geo details for every card when the user picks a new IP database.
-// Same probe-then-fan-out as checkAllIPs, no stagger.
+// Each card queries independently in parallel — no probe — so a slow or failing
+// card never blocks the rest.
 const selectIPGeoSource = async () => {
   // Clear stale detail fields, keep IP + map.
   ipDataCards.forEach((card) => {
@@ -302,20 +299,15 @@ const selectIPGeoSource = async () => {
   });
   ipDataCache.clear();
 
-  // Cards that actually hold an IP, in display order.
-  const cards = ipDataCards
-    .map((card, index) => ({ card, index }))
-    .filter(({ card }) => isValidIP(card.ip));
-
-  // Probe the first card so a failed source fails over once, then reuse the
-  // settled source for the rest in parallel.
-  const probe = cards.shift();
-  if (!probe) return;
-  await fetchIPDetails(probe.index, probe.card.ip, ipGeoSource.value);
-  const settledSource = ipGeoSource.value;
-
+  // Query every card that holds a valid IP against the chosen source, in
+  // parallel. Captured once so an in-flight fetchIPDetails mutating
+  // ipGeoSource.value can't shift the source mid-batch.
+  const chosenSource = ipGeoSource.value;
   await Promise.allSettled(
-    cards.map(({ card, index }) => fetchIPDetails(index, card.ip, settledSource))
+    ipDataCards
+      .map((card, index) => ({ card, index }))
+      .filter(({ card }) => isValidIP(card.ip))
+      .map(({ card, index }) => fetchIPDetails(index, card.ip, chosenSource))
   );
 };
 

@@ -8,7 +8,7 @@
         </h2>
         <JnTooltip :text="t('Tooltips.RefreshConnectivityTests')" side="left">
           <Button size="icon" variant="outline" class="shrink-0 cursor-pointer"
-            @click="checkAllConnectivity(false, true, true)" aria-label="Refresh Connectivity Test">
+            @click="handelCheckStart('manual')" aria-label="Refresh Connectivity Test">
             <component :is="isStarted ? RotateCw : Play" />
           </Button>
         </JnTooltip>
@@ -510,12 +510,20 @@ const finalizeMultiTestAlert = () => {
 };
 
 // ── Main control ───────────────────────────────────────────────────────────
-const handelCheckStart = async (fromApp = false) => {
+// `trigger` selects three behaviors (arming the toast = setting alertToShow):
+//   'boot'    — startup auto-run: arm toast, no card reset, auto pass (records rounds)
+//   'manual'  — section refresh button: arm toast, reset cards, single pass
+//   'refresh' — global "refresh everything": suppress toast (global alert covers it), reset cards
+const handelCheckStart = async (trigger = 'boot') => {
   const multi = multipleTests.value;
-  if (fromApp) await checkAllConnectivity(false, true, true);
-  else await checkAllConnectivity(true, false, false);
+  const isAuto = trigger === 'boot';
+  const showToast = trigger !== 'refresh';
+  const resetCards = trigger !== 'boot';
+  await checkAllConnectivity(showToast, resetCards, !isAuto);
   store.setLoadingStatus('Connectivity', true);
-  if (multi) {
+  // Multi-round follow-ups are a startup-only feature; manual/global refreshes
+  // are a single pass and flag completion immediately so the toast can fire.
+  if (multi && isAuto) {
     intervalId.value = setInterval(async () => {
       if (counter.value < maxCounts.value && !manualRun.value) {
         await checkAllConnectivity(false, false, false);

@@ -160,7 +160,7 @@
       "ipSourcesToCheckTips": "Select the number of servers to check your IP address. The more servers you select, the more time it will take to complete the check.",
       "appSettings": "Program Settings",
       "autoRun": "Auto Run",
-      "autoRunTips": "If disabled, the app will only check the local IP and will not run tests automatically.",
+      "autoRunTips": "IP info is always checked when the page loads. Choose which other modules run automatically on startup.",
       "simpleMode": "Simple Mode",
       "simpleModeTips": "Hide the description text of each module, suitable for users who are already familiar with the application.",
       "connectivityMultipleTests": "Multiple Connectivity Refreshes",
@@ -841,9 +841,10 @@
     "contact": "If you have any questions or suggestions, please contact me via email: jason[AT]kenengba.com.",
     "personal": "Personal Website",
     "blog": "My Blog",
-    "retiremoney": "Future Planner",
+    "linkedIn": "LinkedIn",
     "twitter": "Twitter",
-    "Sponsor": "Sponsor"
+    "Sponsor": "Sponsor Us",
+    "Privacy": "Privacy"
   },
   "specialthanks": {
     "Title": "Special Thanks",

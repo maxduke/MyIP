@@ -1,8 +1,22 @@
+// The static map renders at zoom 3 (continent scale), where ~0.176° spans a
+// single pixel. Quantizing the request coords to 1 decimal (~0.1°, sub-pixel)
+// leaves the marker visually unchanged while collapsing every IP in the same
+// 0.1° grid cell onto one CF edge-cache key — the cache key is the client URL,
+// so this rounding must happen here, not in the backend handler. The full-
+// precision lat/lon are still kept on baseData for display.
+function mapCoord(value) {
+    return Number(value).toFixed(1);
+}
+
 // Parse IP data
 function transformDataFromIPapi(data, ipGeoSource, t, mapLanguage) {
     if (data.error) {
         throw new Error(data.reason);
     }
+
+    const hasCoords = data.latitude && data.longitude;
+    const mapLat = hasCoords ? mapCoord(data.latitude) : "";
+    const mapLon = hasCoords ? mapCoord(data.longitude) : "";
 
     const baseData = {
         country_name: data.country_name || "",
@@ -14,8 +28,8 @@ function transformDataFromIPapi(data, ipGeoSource, t, mapLanguage) {
         isp: data.org || "",
         asn: data.asn || "",
         asnlink: data.asn ? data.asn.startsWith('AS') ? `https://bgp.tools/as/${data.asn}` : false : false,
-        mapUrl: data.latitude && data.longitude ? `/api/map?latitude=${data.latitude}&longitude=${data.longitude}&language=${mapLanguage}` : "",
-        mapUrl_dark: data.latitude && data.longitude ? `/api/map?latitude=${data.latitude}&longitude=${data.longitude}&language=${mapLanguage}&CanvasMode=Dark` : ""
+        mapUrl: hasCoords ? `/api/map?latitude=${mapLat}&longitude=${mapLon}&language=${mapLanguage}` : "",
+        mapUrl_dark: hasCoords ? `/api/map?latitude=${mapLat}&longitude=${mapLon}&language=${mapLanguage}&CanvasMode=Dark` : ""
     };
 
     if (ipGeoSource === 0) {

@@ -1,6 +1,6 @@
 <template>
     <Dialog :open="isOpen" @update:open="isOpen = $event">
-        <DialogContent :title="t('helpModal.Title')" class="max-w-2xl">
+        <DialogContent :title="t('helpModal.Title')" class="max-w-4xl">
             <DialogHeader :icon="Keyboard" :title="t('helpModal.Title')" />
 
             <div class="space-y-4">
@@ -9,8 +9,8 @@
                     <span>{{ t('shortcutKeys.HelpNote') }}</span>
                 </p>
 
-                <!-- 2 column shortcut list -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+                <!-- Multi-column shortcut list -->
+                <div class="grid grid-cols-2 md:grid-cols-3  gap-x-6 gap-y-1">
                     <div v-for="key in keyMap" :key="key.keys"
                         class="flex items-center justify-between gap-3 py-2 border-b last:border-b-0">
                         <span class="text-sm">{{ key.description }}</span>

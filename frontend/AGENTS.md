@@ -22,7 +22,10 @@ frontend/
 │                                  display mode, which is utils/pwa.js's
 │                                  isRunningAsPwa()). Advanced tools also open
 │                                  in-page via the `?tool=<slug>` query on `/`.
-├── locales/                     ← i18n copy (en / zh / fr / tr) + security-checklist data
+│                                  `/privacy` → PrivacyPolicy.vue (standalone page).
+├── locales/                     ← i18n copy (en / zh / fr / tr) + on-demand
+│                                  sub-packs (security-checklist/ · privacy/)
+│                                  loaded by their own page, not the main bundle
 ├── style/style.css              ← Tailwind v4 entry + design tokens
 ├── lib/                         ← cn() helper (tailwind-merge + clsx)
 ├── data/                        ← static config
@@ -47,6 +50,9 @@ frontend/
 └── components/
     ├── Home.vue                 ← the homepage (`/` route): all top-level sections + the drawer
     ├── StandaloneTool.vue       ← `/tools/:slug` page: one tool in a minimal full-page layout
+    ├── PrivacyPolicy.vue        ← `/privacy` page (standalone layout)
+    ├── StandalonePageHeader.vue ← slim header shared by StandaloneTool + PrivacyPolicy
+    │                              (brand → home + breadcrumb + back link; NOT Nav.vue)
     ├── *.vue                    ← top-level sections (IpInfos / Connectivity / WebRTC / DnsLeaks
     │                              / SpeedTest / Advanced / Footer / Nav / Achievements / User /
     │                              Additional)

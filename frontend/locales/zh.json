@@ -110,7 +110,7 @@
         },
         "ResourceHog": {
           "Title": "费油的车",
-          "Meet": "设置多次刷新可用性"
+          "Meet": "设置多次刷新网络连通性"
         },
         "MakingBigNews": {
           "Title": "搞大新闻",
@@ -160,13 +160,13 @@
       "ipSourcesToCheckTips": "选择默认从多少个 IP 检测服务器获取 IP 信息。",
       "appSettings": "程序设置",
       "autoRun": "自动运行",
-      "autoRunTips": "关闭后，打开应用将只会进行本机 IP 检测，不会自动运行其它的测试。",
+      "autoRunTips": "打开页面时始终会检测 IP 信息。你可以选择其它模块是否在启动时自动运行。",
       "simpleMode": "简洁模式",
       "simpleModeTips": "隐藏每个模块的说明文字，适合已经了解本应用的用户。",
-      "connectivityMultipleTests": "多次刷新可用性检测",
+      "connectivityMultipleTests": "多次刷新网络连通性检测",
       "connectivityMultipleTestsTips": "开启多次刷新后，程序在启动时将运行多次检测，并显示最小延迟值。",
-      "popupConnectivityNotifications": "显示可用性检测气泡",
-      "popupConnectivityNotificationsTips": "开启后，将会在首次检测时以气泡形式提示可用性结果。",
+      "popupConnectivityNotifications": "显示网络连通性检测气泡",
+      "popupConnectivityNotificationsTips": "开启后，将会在首次检测时以气泡形式提示网络连通性结果。",
       "ipDB": "IP 解析数据源",
       "ipDBTips": "你可以选择你默认使用的 IP 地理位置数据源，如果你选定的不可用，系统会依次使用后续的数据源。",
       "language": "语言设置",
@@ -841,9 +841,10 @@
     "contact": "如果你有任何问题或建议，请通过邮箱联系我： jason[AT]kenengba.com",
     "personal": "个人网站",
     "blog": "可能吧博客",
-    "retiremoney": "躺平计算器",
+    "linkedIn": "LinkedIn",
     "twitter": "Twitter",
-    "Sponsor": "赞助"
+    "Sponsor": "赞助我们",
+    "Privacy": "隐私政策"
   },
   "specialthanks": {
     "Title": "特别鸣谢",

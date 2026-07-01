@@ -6,7 +6,7 @@
             <!-- Header -->
             <header class="flex items-center justify-between gap-2 px-4 py-3 border-b shrink-0">
                 <h2 class="flex items-center gap-2 text-base font-semibold m-0">
-                    <SlidersHorizontal class="size-4 text-muted-foreground" />
+                    <Cog class="size-4 text-muted-foreground" />
                     {{ t('nav.preferences.title') }}
                 </h2>
                 <SheetClose
@@ -92,29 +92,46 @@
                     <SectionTip>{{ t('nav.preferences.ipDBTips') }}</SectionTip>
                 </section>
 
+                <!-- Auto Run on Startup — per-module switches only. IP info always
+                     runs (no switch). The Connectivity test options live in App
+                     Settings below: they apply to manual runs too, not just startup. -->
+                <section id="Pref_autoRun">
+                    <SectionTitle :icon="Play">{{ t('nav.preferences.autoRun') }}</SectionTitle>
+                    <div class="rounded-lg border bg-card divide-y">
+                        <PrefRow id="autoRunConnectivity" :label="t('nav.Connectivity')"
+                            :model-value="userPreferences.autoRunConnectivity"
+                            @update:model-value="(v) => prefAutoRun('autoRunConnectivity', v)" />
+
+                        <PrefRow id="autoRunWebRTC" :label="t('nav.WebRTC')"
+                            :model-value="userPreferences.autoRunWebRTC"
+                            @update:model-value="(v) => prefAutoRun('autoRunWebRTC', v)" />
+
+                        <PrefRow id="autoRunDnsLeak" :label="t('nav.DNSLeakTest')"
+                            :model-value="userPreferences.autoRunDnsLeak"
+                            @update:model-value="(v) => prefAutoRun('autoRunDnsLeak', v)" />
+                    </div>
+                    <SectionTip>{{ t('nav.preferences.autoRunTips') }}</SectionTip>
+                </section>
+
                 <!-- App Settings -->
                 <section id="Pref_appSettings">
                     <SectionTitle :icon="AppWindow">{{ t('nav.preferences.appSettings') }}</SectionTitle>
                     <div class="rounded-lg border bg-card divide-y">
-                        <PrefRow id="autoStart" :label="t('nav.preferences.autoRun')"
-                            :tip="t('nav.preferences.autoRunTips')" :model-value="userPreferences.autoStart"
-                            @update:model-value="prefAutoStart" />
-
-                        <PrefRow v-if="userPreferences.autoStart" id="ConnectivityMultipleTests"
+                        <PrefRow id="ConnectivityMultipleTests"
                             :label="t('nav.preferences.connectivityMultipleTests')"
                             :tip="t('nav.preferences.connectivityMultipleTestsTips')"
                             :model-value="userPreferences.connectivityMultipleTests"
                             @update:model-value="prefConnectivityMultipleTests" />
-
-                        <PrefRow id="simpleMode" :label="t('nav.preferences.simpleMode')"
-                            :tip="t('nav.preferences.simpleModeTips')" :model-value="userPreferences.simpleMode"
-                            @update:model-value="prefSimpleMode" />
 
                         <PrefRow id="ConnectivityNotifications"
                             :label="t('nav.preferences.popupConnectivityNotifications')"
                             :tip="t('nav.preferences.popupConnectivityNotificationsTips')"
                             :model-value="userPreferences.popupConnectivityNotifications"
                             @update:model-value="prefconnectivityShowNoti" />
+
+                        <PrefRow id="simpleMode" :label="t('nav.preferences.simpleMode')"
+                            :tip="t('nav.preferences.simpleModeTips')" :model-value="userPreferences.simpleMode"
+                            @update:model-value="prefSimpleMode" />
                     </div>
                 </section>
             </div>
@@ -141,7 +158,8 @@ import {
     LayoutGrid,
     Moon,
     Palette,
-    SlidersHorizontal,
+    Play,
+    Cog,
     Sun,
 } from '@lucide/vue';
 
@@ -215,10 +233,14 @@ const prefSimpleMode = (value) => {
     trackEvent('Nav', 'PrefereceClick', 'SimpleMode');
 };
 
-const prefAutoStart = (value) => {
-    store.updatePreference('autoStart', value);
-    trackEvent('Nav', 'PrefereceClick', 'AutoStart');
-    if (isSignedIn.value && !value && !store.userAchievements.EnergySaver.achieved) {
+// Per-module startup auto-run toggle. EnergySaver is earned once every auto-run
+// module is off.
+const prefAutoRun = (key, value) => {
+    store.updatePreference(key, value);
+    trackEvent('Nav', 'PrefereceClick', key);
+    const prefs = userPreferences.value;
+    const allOff = !prefs.autoRunConnectivity && !prefs.autoRunWebRTC && !prefs.autoRunDnsLeak;
+    if (isSignedIn.value && allOff && !store.userAchievements.EnergySaver.achieved) {
         store.setTriggerUpdateAchievements('EnergySaver');
     }
 };
@@ -256,7 +278,7 @@ SectionTitle.props = ['icon'];
 const SectionTip = (props, { slots }) =>
     h('p', { class: 'mt-2 text-xs text-muted-foreground leading-relaxed' }, slots.default?.());
 
-// App Settings switch row: label + tip on left, Switch on right
+// App Settings switch row: label (+ optional tip) on left, Switch on right.
 const PrefRow = (props, { emit }) =>
     h('div', { class: 'flex items-start justify-between gap-3 p-3' }, [
         h('div', { class: 'flex-1 min-w-0' }, [
@@ -264,7 +286,9 @@ const PrefRow = (props, { emit }) =>
                 for: props.id,
                 class: 'text-sm font-medium cursor-pointer select-none',
             }, props.label),
-            h('p', { class: 'mt-0.5 text-xs text-muted-foreground leading-relaxed' }, props.tip),
+            props.tip
+                ? h('p', { class: 'mt-0.5 text-xs text-muted-foreground leading-relaxed' }, props.tip)
+                : null,
         ]),
         h(Switch, {
             id: props.id,

@@ -79,6 +79,11 @@ export default async (req, res) => {
             return res.status(apiRes.status).json({ error: `Upstream map API returned ${apiRes.status}` });
         }
         res.setHeader('Content-Type', apiRes.headers.get('content-type') || 'image/jpeg');
+        // Binary streams bypass the res.json hook in the cacheable() middleware,
+        // so apply the cache value it stashed on res.locals here on the 2xx path.
+        if (res.locals.cacheControl) {
+            res.setHeader('Cache-Control', res.locals.cacheControl);
+        }
         Readable.fromWeb(apiRes.body).pipe(res);
     } catch (e) {
         logger.error({ err: e, latitude, longitude, language, CanvasMode }, 'google-map handler failed');

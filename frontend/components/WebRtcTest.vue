@@ -46,7 +46,7 @@
               <span class="relative inline-flex size-2 rounded-full" :class="dotClass(toneOf(stun))"></span>
             </span>
             <FitText :text="stun.ip" :tiers="INLINE_TIERS" :title="stun.ip" class="font-mono min-w-0"
-              :class="textClass(toneOf(stun))" data-mask="ip" />
+              :class="textClass(toneOf(stun))" :data-mask="maskAttr(stun.ip)" />
           </div>
 
           <!-- NAT + ISP + Country -->
@@ -125,6 +125,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { useStatusTone, ipFieldTone, isFieldPending as isFieldPendingShared } from '@/composables/use-status-tone.js';
+import { createMaskGate } from '@/composables/use-info-mask.js';
 import { useMaxmind } from '@/composables/use-maxmind.js';
 import { Play, MapPin, EthernetPort, Flower, Network, RotateCw, FileText, ChevronDown } from '@lucide/vue';
 import { Icon } from '@iconify/vue';
@@ -135,6 +136,8 @@ import { INLINE_TIERS } from '@/composables/use-fit-text.js';
 const { t } = useI18n();
 const store = useMainStore();
 const userPreferences = computed(() => store.userPreferences);
+// Skip the info-mask blur on waiting/error placeholders (not a real IP).
+const maskAttr = createMaskGate(t);
 const isSimpleMode = computed(() => userPreferences.value.simpleMode);
 const { dotClass, textClass } = useStatusTone();
 const { lookupMaxmind } = useMaxmind();
