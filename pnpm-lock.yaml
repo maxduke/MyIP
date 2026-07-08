@@ -73,7 +73,7 @@ importers:
         version: 1.11.13
       http-proxy-middleware:
         specifier: ^4.2.0
-        version: 4.2.0
+        version: 4.2.0(supports-color@5.5.0)
       maxmind:
         specifier: ^5.0.6
         version: 5.0.6
@@ -140,7 +140,7 @@ importers:
         version: 6.0.7(vite@8.1.3(@types/node@24.1.0)(jiti@2.7.0)(yaml@2.9.0))(vue@3.5.39)
       code-inspector-plugin:
         specifier: ^1.6.6
-        version: 1.6.6
+        version: 1.6.6(supports-color@5.5.0)
       nodemon:
         specifier: ^3.1.14
         version: 3.1.14
@@ -2255,45 +2255,45 @@ snapshots:
 
   '@cloudflare/speedtest@1.11.0': {}
 
-  '@code-inspector/core@1.6.6':
+  '@code-inspector/core@1.6.6(supports-color@5.5.0)':
     dependencies:
       '@vue/compiler-dom': 3.5.39
       chalk: 4.1.2
       dotenv: 16.6.1
       launch-ide: 1.4.5
-      portfinder: 1.0.38
+      portfinder: 1.0.38(supports-color@5.5.0)
     transitivePeerDependencies:
       - supports-color
 
   '@code-inspector/esbuild@1.6.6':
     dependencies:
-      '@code-inspector/core': 1.6.6
+      '@code-inspector/core': 1.6.6(supports-color@5.5.0)
     transitivePeerDependencies:
       - supports-color
 
   '@code-inspector/mako@1.6.6':
     dependencies:
-      '@code-inspector/core': 1.6.6
+      '@code-inspector/core': 1.6.6(supports-color@5.5.0)
     transitivePeerDependencies:
       - supports-color
 
   '@code-inspector/turbopack@1.6.6':
     dependencies:
-      '@code-inspector/core': 1.6.6
+      '@code-inspector/core': 1.6.6(supports-color@5.5.0)
       '@code-inspector/webpack': 1.6.6
     transitivePeerDependencies:
       - supports-color
 
   '@code-inspector/vite@1.6.6':
     dependencies:
-      '@code-inspector/core': 1.6.6
+      '@code-inspector/core': 1.6.6(supports-color@5.5.0)
       chalk: 4.1.1
     transitivePeerDependencies:
       - supports-color
 
   '@code-inspector/webpack@1.6.6':
     dependencies:
-      '@code-inspector/core': 1.6.6
+      '@code-inspector/core': 1.6.6(supports-color@5.5.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -3010,7 +3010,7 @@ snapshots:
       '@vue/shared': 3.5.39
       estree-walker: 2.0.2
       magic-string: 0.30.21
-      postcss: 8.5.15
+      postcss: 8.5.16
       source-map-js: 1.2.1
 
   '@vue/compiler-ssr@3.5.38':
@@ -3258,9 +3258,9 @@ snapshots:
 
   clsx@2.1.1: {}
 
-  code-inspector-plugin@1.6.6:
+  code-inspector-plugin@1.6.6(supports-color@5.5.0):
     dependencies:
-      '@code-inspector/core': 1.6.6
+      '@code-inspector/core': 1.6.6(supports-color@5.5.0)
       '@code-inspector/esbuild': 1.6.6
       '@code-inspector/mako': 1.6.6
       '@code-inspector/turbopack': 1.6.6
@@ -3555,7 +3555,7 @@ snapshots:
 
   http-parser-js@0.5.10: {}
 
-  http-proxy-middleware@4.2.0:
+  http-proxy-middleware@4.2.0(supports-color@5.5.0):
     dependencies:
       debug: 4.4.3(supports-color@5.5.0)
       httpxy: 0.5.4
@@ -3885,7 +3885,7 @@ snapshots:
       exsolve: 1.0.8
       pathe: 2.0.3
 
-  portfinder@1.0.38:
+  portfinder@1.0.38(supports-color@5.5.0):
     dependencies:
       async: 3.2.6
       debug: 4.4.3(supports-color@5.5.0)
