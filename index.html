@@ -59,12 +59,12 @@
   <!-- @site-url:close -->
 
   <!-- Seed the `.dark` class on <html> BEFORE first paint.
-      Reads the user's stored theme preference from localStorage (key
-      `userPreferences`, field `theme`, values: "auto" / "light" / "dark"),
-      falling back to the OS `prefers-color-scheme` when on "auto" or when
-      there's no stored preference yet. Runs synchronously — must come before
-      the inline <style> block below and before the Vue bundle loads, so the
-      boot screen and the eventually-mounted app agree on the theme from
+      Reads the stored theme preference (field `theme`, values:
+      "auto" / "light" / "dark") via `jnReadPrefs`, falling back to the OS
+      `prefers-color-scheme` when on "auto" or when there's no stored
+      preference yet. Runs synchronously — must come before the inline
+      <style> block below and before the Vue bundle loads, so the boot
+      screen and the eventually-mounted app agree on the theme from
       frame 1. Preferences.vue owns the class after mount via
       `store.setDarkMode`. -->
   <script>
@@ -72,18 +72,24 @@
       // Gates the initial-hidden `#app` rule; App.vue clears it for the
       // scale/fade-in. If this script never runs, #app renders normally.
       document.documentElement.setAttribute('data-booting', '');
-      try {
-        var stored = JSON.parse(localStorage.getItem('userPreferences') || '{}');
-        var theme = stored.theme || 'auto';
-        var isDark =
-          theme === 'dark' ||
-          (theme === 'auto' &&
-            window.matchMedia &&
-            window.matchMedia('(prefers-color-scheme: dark)').matches);
-        if (isDark) document.documentElement.classList.add('dark');
-      } catch (e) {
-        /* localStorage / JSON parse disabled — fall through, defaults to light. */
-      }
+      // Stored preferences. The key mirrors PREFS_STORAGE_KEY in
+      // frontend/data/default-preferences.js — keep them in sync. Also used
+      // by the boot-quips script in <body> to pick the copy language.
+      window.jnReadPrefs = function () {
+        try {
+          return JSON.parse(localStorage.getItem('userPreferences_v7') || '{}') || {};
+        } catch (e) {
+          /* malformed entry or storage disabled — fall back to defaults */
+          return {};
+        }
+      };
+      var theme = window.jnReadPrefs().theme || 'auto';
+      var isDark =
+        theme === 'dark' ||
+        (theme === 'auto' &&
+          window.matchMedia &&
+          window.matchMedia('(prefers-color-scheme: dark)').matches);
+      if (isDark) document.documentElement.classList.add('dark');
     })();
   </script>
 
@@ -168,11 +174,11 @@
     }
 
     /* Hand-off, driven from App.vue:
-        stage-1 & stage-2 — non-logo children fade out, logo stays put.logo scales down to 0 and fades.
+        stage-1 — non-logo children (progress bar, quips) fade out, logo stays put.
+        stage-2 — the logo scales down to 0 and fades.
         stage-3 — overlay removed, `#app` runs `.jn-app-enter` below. */
     .jn-loading>svg,
     .jn-loading>div,
-    .jn-loading>.jn-spinner,
     .jn-loading>p {
       transition: opacity 180ms ease-out,
         transform 200ms cubic-bezier(0.55, 0, 0.7, 0);
@@ -206,21 +212,49 @@
       text-decoration: underline;
     }
 
-    /* Spinner — explicitly border-box so its rendered size stays 28×28 whether
-       Preflight has arrived or not. */
-    .jn-spinner {
-      width: 28px;
-      height: 28px;
-      border: 4px solid #16a34a;
-      border-left-color: transparent;
-      border-radius: 50%;
-      animation: jn-spin 1s linear infinite;
+    /* Fake progress bar — width is driven by the boot-quips script below,
+       easing toward a 92% cap; the real hand-off never waits for it. */
+    .jn-progress {
+      width: 220px;
+      max-width: 70vw;
+      height: 6px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      overflow: hidden;
     }
 
-    @keyframes jn-spin {
-      to {
-        transform: rotate(360deg);
+    html.dark .jn-progress {
+      background: #27272a;
+    }
+
+    /* blue-500 — the brand action color, same value in light and dark. */
+    .jn-progress-fill {
+      display: block;
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: #3b82f6;
+      transition: width 600ms ease-out;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .jn-progress-fill {
+        transition: none;
       }
+    }
+
+    /* Screen-reader-only text — the rotating quips are aria-hidden so they
+       don't spam the live region every second; this line is announced once
+       instead. */
+    .jn-visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
     }
 
     /* `#app` starts hidden + shrunk; App.vue flips `.jn-app-enter` to
@@ -267,17 +301,117 @@
         d="M162.62,21.9026663 C157.13,27.3326663 151.99,33.9226663 147.2,41.6126663 C129.83,69.4326663 116.87,111.602666 107.28,164.772666 C50.98,175.412666 16.22,198.912666 17.38,222.912666 C18.42,244.652666 45.84,261.322666 87.05,272.832666 C84.34,281.212666 84.98,282.652666 88.65,292.962666 C57.87,305.942666 25.71,345.362666 0,379.892666 L100.03,447.502666 L64.71,512.352666 L449.12,512.352666 L411.86,447.502666 L511,378.632666 C481.92,337.782666 446.81,303.072666 424.88,293.652666 C429.51,281.632666 430.32,279.532666 426.44,272.862666 C467.65,261.142666 494.67,244.022666 494.61,221.392666 C494.55,196.712666 459.11,173.012666 406.3,164.772666 C393.66,111.272666 381.08,69.1526663 365.07,41.5026663 C362.16,36.4826663 359.14,31.9326663 355.98,27.8826663 C308.32,-33.2373337 291.62,25.1926663 257.84,25.1226663 C218.67,25.0426663 213.69,-28.5673337 162.62,21.9026663 Z M223.27,419.802666 C223.27,416.232666 226.17,413.332666 229.74,413.332666 L240.26,413.332666 C241.64,413.332666 242.92,413.772666 243.96,414.502666 C247.73,416.602666 251.42,417.832666 254.97,417.922666 C256.256726,417.95538 257.551379,417.837477 258.853959,417.554552 C261.134997,417.059103 263.440344,416.057596 265.77,414.472666 C266.837339,413.754341 268.093464,413.368108 269.38,413.362666 L282.16,413.332666 C285.73,413.332666 288.62,416.232666 288.62,419.802666 C288.62,423.372666 285.73,426.272666 282.16,426.272666 L271.21,426.272666 C265.75,429.542666 260.23,430.942666 254.67,430.802666 C249.23,430.662666 243.89,429.032666 238.66,426.272666 L229.74,426.272666 C226.17,426.272666 223.27,423.372666 223.27,419.802666 Z M160.62,279.492666 C221.05,301.232666 281.49,300.872666 341.92,281.322666 C283.47,286.072666 219.13,284.942666 160.62,279.492666 Z M267.04,306.612666 L244.93,306.612666 C210.81,384.892666 122.79,350.782666 142.77,277.672666 C135.46,276.872666 128.26,275.992666 121.21,275.052666 L120.89,276.932666 L120.3,280.492666 L116.82,301.362666 C86.43,294.642666 103.46,373.132666 131.08,366.232666 C135.3,378.412666 136.442197,389.44711 142.34,398.422666 C171.368144,442.599077 205.648487,494.791988 256.040415,494.791988 C306.432342,494.791988 341.594767,438.778379 368.99,398.422666 C375.513955,388.812277 376.14,383.142666 380.53,369.392666 C405.97,373.452666 426.88,296.082666 395.87,301.762666 L392.68,280.712666 L392.13,277.062666 L391.9,275.522666 C384.43,276.682666 376.78,277.722666 368.99,278.632666 C389.88,349.262666 300.46,385.132666 267.04,306.612666 Z M284.280512,176.166601 L284.280512,67.1666006 C366.547618,67.1666006 361.40053,176.166601 284.280512,176.166601 Z M170.780508,409.666601 C182.571845,404.08157 211.029823,401.289054 256.154442,401.289054 C301.27906,401.289054 329.487749,404.08157 340.780508,409.666601 C340.780508,398.413948 339.802073,389.918194 323.84137,384.371704 C288.837937,372.207694 222.824258,373.335802 189.15409,384.371704 C170.816498,390.382125 170.780508,397.067154 170.780508,409.666601 Z M206.779566,446.766602 C218.286957,452.470688 235.027101,455.322731 257,455.322731 C278.972899,455.322731 295.566401,452.470688 306.780508,446.766602 C306.780508,458.019255 306.204953,466.515009 296.816215,472.061498 C286.632212,478.077798 271.985838,480.842479 257.386147,480.76502 C242.467564,480.685868 227.597726,477.639061 217.587657,472.061498 C206.800736,466.051077 206.779566,459.366048 206.779566,446.766602 Z M256.254843,67.1117579 L229.254843,87.6169826 C229.254843,124.271828 229.254843,160.370447 229.254843,204.775426 L256.254843,208.111758 C256.254843,143.245746 256.254843,107.726499 256.254843,67.1117579 Z M207.254843,67.1117579 L180.254843,87.6169826 C180.254843,124.271828 180.254843,160.370447 180.254843,204.775426 L207.254843,208.111758 C207.254843,143.245746 207.254843,107.726499 207.254843,67.1117579 Z" />
     </svg>
 
-    <div>
-      <p>It may take a while for the first time</p>
-      <p>Please wait&hellip;</p>
+    <p class="jn-visually-hidden">Loading, it may take a while for the first time. Please wait&hellip;</p>
+
+    <div class="jn-progress" aria-hidden="true">
+      <span class="jn-progress-fill" id="jn-loading-progress"></span>
     </div>
 
-    <div class="jn-spinner" aria-label="Loading"></div>
+    <p id="jn-loading-quip" aria-hidden="true"></p>
 
     <p id="jn-loading-slow-hint" hidden>
       Waiting too long? Try <a href="https://lite.ipcheck.ing/">IPCheck.ing Lite</a>, or refresh the page.
     </p>
   </div>
+
+  <!-- Boot quips + fake progress. The copy lives inline (not in vue-i18n)
+      because it runs before Vue loads; all four locales ship here and the
+      language pick mirrors frontend/locales/i18n.js (stored prefs → ?hl= →
+      browser language → en). The progress is time-driven make-believe: one
+      quip per second, width easing toward a 92% cap. App.vue's hand-off
+      removes the overlay the moment Vue mounts and is never delayed by the
+      script — returning visitors with a warm cache may only glimpse quip #1. -->
+  <script>
+    (() => {
+      const QUIPS = {
+        en: [
+          'Installing network card drivers…',
+          'Lining up the RJ45 connector…',
+          'Plugging the fiber into the router…',
+          'Blowing the dust out of the Ethernet port…',
+          'Rebooting the modem (attempt #1)…',
+          'Three-way handshaking with your ISP…',
+          'Asking the DNS where you actually are…',
+          'Almost there, promise…',
+        ],
+        zh: [
+          '正在安装网卡驱动…',
+          '正在把水晶头对准 RJ45 接口…',
+          '正在把光纤插进路由器…',
+          '正在吹掉网线接头上的灰…',
+          '正在重启光猫（第 1 次）…',
+          '正在与运营商三次握手…',
+          '正在问 DNS 你到底在哪…',
+          '马上就好，真的…',
+        ],
+        fr: [
+          'Installation du pilote de la carte réseau…',
+          'Alignement de la fiche RJ45…',
+          'Branchement de la fibre sur le routeur…',
+          'Dépoussiérage du port Ethernet…',
+          'Redémarrage de la box (essai n° 1)…',
+          'Triple poignée de main avec le FAI…',
+          'On demande au DNS où vous êtes…',
+          "C'est presque prêt, promis…",
+        ],
+        tr: [
+          'Ağ kartı sürücüsü kuruluyor…',
+          'RJ45 konnektörü hizalanıyor…',
+          'Fiber kablo modeme takılıyor…',
+          'Ethernet portundaki toz üfleniyor…',
+          'Modem yeniden başlatılıyor (1. deneme)…',
+          'Servis sağlayıcıyla üçlü el sıkışılıyor…',
+          "DNS'e tam olarak nerede olduğun soruluyor…",
+          'Az kaldı, gerçekten…',
+        ],
+      };
+
+      // Slow-network hint (revealed after 12s by the head script). Stored as
+      // whole sentences because the link position differs per language; the
+      // markup's English text stays as the no-script fallback.
+      const SLOW_HINTS = {
+        en: 'Waiting too long? Try <a href="https://lite.ipcheck.ing/">IPCheck.ing Lite</a>, or refresh the page.',
+        zh: '等得太久？试试 <a href="https://lite.ipcheck.ing/">IPCheck.ing Lite</a>，或刷新页面。',
+        fr: 'C’est un peu long ? Essayez <a href="https://lite.ipcheck.ing/">IPCheck.ing Lite</a>, ou actualisez la page.',
+        tr: 'Çok mu uzun sürdü? <a href="https://lite.ipcheck.ing/">IPCheck.ing Lite</a>’ı deneyin veya sayfayı yenileyin.',
+      };
+
+      const pickLang = () => {
+        const stored = window.jnReadPrefs ? window.jnReadPrefs().lang : null;
+        if (QUIPS[stored]) return stored;
+        const hl = new URLSearchParams(window.location.search).get('hl');
+        if (QUIPS[hl]) return hl;
+        const nav = (navigator.language || '').slice(0, 2).toLowerCase();
+        return QUIPS[nav] ? nav : 'en';
+      };
+
+      const lang = pickLang();
+      const quips = QUIPS[lang];
+
+      const hintEl = document.getElementById('jn-loading-slow-hint');
+      if (hintEl) hintEl.innerHTML = SLOW_HINTS[lang];
+
+      const quipEl = document.getElementById('jn-loading-quip');
+      const fillEl = document.getElementById('jn-loading-progress');
+      if (!quipEl || !fillEl) return;
+
+      let timer;
+      let step = 0;
+      const tick = () => {
+        // Overlay already removed by App.vue — stop ticking.
+        if (!document.getElementById('jn-loading')) {
+          clearInterval(timer);
+          return;
+        }
+        step += 1;
+        // Past the last quip the copy holds while the bar keeps creeping.
+        quipEl.textContent = quips[Math.min(step, quips.length) - 1];
+        fillEl.style.width = (92 * (1 - Math.pow(0.78, step))).toFixed(1) + '%';
+      };
+      tick();
+      timer = setInterval(tick, 1000);
+    })();
+  </script>
 
   <noscript>
     <p style="padding: 40px; text-align: center;">
