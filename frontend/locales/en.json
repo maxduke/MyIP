@@ -539,7 +539,7 @@
   },
   "ipHistory": {
     "Title": "IP History",
-    "Notes": "IPs detected while you use this site are recorded here. The data is stored only in this browser — it never syncs to your account or leaves your device. Records are kept for 90 days.",
+    "Notes": "IPs detected while you use this site are recorded here. The data is stored only in this browser — it never syncs to your account or leaves your device. You can adjust the record retention time in the \"Preferences\".",
     "Empty": "No records yet. IPs will appear here once the homepage tests detect them.",
     "ClearAll": "Clear History",
     "ClearConfirm": "Click again to confirm"

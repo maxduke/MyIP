@@ -539,7 +539,7 @@
   },
   "ipHistory": {
     "Title": "IP Geçmişi",
-    "Notes": "Siteyi kullanırken tespit edilen IP'ler burada kaydedilir. Veriler yalnızca bu tarayıcıda saklanır — hesabınızla asla eşitlenmez ve cihazınızdan ayrılmaz. Kayıtlar 90 gün saklanır.",
+    "Notes": "Siteyi kullanırken tespit edilen IP'ler burada kaydedilir. Veriler yalnızca bu tarayıcıda saklanır — hesabınızla asla eşitlenmez ve cihazınızdan ayrılmaz. Kayıtların saklanma süresini \"Tercihler\" bölümünde ayarlayabilirsiniz.",
     "Empty": "Henüz kayıt yok. Ana sayfadaki testler IP tespit ettiğinde burada görünecek.",
     "ClearAll": "Geçmişi Temizle",
     "ClearConfirm": "Onaylamak için tekrar tıklayın"
