@@ -318,7 +318,7 @@
       because it runs before Vue loads; all four locales ship here and the
       language pick mirrors frontend/locales/i18n.js (stored prefs → ?hl= →
       browser language → en). The progress is time-driven make-believe: one
-      quip per second, width easing toward a 92% cap. App.vue's hand-off
+      quip every 1.5s, width easing toward a 92% cap. App.vue's hand-off
       removes the overlay the moment Vue mounts and is never delayed by the
       script — returning visitors with a warm cache may only glimpse quip #1. -->
   <script>
@@ -409,7 +409,7 @@
         fillEl.style.width = (92 * (1 - Math.pow(0.78, step))).toFixed(1) + '%';
       };
       tick();
-      timer = setInterval(tick, 1000);
+      timer = setInterval(tick, 1500);
     })();
   </script>
 
