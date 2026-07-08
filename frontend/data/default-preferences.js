@@ -21,6 +21,9 @@ export const DEFAULT_PREFERENCES = Object.freeze({
   popupConnectivityNotifications: false,
   ipCardsToShow: 2,
   ipGeoSource: 0,
+  // Local IP-history recorder (see use-ip-history.js). Days: 1–90.
+  ipHistoryEnabled: true,
+  ipHistoryDays: 90,
   lang: 'auto', // auto | zh | en | fr | tr
   // User-defined extra targets for the Connectivity test grid. Each entry:
   //   { id: 'custom-<timestamp>', name: string, url: string-with-trailing-? }

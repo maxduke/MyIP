@@ -134,18 +134,48 @@
                             @update:model-value="prefSimpleMode" />
                     </div>
                 </section>
+
+                <!-- IP History -->
+                <section id="Pref_ipHistory">
+                    <SectionTitle :icon="History">{{ t('nav.preferences.ipHistory') }}</SectionTitle>
+                    <div class="rounded-lg border bg-card divide-y">
+                        <PrefRow id="ipHistoryEnabled" :label="t('nav.preferences.ipHistoryEnabled')"
+                            :model-value="userPreferences.ipHistoryEnabled"
+                            @update:model-value="prefIpHistoryEnabled" />
+
+                        <!-- Retention slider: live number while dragging, preference
+                             committed on release so pruning never fires mid-drag. -->
+                        <div class="p-3" :class="{ 'opacity-50': !userPreferences.ipHistoryEnabled }">
+                            <div class="flex items-center justify-between gap-3 mb-3">
+                                <label for="ipHistoryDays" class="text-sm font-medium select-none">
+                                    {{ t('nav.preferences.ipHistoryDays') }}
+                                </label>
+                                <span class="text-sm font-mono tabular-nums text-muted-foreground">
+                                    {{ ipHistoryDaysDraft }}
+                                </span>
+                            </div>
+                            <Slider id="ipHistoryDays" :model-value="[ipHistoryDaysDraft]" :min="1" :max="90"
+                                :step="1" :disabled="!userPreferences.ipHistoryEnabled"
+                                @update:model-value="(v) => { if (v?.[0] != null) ipHistoryDaysDraft = v[0]; }"
+                                @value-commit="(v) => prefIpHistoryDays(v?.[0])" />
+                        </div>
+                    </div>
+                    <SectionTip>{{ t('nav.preferences.ipHistoryTips') }}</SectionTip>
+                </section>
             </div>
         </SheetContent>
     </Sheet>
 </template>
 
 <script setup>
-import { computed, onMounted, h } from 'vue';
+import { computed, ref, watch, onMounted, h } from 'vue';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
+import { clampRetentionDays } from '@/utils/ip-history.js';
 import { Sheet, SheetContent, SheetClose } from '@/components/ui/sheet';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Icon } from '@iconify/vue';
@@ -153,6 +183,7 @@ import {
     AppWindow,
     Database,
     Globe,
+    History,
     Languages,
     LaptopMinimal,
     LayoutGrid,
@@ -248,6 +279,26 @@ const prefAutoRun = (key, value) => {
 const prefconnectivityShowNoti = (value) => {
     store.updatePreference('popupConnectivityNotifications', value);
     trackEvent('Nav', 'PrefereceClick', 'ConnectivityNotifications');
+};
+
+// IP history recorder: on/off + retention days (1–90). The draft ref feeds the
+// slider's live readout; the preference is written on value-commit only.
+const ipHistoryDaysDraft = ref(clampRetentionDays(userPreferences.value.ipHistoryDays));
+watch(() => userPreferences.value.ipHistoryDays, (v) => {
+    ipHistoryDaysDraft.value = clampRetentionDays(v);
+});
+
+const prefIpHistoryEnabled = (value) => {
+    store.updatePreference('ipHistoryEnabled', value);
+    trackEvent('Nav', 'PrefereceClick', 'IpHistoryEnabled');
+};
+
+const prefIpHistoryDays = (value) => {
+    if (value == null) return;
+    const days = clampRetentionDays(value);
+    ipHistoryDaysDraft.value = days;
+    store.updatePreference('ipHistoryDays', days);
+    trackEvent('Nav', 'PrefereceClick', 'IpHistoryDays');
 };
 
 const prefipCards = (value) => {
