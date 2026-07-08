@@ -252,8 +252,8 @@ const checkSTUNServer = (stun) => {
         stun.country_code = geo.country_code;
         stun.country = geo.country;
         stun.org = geo.org;
-        // Back-fill the country for this IP in the Globalping picker.
-        IPArray.value = [...IPArray.value, { ip, country: geo.country_code }];
+        // Back-fill details for the Globalping picker + IP history.
+        IPArray.value = [...IPArray.value, { ip, country: geo.country_code, location: geo.country, asn: geo.asn, org: geo.org }];
       } else {
         stun.country = t('webrtc.StatusError');
         stun.org = t('webrtc.StatusError');

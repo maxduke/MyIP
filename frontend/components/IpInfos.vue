@@ -166,8 +166,16 @@ const resolveIP = async (cardID, getFromSource) => {
 const loadCardDetails = async (cardID, ip) => {
   try {
     await fetchIPDetails(cardID, ip);
-    if (ipDataCards[cardID].country_code) {
-      IPArray.value = [...IPArray.value, { ip, country: ipDataCards[cardID].country_code }];
+    const card = ipDataCards[cardID];
+    if (card.country_code) {
+      // Full detail entry for the Globalping picker + IP history.
+      IPArray.value = [...IPArray.value, {
+        ip,
+        country: card.country_code,
+        location: [card.country_name, card.city].filter(Boolean).join(' · '),
+        asn: card.asn || '',
+        org: card.isp || '',
+      }];
     }
   } catch {
     // fetchIPDetails already logged; swallow so it can't reject the batch.

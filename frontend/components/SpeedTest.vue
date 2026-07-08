@@ -416,7 +416,11 @@ const achievementHandler = {
 const setupTestEngine = async () => {
   if (!state.connection.ip) {
     const connectionData = await connectionMethods.getIPFromSpeedTest();
-    if (connectionData) Object.assign(state.connection, connectionData);
+    if (connectionData) {
+      Object.assign(state.connection, connectionData);
+      // Feed the Globalping picker + IP history.
+      store.updateAllIPs([{ ip: connectionData.ip, country: connectionData.loc || '', location: connectionData.country || '' }]);
+    }
   }
 
   testEngine.onRunningChange = () => { state.speedTest.status = 'running'; };

@@ -156,8 +156,19 @@ const fetchTrace = async (id, url) => {
         // trace (authoritative for each ptest worker's egress), so a
         // MaxMind miss leaves the existing country untouched.
         if (ipLine) {
-            const geo = await lookupMaxmind(ruleTests.value[id].ip);
+            const ip = ruleTests.value[id].ip;
+            const geo = await lookupMaxmind(ip);
             ruleTests.value[id].org = geo ? geo.org : t('ruletest.StatusError');
+            if (geo) {
+                // Back-fill details for the Globalping picker + IP history.
+                IPArray.value = [...IPArray.value, {
+                    ip,
+                    country,
+                    location: ruleTests.value[id].country || geo.country,
+                    asn: geo.asn,
+                    org: geo.org,
+                }];
+            }
         }
     } catch (error) {
         ruleTests.value[id].ip = t('ruletest.StatusError');
