@@ -6,6 +6,7 @@ import i18n, { loadActiveLocaleMessages } from './locales/i18n';
 import router from './router';
 import { analytics } from './utils/analytics';
 import { getTimezoneInfo } from './utils/timezone';
+import { isRunningAsPwa } from './utils/pwa';
 import { unregisterLegacyServiceWorker } from './utils/unregister-service-worker';
 import { addCollection } from '@iconify/vue';
 
@@ -69,12 +70,15 @@ handleResize();
 // Listen to window size change
 window.addEventListener('resize', handleResize);
 
-// Start Google Analytics
+// Start Google Analytics. `app_mode` is a user-scoped custom dimension
+// (register it in GA admin as a user property) that splits every report by
+// how the app was opened: installed PWA window vs regular browser tab.
 analytics.page();
 const { timezone, offset } = getTimezoneInfo();
-if (timezone || offset) {
-    analytics.setUserProperties({ timezone, tz_offset: offset });
-}
+analytics.setUserProperties({
+    ...(timezone || offset ? { timezone, tz_offset: offset } : {}),
+    app_mode: isRunningAsPwa() ? 'pwa' : 'web',
+});
 unregisterLegacyServiceWorker();
 
 // Check Firebase environment
