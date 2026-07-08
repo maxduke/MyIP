@@ -3,7 +3,7 @@
   "private": true,
   "version": "6.4.0",
   "type": "module",
-  "packageManager": "pnpm@11.9.0",
+  "packageManager": "pnpm@11.10.0",
   "scripts": {
     "dev": "concurrently \"vite\" \"nodemon backend-server.js\"",
     "build": "vite build",
@@ -15,11 +15,11 @@
     "start": "concurrently \"node frontend-server.js\" \"node backend-server.js\""
   },
   "dependencies": {
-    "@cloudflare/speedtest": "^1.10.1",
+    "@cloudflare/speedtest": "^1.11.0",
     "@iconify-json/circle-flags": "^1.2.10",
     "@iconify/vue": "^5.0.1",
     "@khmyznikov/pwa-install": "^0.6.4",
-    "@lucide/vue": "^1.22.0",
+    "@lucide/vue": "^1.23.0",
     "@tanstack/vue-table": "^8.21.3",
     "@thumbmarkjs/thumbmarkjs": "^1.10.0",
     "@vueuse/core": "^14.3.0",
@@ -36,7 +36,7 @@
     "express-slow-down": "^3.1.0",
     "firebase": "^12.15.0",
     "html-to-image": "^1.11.13",
-    "http-proxy-middleware": "^4.1.1",
+    "http-proxy-middleware": "^4.2.0",
     "maxmind": "^5.0.6",
     "pinia": "^3.0.4",
     "pino": "^10.3.1",
@@ -60,10 +60,10 @@
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.2",
     "@vitejs/plugin-vue": "^6.0.7",
-    "code-inspector-plugin": "^1.6.3",
+    "code-inspector-plugin": "^1.6.6",
     "nodemon": "^3.1.14",
     "tailwindcss": "^4.3.2",
     "vconsole": "^3.15.1",
-    "vite": "^8.1.0"
+    "vite": "^8.1.3"
   }
 }
