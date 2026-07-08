@@ -529,8 +529,16 @@
     "CopySdpLog": "Copy SDP Log",
     "ViewOnMap": "View location on map",
     "InfoMask": "Hide IP Information",
+    "IPHistory": "View IP History",
     "QueryIP": "Query IP Address",
     "GithubLink": "View Source Code on GitHub"
+  },
+  "ipHistory": {
+    "Title": "IP History",
+    "Notes": "IPs detected while you use this site are recorded here. The data is stored only in this browser — it never syncs to your account or leaves your device. Records are kept for 90 days.",
+    "Empty": "No records yet. IPs will appear here once the homepage tests detect them.",
+    "ClearAll": "Clear History",
+    "ClearConfirm": "Click again to confirm"
   },
   "ipInfos": {
     "Title": "IP Infos",
@@ -797,6 +805,7 @@
     "DNSResolver": "Open DNS Resolution panel",
     "IPCheck": "Query IP Address",
     "ToggleInfoMask": "Toggle Info Masking",
+    "IPHistory": "Open IP History panel",
     "Help": "Show Shortcut Keys",
     "HelpNote": "People who use shortcuts are really awesome!",
     "GoNext": "Next Card",

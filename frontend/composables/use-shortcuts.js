@@ -179,6 +179,15 @@ function buildShortcutConfig({ refs, store, t, configs, userPreferences, isSigne
             description: t('shortcutKeys.ToggleInfoMask'),
         },
         {
+            keys: 'H',
+            action: () => {
+                if (userPreferences.value.ipHistoryEnabled === false) return;
+                store.toggleSheet('ipHistory');
+                trackEvent('ShortCut', 'ShortCut', 'IPHistory');
+            },
+            description: t('shortcutKeys.IPHistory'),
+        },
+        {
             keys: 'p',
             action: () => { navBarRef.value.OpenPreferences(); trackEvent('ShortCut', 'ShortCut', 'Preferences'); },
             description: t('shortcutKeys.Preferences'),

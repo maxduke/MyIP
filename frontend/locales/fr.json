@@ -529,8 +529,16 @@
     "CopySdpLog": "Copier le journal SDP",
     "ViewOnMap": "Voir l'emplacement sur la carte",
     "InfoMask": "Masquer les informations IP",
+    "IPHistory": "Voir l'historique des IP",
     "QueryIP": "Interroger l'adresse IP",
     "GithubLink": "Voir le code source sur GitHub"
+  },
+  "ipHistory": {
+    "Title": "Historique des IP",
+    "Notes": "Les IP détectées lors de votre utilisation du site sont enregistrées ici. Les données sont stockées uniquement dans ce navigateur — elles ne sont jamais synchronisées avec votre compte et ne quittent pas votre appareil. Les enregistrements sont conservés 90 jours.",
+    "Empty": "Aucun enregistrement pour le moment. Les IP apparaîtront ici dès que les tests de la page d'accueil les détecteront.",
+    "ClearAll": "Effacer l'historique",
+    "ClearConfirm": "Cliquez à nouveau pour confirmer"
   },
   "ipInfos": {
     "Title": "Infos IP",
@@ -797,6 +805,7 @@
     "DNSResolver": "Ouvrir le Résolution DNS",
     "IPCheck": "Vérification IP",
     "ToggleInfoMask": "Masquer/Démasquer les informations",
+    "IPHistory": "Ouvrir l'historique des IP",
     "Help": "Afficher les raccourcis clavier",
     "HelpNote": "Les personnes qui utilisent des raccourcis clavier sont vraiment géniales !",
     "GoNext": "Carte suivante",

@@ -165,7 +165,7 @@
                         :class="['size-7 cursor-pointer', isPanelActive('history') && 'bg-muted text-foreground hover:bg-muted']"
                         @click="togglePanel('history')" :aria-expanded="isPanelActive('history')"
                         :aria-label="'Display ASN History of ' + data.ip">
-                        <History />
+                        <FolderClock />
                     </Button>
                 </JnTooltip>
                 <!-- ASN Connectivity -->
@@ -264,6 +264,7 @@ import {
     ShieldCheck,
     SignalHigh,
     CircleQuestionMark,
+    FolderClock,
 } from '@lucide/vue';
 
 const { t } = useI18n();

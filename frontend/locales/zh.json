@@ -529,8 +529,16 @@
     "CopySdpLog": "复制 SDP 日志",
     "ViewOnMap": "在地图上查看位置",
     "InfoMask": "隐藏信息",
+    "IPHistory": "查看 IP 历史记录",
     "QueryIP": "查询 IP 信息",
     "GithubLink": "查看源代码"
+  },
+  "ipHistory": {
+    "Title": "IP 历史记录",
+    "Notes": "这里记录你使用本站时被侦测到的 IP。数据仅保存在当前浏览器本地，不会同步到账号，也不会离开你的设备。记录保留 90 天。",
+    "Empty": "暂无记录。主页检测到 IP 后会自动记录在这里。",
+    "ClearAll": "清空记录",
+    "ClearConfirm": "再次点击确认清空"
   },
   "ipInfos": {
     "Title": "IP 信息",
@@ -797,6 +805,7 @@
     "DNSResolver": "打开 DNS 解析器面板",
     "IPCheck": "IP 查询",
     "ToggleInfoMask": "切换信息隐藏",
+    "IPHistory": "打开 IP 历史记录面板",
     "Help": "显示快捷键",
     "HelpNote": "使用快捷键的人，是喜欢效率的人，你真棒！",
     "GoNext": "下一张卡片",

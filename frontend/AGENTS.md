@@ -36,12 +36,14 @@ frontend/
 ├── utils/                       ← framework-agnostic pure helpers + IO modules
 │                                  (valid-ip / getips / transform-ip-data /
 │                                   fetch-with-timeout / analytics / scroll-to /
+│                                   ip-history — pure localStorage history helpers /
 │                                   pwa — isRunningAsPwa() / …)
 ├── composables/                 ← Vue-aware reactive / stateful logic (useXxx)
 │   ├── use-fit-text.js          ← auto-fit font-size picker (+ HERO_TIERS / INLINE_TIERS presets)
 │   ├── use-globalping-measurement.js ← shared POST+poll orchestrator for the Globalping tools
 │   ├── use-document-meta.js     ← per-route title / description / canonical / OG (no SSR)
 │   ├── use-info-mask.js
+│   ├── use-ip-history.js        ← records store.allIPs into the local IP-history (90-day retention)
 │   ├── use-refresh-orchestrator.js
 │   ├── use-section-tracking.js
 │   ├── use-shortcuts.js
@@ -63,7 +65,7 @@ frontend/
     │                               EnhancedDnsLeakTest / CensorshipCheck / Whois / ServiceStatus /
     │                               MacChecker / BrowserInfo / InvisibilityTest /
     │                               SecurityChecklist + Empty)
-    ├── widgets/                 ← small reusables (QueryIP / Help / Preferences / InfoMask / PWA / Toast / FitText / CopyButton)
+    ├── widgets/                 ← small reusables (QueryIP / Help / Preferences / InfoMask / IPHistory / PWA / Toast / FitText / CopyButton)
     ├── svgicons/                ← a few inline SVGs
     └── ui/                      ← shadcn-vue copy-in primitives (see "UI system" below)
 ```

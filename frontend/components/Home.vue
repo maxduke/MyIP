@@ -16,6 +16,7 @@
   <FloatingDock>
     <InfoMask :showMaskButton.value="showMaskButton" :infoMaskLevel.value="infoMaskLevel"
       :toggleInfoMask="toggleInfoMask" />
+    <IPHistory />
     <QueryIP ref="queryIPRef" />
   </FloatingDock>
   <HelpModal ref="helpModalRef" />
@@ -47,6 +48,7 @@ import Preferences from './widgets/Preferences.vue';
 import QueryIP from './widgets/QueryIP.vue';
 import HelpModal from './widgets/Help.vue';
 import InfoMask from './widgets/InfoMask.vue';
+import IPHistory from './widgets/IPHistory.vue';
 import FloatingDock from './widgets/FloatingDock.vue';
 
 // Vue + Store

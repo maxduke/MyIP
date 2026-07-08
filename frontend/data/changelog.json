@@ -1318,5 +1318,29 @@
         }
       }
     ]
+  },
+  {
+    "version": "v6.7.0",
+    "date": "Beta",
+    "content": [
+      {
+        "type": "add",
+        "change": {
+          "en": "Added IP History panel",
+          "zh": "新增 IP 历史记录面板",
+          "fr": "Ajout du panneau Historique IP",
+          "tr": "IP Geçmişi panosu eklendi"
+        }
+      },
+      {
+        "type": "fix",
+        "change": {
+          "en": "Fixed some issues",
+          "zh": "修复一些问题",
+          "fr": "Correction de petits problèmes",
+          "tr": "Birkaç küçük sorun düzeltildi"
+        }
+      }
+    ]
   }
 ]
