@@ -30,6 +30,7 @@ import { ref, computed, watch } from 'vue';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
+import { emitAppEvent } from '@/utils/app-events.js';
 import { authenticatedFetch } from '@/utils/authenticated-fetch';
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { CircleCheck, HeartHandshake } from '@lucide/vue';
@@ -83,14 +84,8 @@ const initUserAchievements = () => {
         }
     });
 
-    if (isSignedIn.value) {
-        if (!store.userAchievements.IAmHuman.achieved) {
-            store.setTriggerUpdateAchievements('IAmHuman');
-        }
-        if (!store.userAchievements.MakingBigNews.achieved && functionUses.total > 1000) {
-            store.setTriggerUpdateAchievements('MakingBigNews');
-        }
-    }
+    // Unlock rules (IAmHuman / MakingBigNews) live in data/achievement-rules.js.
+    emitAppEvent('user:info-loaded', { totalFunctionUses: functionUses?.total ?? 0 });
 };
 
 // Update local achievement status

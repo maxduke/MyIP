@@ -166,6 +166,7 @@ import { ref, computed } from 'vue';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
+import { emitAppEvent } from '@/utils/app-events.js';
 import { authenticatedFetch } from '@/utils/authenticated-fetch';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -175,7 +176,6 @@ import { CircleCheck, CircleX, Info, ListChecks, Lock, Shield, Play } from '@luc
 const { t } = useI18n();
 
 const store = useMainStore();
-const isSignedIn = computed(() => store.isSignedIn);
 
 const checkingStatus = ref('idle');
 const errorMsg = ref('');
@@ -266,9 +266,8 @@ const onSubmit = () => {
     errorMsg.value = '';
     testResults.value = {};
     loadScript();
-    if (isSignedIn.value && !store.userAchievements.JustInCase.achieved) {
-        store.setTriggerUpdateAchievements('JustInCase');
-    }
+    // Achievement rule (JustInCase) lives in data/achievement-rules.js.
+    emitAppEvent('invisibility:started');
     setTimeout(() => { getResult(); }, 10000);
 };
 
@@ -286,14 +285,11 @@ const getResult = async () => {
         }
         testResults.value = data;
 
-        const proxyScore = Math.floor(testResults.value.score.proxy);
-        const vpnScore = Math.floor(testResults.value.score.vpn);
-        if (isSignedIn.value && !store.userAchievements.HiddenWell.achieved && proxyScore === 0 && vpnScore === 0) {
-            store.setTriggerUpdateAchievements('HiddenWell');
-        }
-        if (isSignedIn.value && !store.userAchievements.SlipUp.achieved && (proxyScore > 50 || vpnScore > 50)) {
-            store.setTriggerUpdateAchievements('SlipUp');
-        }
+        // Achievement rules (HiddenWell / SlipUp) live in data/achievement-rules.js.
+        emitAppEvent('invisibility:result', {
+            proxyScore: Math.floor(testResults.value.score.proxy),
+            vpnScore: Math.floor(testResults.value.score.vpn),
+        });
     } catch (error) {
         console.error('Error fetching InvisibilityTest results:', error);
         if (error.message.includes('Invalid token')) {

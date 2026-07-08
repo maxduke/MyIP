@@ -172,6 +172,7 @@ import { computed, ref, watch, onMounted, h } from 'vue';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
+import { emitAppEvent } from '@/utils/app-events.js';
 import { clampRetentionDays } from '@/utils/ip-history.js';
 import { Sheet, SheetContent, SheetClose } from '@/components/ui/sheet';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -200,7 +201,6 @@ const store = useMainStore();
 const configs = computed(() => store.configs);
 const userPreferences = computed(() => store.userPreferences);
 const ipDBs = computed(() => store.ipDBs);
-const isSignedIn = computed(() => store.isSignedIn);
 
 const isOpen = computed(() => store.openSheet === 'preferences');
 const onOpenChange = (val) => {
@@ -253,9 +253,8 @@ const prefLanguage = (value) => {
 
 const prefConnectivityMultipleTests = (value) => {
     store.updatePreference('connectivityMultipleTests', value);
-    if (isSignedIn.value && !store.userAchievements.ResourceHog.achieved) {
-        store.setTriggerUpdateAchievements('ResourceHog');
-    }
+    // Achievement rule (ResourceHog) lives in data/achievement-rules.js.
+    emitAppEvent('preferences:multiple-tests-toggled');
     trackEvent('Nav', 'PrefereceClick', 'ConnectivityMultipleTests');
 };
 
@@ -264,16 +263,15 @@ const prefSimpleMode = (value) => {
     trackEvent('Nav', 'PrefereceClick', 'SimpleMode');
 };
 
-// Per-module startup auto-run toggle. EnergySaver is earned once every auto-run
-// module is off.
+// Per-module startup auto-run toggle. The EnergySaver achievement rule
+// (earned once every auto-run module is off) lives in data/achievement-rules.js.
 const prefAutoRun = (key, value) => {
     store.updatePreference(key, value);
     trackEvent('Nav', 'PrefereceClick', key);
     const prefs = userPreferences.value;
-    const allOff = !prefs.autoRunConnectivity && !prefs.autoRunWebRTC && !prefs.autoRunDnsLeak;
-    if (isSignedIn.value && allOff && !store.userAchievements.EnergySaver.achieved) {
-        store.setTriggerUpdateAchievements('EnergySaver');
-    }
+    emitAppEvent('preferences:autorun-changed', {
+        allAutoRunOff: !prefs.autoRunConnectivity && !prefs.autoRunWebRTC && !prefs.autoRunDnsLeak,
+    });
 };
 
 const prefconnectivityShowNoti = (value) => {

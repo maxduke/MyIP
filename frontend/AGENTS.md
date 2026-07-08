@@ -29,16 +29,21 @@ frontend/
 ├── style/style.css              ← Tailwind v4 entry + design tokens
 ├── lib/                         ← cn() helper (tailwind-merge + clsx)
 ├── data/                        ← static config
-│                                  (achievements / ip-databases / sections /
-│                                   default-preferences / changelog / tools —
-│                                   the Advanced Tools registry: router + cards
-│                                   + drawer + standalone pages all derive from it)
+│                                  (achievements / achievement-rules — the
+│                                   event → achievement trigger table, see
+│                                   "Achievements" below / ip-databases /
+│                                   sections / default-preferences / changelog /
+│                                   tools — the Advanced Tools registry: router
+│                                   + cards + drawer + standalone pages all
+│                                   derive from it)
 ├── utils/                       ← framework-agnostic pure helpers + IO modules
 │                                  (valid-ip / getips / transform-ip-data /
-│                                   fetch-with-timeout / analytics / scroll-to /
+│                                   fetch-with-timeout / analytics / app-events —
+│                                   the emitAppEvent/onAppEvent bus / scroll-to /
 │                                   ip-history — pure localStorage history helpers /
 │                                   pwa — isRunningAsPwa() / …)
 ├── composables/                 ← Vue-aware reactive / stateful logic (useXxx)
+│   ├── use-achievement-engine.js ← subscribes app events → evaluates achievement-rules
 │   ├── use-fit-text.js          ← auto-fit font-size picker (+ HERO_TIERS / INLINE_TIERS presets)
 │   ├── use-globalping-measurement.js ← shared POST+poll orchestrator for the Globalping tools
 │   ├── use-document-meta.js     ← per-route title / description / canonical / OG (no SSR)
@@ -85,6 +90,30 @@ Three sibling directories hold non-component code. The deciding question is **do
 - **`lib/`** — the shadcn-vue support layer, *not* a general dumping ground. Today it holds only `cn()` (tailwind-merge + clsx), which every `ui/` primitive imports as `@/lib/utils`. Don't add business or app logic here; new shared helpers go to `utils/` or `composables/` per the rule above.
 
 Quick test before adding a file: needs Vue reactivity/lifecycle → `composables/` (`useXxx`); otherwise → `utils/` (no `use-` prefix). Leave `lib/` to shadcn.
+
+### Achievements are event-driven
+
+Components never talk to the achievement system directly — no
+`store.setTriggerUpdateAchievements()`, no `store.userAchievements` reads, no
+signed-in checks for achievement purposes. Instead:
+
+1. The component emits a **domain event** describing what happened:
+   `emitAppEvent('speedtest:finished', { downloadSpeed, uploadSpeed })`
+   (bus: `utils/app-events.js`). Emit unconditionally — signed-out users are
+   filtered downstream.
+2. The **rule table** `data/achievement-rules.js` maps events to achievement
+   slugs with optional pure predicates. This is the single place to look for
+   "what unlocks achievement X".
+3. The **engine** `composables/use-achievement-engine.js` (initialized once in
+   App.vue) owns the cross-cutting guards: signed-in check, already-achieved
+   check, and 2s spacing between dispatches into the store's single-slot
+   update pipeline (consumed by User.vue → backend).
+
+Adding a new achievement = define it in `data/achievements.js`, add a rule in
+`data/achievement-rules.js`, and (only if no suitable event exists yet) emit a
+new domain event from the component. Rules and predicates are unit-tested in
+`tests/achievement-rules.test.js`; the engine in
+`tests/composable-achievement-engine.test.js`.
 
 ## shadcn-vue first
 

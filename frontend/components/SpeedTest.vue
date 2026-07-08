@@ -165,6 +165,7 @@ import { reactive, computed, onMounted, markRaw, onUnmounted } from 'vue';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
+import { emitAppEvent } from '@/utils/app-events.js';
 import { fetchWithTimeout } from '@/utils/fetch-with-timeout.js';
 import { isValidIP } from '@/utils/valid-ip.js';
 import getCountryName from '@/data/country-name.js';
@@ -184,7 +185,6 @@ import { Icon } from '@iconify/vue';
 const { t } = useI18n();
 const store = useMainStore();
 const lang = computed(() => store.lang);
-const isSignedIn = computed(() => store.isSignedIn);
 const userPreferences = computed(() => store.userPreferences);
 const isSimpleMode = computed(() => userPreferences.value.simpleMode);
 // State Management
@@ -380,37 +380,6 @@ const engineMethods = {
   },
 };
 
-// --- Achievements --------------------------------------------------------------
-
-const achievementHandler = {
-  checkAndUpdate() {
-    if (state.speedTest.status !== 'finished') return;
-    const achievements = this.getQualifiedAchievements();
-    this.triggerAchievementsWithDelay(achievements);
-  },
-
-  getQualifiedAchievements() {
-    const { downloadSpeed, uploadSpeed } = state.speedTest;
-    const achievements = [];
-    if (downloadSpeed >= 100) achievements.push('BarelyEnough');
-    if (downloadSpeed >= 500) achievements.push('RapidPace');
-    if (downloadSpeed >= 1000) achievements.push('TorrentFlow');
-    if (uploadSpeed >= 50) achievements.push('SteadyGoing');
-    if (uploadSpeed >= 200) achievements.push('TooFastTooSimple');
-    if (uploadSpeed >= 1000) achievements.push('SwiftAscent');
-    return achievements.filter((a) => !store.userAchievements[a].achieved);
-  },
-
-  triggerAchievementsWithDelay(achievements, delay = 2000) {
-    if (!achievements.length) return;
-    const achievement = achievements.shift();
-    store.setTriggerUpdateAchievements(achievement);
-    if (achievements.length) {
-      setTimeout(() => this.triggerAchievementsWithDelay(achievements, delay), delay);
-    }
-  },
-};
-
 // --- Test Control ----------------------------------------------------------
 
 const setupTestEngine = async () => {
@@ -457,7 +426,11 @@ const setupTestEngine = async () => {
     }
 
     testEngine = null;
-    if (isSignedIn.value) achievementHandler.checkAndUpdate();
+    // Achievement rules for speed thresholds live in data/achievement-rules.js.
+    emitAppEvent('speedtest:finished', {
+      downloadSpeed: state.speedTest.downloadSpeed,
+      uploadSpeed: state.speedTest.uploadSpeed,
+    });
   };
   testEngine.onError = (e) => {
     if (typeof e === 'string' && !e.includes('ICE')) {

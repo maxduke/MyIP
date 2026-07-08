@@ -84,6 +84,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
+import { emitAppEvent } from '@/utils/app-events.js';
 import getCountryName from '@/data/country-name.js';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -100,7 +101,6 @@ const { t } = useI18n();
 const store = useMainStore();
 const isMobile = computed(() => store.isMobile);
 const lang = computed(() => store.lang);
-const isSignedIn = computed(() => store.isSignedIn);
 const { dotClass, textClass } = useStatusTone();
 const { lookupMaxmind } = useMaxmind();
 
@@ -200,21 +200,16 @@ const checkAllRuleTest = async (refresh = false) => {
                 processTest(index + 1);
                 if (index === testCount.value - 1) {
                     finishAll.value = true;
-                    if (isSignedIn.value) checkAchievements();
+                    // Achievement rule (CrossingTheWall) lives in data/achievement-rules.js.
+                    emitAppEvent('ruletest:finished', {
+                        uniqueIPCount: new Set(ruleTests.value.map((test) => test.ip)).size,
+                    });
                 }
             }
         }
     };
 
     processTest(0);
-};
-
-const checkAchievements = () => {
-    const allIPs = ruleTests.value.map((test) => test.ip);
-    const uniqueIPs = [...new Set(allIPs)];
-    if (uniqueIPs.length === 8 && !store.userAchievements.CrossingTheWall.achieved) {
-        store.setTriggerUpdateAchievements('CrossingTheWall');
-    }
 };
 
 onMounted(() => {

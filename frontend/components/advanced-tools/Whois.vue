@@ -63,10 +63,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { useMainStore } from '@/store';
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
+import { emitAppEvent } from '@/utils/app-events.js';
 import { isValidIP, isValidDomain } from '@/utils/valid-ip.js';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
@@ -76,9 +76,6 @@ import { Info, Search } from '@lucide/vue';
 import { Label } from '@/components/ui/label';
 
 const { t } = useI18n();
-
-const store = useMainStore();
-const isSignedIn = computed(() => store.isSignedIn);
 
 const queryURLorIP = ref('');
 const whoisCheckStatus = ref('idle');
@@ -129,7 +126,9 @@ const getWhoisResults = async (query) => {
         getProviders(data);
         if (type.value === 'domain' && providers.value.length >= 1) {
             whoisResults.value = data;
-            if (isSignedIn.value && query.toLowerCase().includes('ipcheck.ing')) checkAchievements();
+            // Achievement rule (CuriousCat, ipcheck.ing lookups only) lives in
+            // data/achievement-rules.js.
+            emitAppEvent('whois:lookup', { query });
             errorMsg.value = '';
         } else if (type.value === 'ip' && data.__raw) {
             whoisResults.value = data;
@@ -168,9 +167,4 @@ const filterIPWhoisRawData = (text) => {
     return text;
 };
 
-const checkAchievements = () => {
-    if (!store.userAchievements.CuriousCat.achieved) {
-        store.setTriggerUpdateAchievements('CuriousCat');
-    }
-};
 </script>

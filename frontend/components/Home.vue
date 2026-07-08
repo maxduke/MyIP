@@ -69,7 +69,6 @@ const store = useMainStore();
 const route = useRoute();
 const configs = computed(() => store.configs);
 const userPreferences = computed(() => store.userPreferences);
-const isSignedIn = computed(() => store.isSignedIn);
 // A tool drawer is open iff the home route carries a `?tool=` query (set by
 // Advanced.vue). Drives the `f` fullscreen shortcut gate.
 const isToolOpen = computed(() => !!route.query.tool);
@@ -112,7 +111,7 @@ const { loadShortcuts } = useShortcuts({
         speedTestRef, advancedToolsRef, IPCheckRef, connectivityRef, webRTCRef, dnsLeaksRef,
         isInfosLoaded, isToolOpen, toggleInfoMask,
     },
-    store, t, configs, userPreferences, isSignedIn,
+    store, t, configs, userPreferences,
 });
 
 // Scroll monitoring + section tracking (logic from widgets/Patch.vue)
