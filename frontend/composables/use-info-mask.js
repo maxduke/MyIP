@@ -60,7 +60,7 @@ export function useInfoMask({ store, t }) {
         // directions surface the same info-toned toast.
         const titleKey = infoMaskLevel.value === 1 ? 'alert.maskedInfoTitle' : 'alert.unmaskedInfoTitle';
         const messageKey = infoMaskLevel.value === 1 ? 'alert.maskedInfoMessage' : 'alert.unmaskedInfoMessage';
-        store.setAlert(true, 'text-info', t(messageKey), t(titleKey));
+        store.setAlert(true, infoMaskLevel.value === 1 ? 'text-success' : 'text-warning', t(messageKey), t(titleKey));
     };
 
     // Mirror the level to <html data-mask-level="…"> so the global CSS rule can

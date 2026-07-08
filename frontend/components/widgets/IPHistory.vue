@@ -1,7 +1,7 @@
 <template>
     <!-- Floating history button (bottom-right dock, between InfoMask and QueryIP) -->
     <JnTooltip v-if="enabled" :text="t('Tooltips.IPHistory')" side="left">
-        <Button size="icon" type="button" variant="success" aria-label="IP History"
+        <Button size="icon" type="button" variant="default" aria-label="IP History"
             class="rounded-full shadow-lg cursor-pointer" @click="openPanel">
             <History class="size-4" />
         </Button>

@@ -787,9 +787,9 @@
     "OhNo_Message": "Le test de connectivité a échoué, certains sites web ne sont pas accessibles.",
     "Congrats_Message": "Tous les tests de connectivité ont réussi, vous pouvez accéder à tous les sites web.",
     "maskedInfoTitle": "IPs masquées",
-    "maskedInfoMessage": "Les adresses IP ont été masquées. Partager des captures d'écran ne révélera pas vos IP.",
+    "maskedInfoMessage": "Partager des captures d'écran ne révélera pas vos IP.",
     "unmaskedInfoTitle": "IPs démasquées",
-    "unmaskedInfoMessage": "Les adresses IP ont été démasquées. Faites attention lors de la partage des captures d'écran.",
+    "unmaskedInfoMessage": "Faites attention lors de la partage des captures d'écran.",
     "SignInFailed": "Echec de connexion",
     "SignInFailedReason": "Raison"
   },

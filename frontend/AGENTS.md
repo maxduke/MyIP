@@ -123,9 +123,11 @@ Rule: use semantic tokens (`bg-info` / `bg-success` / `bg-warning` / `bg-destruc
 
 ### Button and Badge variants
 
-Button adds `action` (blue-500 trigger color) to the shadcn defaults (`default / destructive / outline / secondary / ghost / link`).
+Button adds `action` (blue-500 trigger color) and `success` to the shadcn defaults (`default / destructive / outline / secondary / ghost / link`).
 
 Badge adds `success` to the defaults. Badge hover is globally disabled — Badge is a display element, not an interactive one. Put `hover:bg-muted` etc. on an outer `<a>` / `<button>` when interactivity is needed.
+
+**FAB color spec** (the FloatingDock buttons): color expresses semantics, never decoration. `action` blue = trigger (QueryIP); `default` neutral = stateless panel entries (IPHistory) and inactive toggles; `success` green = a protective state currently active (InfoMask while masking — the collapsed-dock dot reuses the same green); `secondary` = dock controls (the ellipsis/X toggle). At most two accent colors are ever visible at once.
 
 ### Status tones
 

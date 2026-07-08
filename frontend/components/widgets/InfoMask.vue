@@ -1,9 +1,11 @@
 <template>
     <JnTooltip :text="t('Tooltips.InfoMask')" side="left">
+        <!-- Neutral when off; success green while the mask is active — the
+            protective state stays visible at a glance (FAB color spec). -->
         <Button v-show="showMaskButton"
             size="icon"
             type="button"
-            variant="default"
+            :variant="infoMaskLevel === 0 ? 'default' : 'success'"
             class="rounded-full shadow-lg cursor-pointer"
             aria-label="Toggle Info Mask"
             @click="toggleInfoMask">
