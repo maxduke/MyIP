@@ -13,7 +13,7 @@
       <AdvancedTools ref="advancedToolsRef" />
     </div>
   </main>
-  <FloatingDock>
+  <FloatingDock :ready="showMaskButton" :mask-active="infoMaskLevel > 0">
     <InfoMask :showMaskButton.value="showMaskButton" :infoMaskLevel.value="infoMaskLevel"
       :toggleInfoMask="toggleInfoMask" />
     <IPHistory />

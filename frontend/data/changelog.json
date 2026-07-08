@@ -1333,6 +1333,15 @@
         }
       },
       {
+        "type": "improve",
+        "change": {
+          "en": "Optimized mobile FAB button operation experience",
+          "zh": "优化手机端 FAB 按钮操作体验",
+          "fr": "Optimisation de l'expérience d'utilisation mobile des boutons FAB",
+          "tr": "Mobil FAB düğmeleri işlem deneyimi iyileştirildi"
+        }
+      },
+      {
         "type": "fix",
         "change": {
           "en": "Fixed some issues",
