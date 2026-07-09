@@ -135,6 +135,14 @@ One is project-specific, not in stock shadcn-vue:
 
 - **`Spinner`** — lucide `Loader2` + `animate-spin` + `role="status"`.
 
+One carries a deliberate style deviation from stock shadcn-vue:
+
+- **`toggle` / `toggle-group`** — the pressed state (`data-[state=on]`) uses
+  the `primary` pair (+ `border-primary` on the outline variant) instead of
+  stock `bg-accent`, which is too close to the resting background in light
+  mode for an on/off control to read clearly. Don't "fix" it back when
+  copying in upstream updates.
+
 ### Design tokens
 
 Tokens live at the top of `frontend/style/style.css`. On top of shadcn defaults, four business-semantic colors are defined:
