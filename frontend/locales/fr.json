@@ -541,6 +541,10 @@
     "Title": "Historique des IP",
     "Notes": "Les IP détectées lors de votre utilisation du site sont enregistrées ici. Les données sont stockées uniquement dans ce navigateur — elles ne sont jamais synchronisées avec votre compte et ne quittent pas votre appareil. Vous pouvez ajuster le délai de conservation des enregistrements dans les \"Préférences\".",
     "Empty": "Aucun enregistrement pour le moment. Les IP apparaîtront ici dès que les tests de la page d'accueil les détecteront.",
+    "FilterByType": "Filtrer par type d'IP",
+    "FilterByCountry": "Filtrer par pays / région",
+    "UnknownCountry": "Inconnu",
+    "NoMatch": "Aucun enregistrement ne correspond aux filtres sélectionnés.",
     "ClearAll": "Effacer l'historique",
     "ClearConfirm": "Cliquez à nouveau pour confirmer"
   },

@@ -14,6 +14,9 @@ import {
     mergeIntoHistory,
     pruneHistory,
     sortedHistoryDays,
+    countryFacets,
+    ipVersionCounts,
+    filterHistoryDays,
 } from '../frontend/utils/ip-history.js';
 
 const entry = (ip, extra = {}) => ({ ip, country: '', location: '', asn: '', org: '', ...extra });
@@ -179,5 +182,90 @@ describe('sortedHistoryDays', () => {
         ({ history: state } = mergeIntoHistory(state, [{ ip: '8.8.8.8' }], '2026-07-08'));
         ({ history: state } = mergeIntoHistory(state, [{ ip: '9.9.9.9' }], '2026-07-07'));
         assert.deepEqual(sortedHistoryDays(state).map((g) => g.day), ['2026-07-08', '2026-07-07', '2026-07-06']);
+    });
+});
+
+// Two-day history spanning US / SG / no-country entries and both IP versions,
+// used by the filter suites below. Day 07-08: three v4 + one v6 (US);
+// day 07-07: one v4 (US).
+const buildFilterDays = () => {
+    let state = createEmptyHistory();
+    ({ history: state } = mergeIntoHistory(state, [
+        { ip: '1.1.1.1', country: 'US' },
+        { ip: '2.2.2.2', country: 'SG' },
+        { ip: '3.3.3.3' },
+        { ip: '2606:4700:4700::1111', country: 'US' },
+    ], '2026-07-08'));
+    ({ history: state } = mergeIntoHistory(state, [
+        { ip: '4.4.4.4', country: 'US' },
+    ], '2026-07-07'));
+    return sortedHistoryDays(state);
+};
+
+describe('countryFacets', () => {
+    it('counts entries per country across days, most entries first', () => {
+        assert.deepEqual(countryFacets(buildFilterDays()), [
+            { code: 'US', count: 3 },
+            { code: '', count: 1 },
+            { code: 'SG', count: 1 },
+        ]);
+    });
+
+    it('breaks count ties by code ascending, is empty for an empty list', () => {
+        let state = createEmptyHistory();
+        ({ history: state } = mergeIntoHistory(state, [
+            { ip: '1.1.1.1', country: 'US' },
+            { ip: '2.2.2.2', country: 'DE' },
+        ], '2026-07-08'));
+        assert.deepEqual(countryFacets(sortedHistoryDays(state)).map((f) => f.code), ['DE', 'US']);
+        assert.deepEqual(countryFacets([]), []);
+    });
+});
+
+describe('ipVersionCounts', () => {
+    it('counts v4 and v6 entries across days', () => {
+        assert.deepEqual(ipVersionCounts(buildFilterDays()), { v4: 4, v6: 1 });
+        assert.deepEqual(ipVersionCounts([]), { v4: 0, v6: 0 });
+    });
+});
+
+describe('filterHistoryDays', () => {
+    it('filters by a single country and drops emptied days', () => {
+        const days = buildFilterDays();
+        const sg = filterHistoryDays(days, { countries: ['SG'] });
+        assert.deepEqual(sg.map((g) => g.day), ['2026-07-08']);
+        assert.deepEqual(sg[0].entries.map((e) => e.ip), ['2.2.2.2']);
+        const us = filterHistoryDays(days, { countries: ['US'] });
+        assert.deepEqual(us.map((g) => g.day), ['2026-07-08', '2026-07-07']);
+    });
+
+    it('filters by IP version', () => {
+        const days = buildFilterDays();
+        const v6 = filterHistoryDays(days, { versions: [6] });
+        assert.deepEqual(v6.map((g) => g.day), ['2026-07-08']);
+        assert.deepEqual(v6[0].entries.map((e) => e.ip), ['2606:4700:4700::1111']);
+        const v4 = filterHistoryDays(days, { versions: [4] });
+        assert.deepEqual(v4.map((g) => g.day), ['2026-07-08', '2026-07-07']);
+        assert.deepEqual(v4[0].entries.map((e) => e.ip), ['1.1.1.1', '2.2.2.2', '3.3.3.3']);
+    });
+
+    it('ORs values within a dimension and ANDs across dimensions', () => {
+        const days = buildFilterDays();
+        // SG OR unknown ('')
+        const or = filterHistoryDays(days, { countries: ['SG', ''] });
+        assert.deepEqual(or[0].entries.map((e) => e.ip), ['2.2.2.2', '3.3.3.3']);
+        // US AND v4 — excludes the v6 US entry
+        const and = filterHistoryDays(days, { versions: [4], countries: ['US'] });
+        assert.deepEqual(and.map((g) => g.day), ['2026-07-08', '2026-07-07']);
+        assert.deepEqual(and[0].entries.map((e) => e.ip), ['1.1.1.1']);
+        // impossible combination → empty list
+        assert.deepEqual(filterHistoryDays(days, { versions: [6], countries: ['SG'] }), []);
+    });
+
+    it('passes the list through untouched when no filter is active', () => {
+        const days = buildFilterDays();
+        assert.equal(filterHistoryDays(days), days);
+        assert.equal(filterHistoryDays(days, {}), days);
+        assert.equal(filterHistoryDays(days, { versions: [], countries: [] }), days);
     });
 });

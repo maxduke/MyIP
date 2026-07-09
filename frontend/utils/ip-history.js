@@ -3,7 +3,7 @@
 // never sync to the user's account. All functions here are pure and
 // storage-agnostic so they can be unit-tested; the localStorage wiring lives
 // in composables/use-ip-history.js.
-import { isValidIP } from './valid-ip.js';
+import { isValidIP, isIPv6 } from './valid-ip.js';
 
 export const IP_HISTORY_STORAGE_KEY = 'ipHistory';
 export const IP_HISTORY_RETENTION_DAYS = 90;
@@ -124,3 +124,50 @@ export const sortedHistoryDays = (history) =>
     Object.entries(history.days)
         .sort(([a], [b]) => (a < b ? 1 : -1))
         .map(([day, entries]) => ({ day, entries }));
+
+// Aggregate entry counts per country over a sortedHistoryDays() list, most
+// entries first (code asc as tie-breaker). Entries without a country roll up
+// under ''. Takes the day list rather than the history object so facets can
+// be computed on an already-filtered view (e.g. after the IP-type filter).
+export const countryFacets = (days) => {
+    const counts = new Map();
+    for (const { entries } of days) {
+        for (const { country } of entries) {
+            const code = country || '';
+            counts.set(code, (counts.get(code) || 0) + 1);
+        }
+    }
+    return [...counts.entries()]
+        .map(([code, count]) => ({ code, count }))
+        .sort((a, b) => b.count - a.count || (a.code < b.code ? -1 : 1));
+};
+
+// Entry counts per IP version over a sortedHistoryDays() list.
+export const ipVersionCounts = (days) => {
+    let v4 = 0;
+    let v6 = 0;
+    for (const { entries } of days) {
+        for (const { ip } of entries) {
+            if (isIPv6(ip)) v6 += 1;
+            else v4 += 1;
+        }
+    }
+    return { v4, v6 };
+};
+
+// Narrow a sortedHistoryDays() list by any combination of tag selections:
+// `versions` — IP versions to keep (4 / 6); `countries` — country codes to
+// keep ('' matches entries recorded without a country). Within a dimension
+// the values OR together; the two dimensions AND. An empty / omitted array
+// leaves that dimension unfiltered. Emptied days are dropped.
+export const filterHistoryDays = (days, { versions = [], countries = [] } = {}) => {
+    if (!versions.length && !countries.length) return days;
+    return days
+        .map(({ day, entries }) => ({
+            day,
+            entries: entries.filter((e) =>
+                (!versions.length || versions.includes(isIPv6(e.ip) ? 6 : 4)) &&
+                (!countries.length || countries.includes(e.country || ''))),
+        }))
+        .filter((group) => group.entries.length > 0);
+};

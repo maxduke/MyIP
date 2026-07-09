@@ -35,8 +35,48 @@
                     {{ t('ipHistory.Empty') }}
                 </div>
 
+                <!-- Filters — flat toggle tags: highlight any combination.
+                    Within a row selections OR together, the two rows AND.
+                    Nothing highlighted = no filter. Tags and counts come from
+                    the full history so the layout never shifts mid-combo. -->
+                <div v-if="hasHistory && (showTypeFilter || showCountryFilter)" class="space-y-2">
+                    <!-- IP type tags -->
+                    <ToggleGroup v-if="showTypeFilter" v-model="versionFilter" type="multiple" variant="outline"
+                        :spacing="2" class="w-full flex-wrap justify-start"
+                        :aria-label="t('ipHistory.FilterByType')">
+                        <ToggleGroupItem value="v4" :class="tagClass">
+                            IPv4
+                            <span :class="tagCountClass">({{ versionCounts.v4 }})</span>
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="v6" :class="tagClass">
+                            IPv6
+                            <span :class="tagCountClass">({{ versionCounts.v6 }})</span>
+                        </ToggleGroupItem>
+                    </ToggleGroup>
+                    <!-- Country / region tags -->
+                    <ToggleGroup v-if="showCountryFilter" v-model="countryFilter" type="multiple" variant="outline"
+                        :spacing="2" class="w-full flex-wrap justify-start"
+                        :aria-label="t('ipHistory.FilterByCountry')">
+                        <ToggleGroupItem v-for="facet in countries" :key="facet.code || 'unknown'"
+                            :value="facet.code || 'unknown'" :class="tagClass">
+                            <Icon v-if="facet.code" :icon="'circle-flags:' + facet.code.toLowerCase()"
+                                class="size-3.5 shrink-0" />
+                            <Globe v-else :class="['size-3.5 shrink-0', tagCountClass]" />
+                            <span class="truncate max-w-32">{{ countryName(facet.code) }}</span>
+                            <span :class="tagCountClass">({{ facet.count }})</span>
+                        </ToggleGroupItem>
+                    </ToggleGroup>
+                </div>
+
+                <!-- Empty result for the selected tag combination -->
+                <div v-if="hasHistory && displayDays.length === 0"
+                    class="flex flex-col items-center gap-2 py-10 text-center text-sm text-muted-foreground">
+                    <ListFilter class="size-8 opacity-40" />
+                    {{ t('ipHistory.NoMatch') }}
+                </div>
+
                 <!-- Day groups, newest first -->
-                <section v-for="group in sortedDays" :key="group.day">
+                <section v-for="group in displayDays" :key="group.day">
                     <h3 class="text-xs uppercase tracking-wide text-muted-foreground mb-2">
                         {{ formatDay(group.day) }}
                     </h3>
@@ -88,13 +128,16 @@ import { trackEvent } from '@/utils/analytics';
 import { useIpHistory } from '@/composables/use-ip-history.js';
 import { createMaskGate } from '@/composables/use-info-mask.js';
 import { INLINE_TIERS } from '@/composables/use-fit-text.js';
+import { filterHistoryDays, countryFacets, ipVersionCounts } from '@/utils/ip-history.js';
+import getCountryName from '@/data/country-name.js';
 import FitText from '@/components/widgets/FitText.vue';
 import { Sheet, SheetContent, SheetClose } from '@/components/ui/sheet';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { JnTooltip } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Icon } from '@iconify/vue';
-import { Globe, History, Trash2 } from '@lucide/vue';
+import { Globe, History, ListFilter, Trash2 } from '@lucide/vue';
 
 const { t } = useI18n();
 const store = useMainStore();
@@ -113,8 +156,50 @@ const openPanel = () => {
     store.toggleSheet('ipHistory');
 };
 
-// Localized day header, e.g. "Jul 8, 2026" / "2026年7月8日".
 const lang = computed(() => store.lang);
+
+// Filters — flat toggle tags, any combination. Empty selection = that
+// dimension unfiltered. Country values are country codes plus the 'unknown'
+// sentinel (lowercase, so it can never collide with the uppercase ISO codes)
+// for entries recorded without a country.
+const versionFilter = ref([]); // subset of ['v4', 'v6']
+const countryFilter = ref([]); // country codes + 'unknown'
+
+// Tag pill look on top of the toggle primitive (whose pressed state is the
+// high-contrast primary pair). `group` lets the muted count / icon flip along
+// with the selection via tagCountClass.
+const tagClass = 'group h-7 rounded-full px-2.5 text-xs cursor-pointer';
+const tagCountClass = 'text-muted-foreground group-data-[state=on]:text-primary-foreground/70';
+
+const versionCounts = computed(() => ipVersionCounts(sortedDays.value));
+const showTypeFilter = computed(() => versionCounts.value.v4 > 0 && versionCounts.value.v6 > 0);
+const countries = computed(() => countryFacets(sortedDays.value));
+const showCountryFilter = computed(() => countries.value.length > 1);
+
+const displayDays = computed(() => filterHistoryDays(sortedDays.value, {
+    versions: versionFilter.value.map((v) => (v === 'v6' ? 6 : 4)),
+    countries: countryFilter.value.map((c) => (c === 'unknown' ? '' : c)),
+}));
+
+// Drop selections whose records vanished entirely (retention pruning,
+// clear-all), so stale hidden tags don't keep filtering the list.
+watch(countries, (facets) => {
+    const alive = new Set(facets.map((f) => f.code || 'unknown'));
+    const kept = countryFilter.value.filter((c) => alive.has(c));
+    if (kept.length !== countryFilter.value.length) countryFilter.value = kept;
+});
+watch(showTypeFilter, (shown) => {
+    if (!shown) versionFilter.value = [];
+});
+
+// Localized country name for a facet code, via the shared country list
+// (data/country-name.js) — same source the rest of the product uses.
+const countryName = (code) => {
+    if (!code) return t('ipHistory.UnknownCountry');
+    return getCountryName(code, lang.value) || code;
+};
+
+// Localized day header, e.g. "Jul 8, 2026" / "2026年7月8日".
 const formatDay = (dayKey) => {
     const [y, m, d] = dayKey.split('-').map(Number);
     const locale = lang.value === 'zh' ? 'zh-CN' : lang.value;

@@ -28,6 +28,13 @@ function isValidIP(ip) {
     return hasCompressedGroup ? groups.length < 8 : groups.length === 8;
 };
 
+// Distinguish IPv6 from IPv4 for an already-validated IP string (the ':'
+// separator only exists in v6). This is the codebase-wide idiom formalized —
+// it does NOT validate; run isValidIP first for untrusted input.
+function isIPv6(ip) {
+    return typeof ip === 'string' && ip.includes(':');
+}
+
 // Validate if a string is a syntactically plausible domain name.
 // Matches the hostname pattern used by DnsResolver / Whois / CensorshipCheck:
 // lowercase-only labels of [a-z0-9-], at least one dot, and a TLD of 2+
@@ -39,4 +46,4 @@ function isValidDomain(domain) {
     return /^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/i.test(domain);
 }
 
-export { isValidIP, isValidDomain };
+export { isValidIP, isIPv6, isValidDomain };

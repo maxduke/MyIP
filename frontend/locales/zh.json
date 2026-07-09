@@ -541,6 +541,10 @@
     "Title": "IP 历史记录",
     "Notes": "这里记录你使用本站时被侦测到的 IP。数据仅保存在当前浏览器本地，不会同步到账号，也不会离开你的设备。你可以在「偏好设置」中调整记录保留时间。",
     "Empty": "暂无记录。主页检测到 IP 后会自动记录在这里。",
+    "FilterByType": "按 IP 类型筛选",
+    "FilterByCountry": "按国家或地区筛选",
+    "UnknownCountry": "未知",
+    "NoMatch": "没有符合筛选条件的记录。",
     "ClearAll": "清空记录",
     "ClearConfirm": "再次点击确认清空"
   },
