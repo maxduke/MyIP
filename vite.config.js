@@ -20,18 +20,10 @@ const sourceChunkGroups = {
   'utils-getips': [
     '/frontend/utils/getips/index',
     '/frontend/utils/valid-ip',
-    '/frontend/utils/transform-ip-data',
-    '/frontend/utils/masked-info'
-  ],
-  'utils-data': [
-    '/frontend/utils/country-name',
-    '/frontend/utils/speedtest-colos'
+    '/frontend/utils/transform-ip-data'
   ],
   'utils-auth': [
     '/frontend/utils/authenticated-fetch'
-  ],
-  'utils-analytics': [
-    '/frontend/utils/use-analytics'
   ]
 };
 
