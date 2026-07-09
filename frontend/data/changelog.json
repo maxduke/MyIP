@@ -1333,6 +1333,24 @@
         }
       },
       {
+        "type": "add",
+        "change": {
+          "en": "Added a humorous startup animation",
+          "zh": "新增一个幽默风格的启动动画",
+          "fr": "Ajout d'une animation de lancement humoristique",
+          "tr": "Eğlenceli bir başlangıç animasyonu eklendi"
+        }
+      },
+      {
+        "type": "improve",
+        "change": {
+          "en": "Avoided political controversies in different regions",
+          "zh": "避免不同地区的政治争议",
+          "fr": "Evite les controverses politiques dans différentes régions",
+          "tr": "Farklı bölgelerde siyasi tartışmaları önlemek"
+        }
+      },
+      {
         "type": "improve",
         "change": {
           "en": "Optimized mobile FAB button operation experience",
