@@ -1342,6 +1342,15 @@
         }
       },
       {
+        "type": "improve",
+        "change": {
+          "en": "Optimized code efficiency, reduced package size",
+          "zh": "优化代码效率，减少包大小",
+          "fr": "Optimisation du code pour réduire la taille des paquets",
+          "tr": "Kod optimizasyonu, paket boyutunu azaltıldı"
+        }
+      },
+      {
         "type": "fix",
         "change": {
           "en": "Fixed some issues",
