@@ -40,6 +40,11 @@ const sanitizeEntry = (raw) => {
     for (const field of DETAIL_FIELDS) {
         entry[field] = typeof raw[field] === 'string' ? raw[field] : '';
     }
+    // Country codes arrive in whatever case the IP source uses ('SG' vs
+    // 'sg'); store them uppercase so facet grouping and filtering can't
+    // split one country into two tags. Runs on load too, so pre-existing
+    // mixed-case records self-heal.
+    entry.country = entry.country.toUpperCase();
     return entry;
 };
 

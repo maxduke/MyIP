@@ -76,8 +76,9 @@ describe('parseHistory', () => {
         });
         const history = parseHistory(raw);
         assert.deepEqual(Object.keys(history.days), ['2026-07-08']);
+        // country comes back uppercased — sanitizeEntry normalizes case
         assert.deepEqual(history.days['2026-07-08'], [
-            { ip: '1.1.1.1', country: 'us', location: 'United States', asn: 'AS13335', org: 'Cloudflare' },
+            { ip: '1.1.1.1', country: 'US', location: 'United States', asn: 'AS13335', org: 'Cloudflare' },
         ]);
     });
 
@@ -95,7 +96,7 @@ describe('mergeIntoHistory', () => {
             '2026-07-08',
         );
         assert.equal(changed, true);
-        assert.deepEqual(history.days['2026-07-08'], [entry('1.1.1.1', { country: 'us' })]);
+        assert.deepEqual(history.days['2026-07-08'], [entry('1.1.1.1', { country: 'US' })]);
     });
 
     it('dedupes by IP within a day and back-fills empty fields', () => {
@@ -108,7 +109,7 @@ describe('mergeIntoHistory', () => {
         );
         assert.equal(changed, true);
         assert.deepEqual(history.days['2026-07-08'], [
-            entry('1.1.1.1', { country: 'us', asn: 'AS13335' }),
+            entry('1.1.1.1', { country: 'US', asn: 'AS13335' }),
         ]);
     });
 
@@ -219,6 +220,27 @@ describe('countryFacets', () => {
         ], '2026-07-08'));
         assert.deepEqual(countryFacets(sortedHistoryDays(state)).map((f) => f.code), ['DE', 'US']);
         assert.deepEqual(countryFacets([]), []);
+    });
+
+    it('groups mixed-case source codes into one facet', () => {
+        let state = createEmptyHistory();
+        ({ history: state } = mergeIntoHistory(state, [
+            { ip: '1.1.1.1', country: 'SG' },
+            { ip: '2606:4700:4700::1111', country: 'sg' },
+        ], '2026-07-08'));
+        const facets = countryFacets(sortedHistoryDays(state));
+        assert.deepEqual(facets, [{ code: 'SG', count: 2 }]);
+        // filtering by the normalized code matches both entries
+        const days = filterHistoryDays(sortedHistoryDays(state), { countries: ['SG'] });
+        assert.equal(days[0].entries.length, 2);
+    });
+
+    it('normalizes mixed-case codes already persisted in storage on parse', () => {
+        const raw = JSON.stringify({
+            version: 1,
+            days: { '2026-07-08': [{ ip: '1.1.1.1', country: 'jp', location: '', asn: '', org: '' }] },
+        });
+        assert.equal(parseHistory(raw).days['2026-07-08'][0].country, 'JP');
     });
 });
 
