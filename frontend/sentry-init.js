@@ -20,8 +20,15 @@ const initSentry = (app, router) => {
         environment: env.MODE,
         integrations: [
             // Route-change performance tracing via vue-router → Web Vitals
-            // (LCP / CLS / INP) and per-route load metrics under Insights
-            Sentry.browserTracingIntegration({ router }),
+            // (LCP / CLS / INP) and per-route load metrics under Insights.
+            // Speed-test endpoints are excluded from span creation:
+            // deliberately-huge downloads are the FEATURE there, and they
+            // both trip the "Large HTTP Payload" performance detector and
+            // flood traces with dozens of meaningless spans per run.
+            Sentry.browserTracingIntegration({
+                router,
+                shouldCreateSpanForRequest: (url) => !url.includes('speed.cloudflare.com'),
+            }),
             // Session Replay, error-only: nothing is uploaded unless an error
             // event fires. Page text is deliberately UNMASKED — this site's
             // whole UI is the visitor's own network info (IPs, ASN, DNS), and

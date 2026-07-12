@@ -8,7 +8,10 @@
 // check-in and rethrows, so callers keep their own .catch logging.
 
 let sentryWithMonitor = null;
-if (process.env.SENTRY_DSN_BACKEND) {
+// Check-ins are production-only: a dev machine's monitor starts reporting
+// "missed" the moment the dev server stops, paging about a closed laptop.
+// Everything else about Sentry still works normally in development.
+if (process.env.SENTRY_DSN_BACKEND && process.env.SENTRY_ENVIRONMENT !== 'development') {
     ({ withMonitor: sentryWithMonitor } = await import('@sentry/node'));
 }
 
