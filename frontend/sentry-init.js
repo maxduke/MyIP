@@ -88,6 +88,8 @@ const initSentry = (app, router) => {
                     // it must succeed even for IPv4-only visitors, so its
                     // failures are a real signal.
                     if (/IPv6(?!\/4)/.test(msg)) return null;
+                    // Filter out DNS-leak probe chain errors.
+                    if (msg.startsWith('Error fetching leak test data:')) return null;
                     event.fingerprint = [msg.slice(0, 200)];
                 }
             }
