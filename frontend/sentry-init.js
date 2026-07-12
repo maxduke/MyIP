@@ -47,7 +47,14 @@ const initSentry = (app, router) => {
             if (event.logger === 'console') {
                 const firstArg = event.extra?.arguments?.[0];
                 if (typeof firstArg === 'string' && firstArg.trim()) {
-                    event.fingerprint = [firstArg.trim().slice(0, 200)];
+                    const msg = firstArg.trim();
+                    // Pure-v6 chain failures are the visitor's network stack
+                    // (IPv4-only users are common), not a defect — drop them.
+                    // The dual-stack "IPv6/4" source is exempt from the drop:
+                    // it must succeed even for IPv4-only visitors, so its
+                    // failures are a real signal.
+                    if (/IPv6(?!\/4)/.test(msg)) return null;
+                    event.fingerprint = [msg.slice(0, 200)];
                 }
             }
             return event;
