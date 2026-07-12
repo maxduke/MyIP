@@ -738,6 +738,7 @@
     "connectionFrom": "Test de vitesse terminé depuis votre machine, IP: ",
     "connectionTo": " vers le serveur de test:",
     "connectionEnd": " .",
+    "testFailed": "Impossible de joindre le serveur de test de vitesse. Vérifiez votre connexion et réessayez.",
     "quality": {
       "bad": "Mauvais",
       "poor": "Faible",

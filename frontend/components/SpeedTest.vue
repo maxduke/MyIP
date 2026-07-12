@@ -155,6 +155,14 @@
             </span>
           </div>
         </div>
+
+        <!-- Error Block — the engine gave up (e.g. speed test server unreachable). -->
+        <div v-else-if="isError" class="jn-slide-in rounded-md border border-destructive/30 bg-destructive/10 p-4">
+          <div class="flex items-start gap-2">
+            <CircleAlert class="size-5 text-destructive shrink-0 mt-0.5" />
+            <span class="text-base text-destructive">{{ t('speedtest.testFailed') }}</span>
+          </div>
+        </div>
       </CardContent>
     </Card>
   </section>
@@ -177,7 +185,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  ArrowLeftRight, CalendarCheck2, Play, CloudDownload, CloudUpload,
+  ArrowLeftRight, CalendarCheck2, CircleAlert, Play, CloudDownload, CloudUpload,
   Globe, Pause, PersonStanding, RotateCw,
 } from '@lucide/vue';
 import { Icon } from '@iconify/vue';
@@ -327,14 +335,16 @@ const engineMethods = {
 
   updateResults(results) {
     const summary = results.getSummary();
+    // Any field can be null when its measurement produced no samples.
+    const fmt = (v, div = 1) => (v == null ? 0 : parseFloat((v / div).toFixed(2)));
     Object.assign(state.speedTest, {
-      downloadSpeed: parseFloat((summary.download / 1000000).toFixed(2)),
-      uploadSpeed: parseFloat((summary.upload / 1000000).toFixed(2)),
-      latency: parseFloat(summary.latency.toFixed(2)),
-      jitter: parseFloat(summary.jitter.toFixed(2)),
+      downloadSpeed: fmt(summary.download, 1000000),
+      uploadSpeed: fmt(summary.upload, 1000000),
+      latency: fmt(summary.latency),
+      jitter: fmt(summary.jitter),
       // Loaded latency only present when the engine measured it.
-      downLoadedLatency: summary.downLoadedLatency == null ? '-' : parseFloat(summary.downLoadedLatency.toFixed(2)),
-      upLoadedLatency: summary.upLoadedLatency == null ? '-' : parseFloat(summary.upLoadedLatency.toFixed(2)),
+      downLoadedLatency: summary.downLoadedLatency == null ? '-' : fmt(summary.downLoadedLatency),
+      upLoadedLatency: summary.upLoadedLatency == null ? '-' : fmt(summary.upLoadedLatency),
     });
   },
 
@@ -398,6 +408,21 @@ const setupTestEngine = async () => {
     engineMethods.updateSpeedInRealTime();
   };
   testEngine.onFinish = (results) => {
+    // The engine fires onFinish even after giving up (e.g. every request to
+    // the test server failed). An error already reported by onError is final,
+    // and a run with no positive measurement (the engine reports 0 for zero
+    // samples) is a failure — never flip either to a green all-zero result.
+    const summary = results?.getSummary?.() ?? {};
+    const measured = (v) => Number.isFinite(v) && v > 0;
+    const hasData = [summary.download, summary.upload, summary.latency].some(measured);
+    if (state.speedTest.status === 'error' || !hasData) {
+      state.speedTest.status = 'error';
+      testEngine.onRunningChange = () => {};
+      testEngine.onResultsChange = () => {};
+      testEngine.onError = () => {};
+      testEngine = null;
+      return;
+    }
     state.speedTest.status = 'finished';
     state.speedTest.progress = 100;
     // No-op, not null: the engine's queued timers call these unconditionally.

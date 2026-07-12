@@ -738,6 +738,7 @@
     "connectionFrom": "Makinenizden hız testi tamamlandı, IP: ",
     "connectionTo": " test sunucusuna:",
     "connectionEnd": " .",
+    "testFailed": "Hız testi sunucusuna ulaşılamadı. Bağlantınızı kontrol edip tekrar deneyin.",
     "quality": {
       "bad": "Kötü",
       "poor": "Zayıf",
