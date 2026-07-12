@@ -62,8 +62,9 @@ const initSentry = (app, router) => {
         transportOptions: {
             headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
         },
-        // Ignore some DNS-leak providers answering empty
-        ignoreErrors: ['no IP in response'],
+        // Ignore visitor-side noise: DNS-leak providers answering empty,
+        // and auth endpoints unreachable from the visitor's network.
+        ignoreErrors: ['no IP in response', 'auth/network-request-failed'],
         // Console-captured events group by the console message instead of
         // the exception stack. The fallback chains all surface the same
         // "TypeError: Failed to fetch" from fetchWithTimeout, so stack
