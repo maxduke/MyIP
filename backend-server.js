@@ -79,9 +79,9 @@ function getClientIp(req) {
     return cfIp || forwardedIps || cfIpV6 || req.ip;
 }
 
-// Shanghai TZ — fixed for log consistency across deployments regardless of host locale.
+// Singapore TZ — fixed for log consistency across deployments regardless of host locale.
 function formatDate(timestamp) {
-    return new Date(timestamp).toLocaleString('en-US', { timeZone: 'Asia/Shanghai' });
+    return new Date(timestamp).toLocaleString('en-US', { timeZone: 'Asia/Singapore' });
 }
 
 // Append-or-update one line in the rate-limit log, keeping the original
