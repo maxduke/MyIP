@@ -22,8 +22,16 @@ const initSentry = (app, router) => {
             // Route-change performance tracing via vue-router → Web Vitals
             // (LCP / CLS / INP) and per-route load metrics under Insights
             Sentry.browserTracingIntegration({ router }),
-            // Session Replay, error-only: nothing is uploaded unless an error event fires
-            Sentry.replayIntegration(),
+            // Session Replay, error-only: nothing is uploaded unless an error
+            // event fires. Page text is deliberately UNMASKED — this site's
+            // whole UI is the visitor's own network info (IPs, ASN, DNS), and
+            // seeing it in an error replay is exactly the debugging context
+            // we need; disclosed in the privacy policy. Typed input stays
+            // masked (maskAllInputs default).
+            Sentry.replayIntegration({
+                maskAllText: false,
+                blockAllMedia: false,
+            }),
             // console.error() → grouped Issues (tagged logger:console).
             Sentry.captureConsoleIntegration({ levels: ['error'] }),
         ],
@@ -33,7 +41,9 @@ const initSentry = (app, router) => {
         // gets flushed when an error occurs
         replaysSessionSampleRate: 0,
         replaysOnErrorSampleRate: 1.0,
-        // MyIP is a privacy tool: never attach user IP / headers to events
+        // No IP / headers attached to event data. Debugging context that
+        // needs the visitor's network info comes from the unmasked
+        // error-replays instead — the page itself displays those details.
         sendDefaultPii: false,
         // Relay envelopes through our own backend (api/sentry-tunnel.js)
         tunnel: '/api/monitoring',

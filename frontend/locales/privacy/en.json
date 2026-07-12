@@ -40,8 +40,8 @@
         "bullets": [
           "Technical error reports: what went wrong in the code, on which page, and your browser and operating system type.",
           "Performance timings, such as how fast pages load.",
-          "When an error occurs, a replay of the moments leading up to it — with all text and input masked — so we can reproduce the problem.",
-          "Your IP address is never attached to any of this: we explicitly disable IP collection, and reports reach Sentry only via our own relay."
+          "When an error occurs, a replay of the moments leading up to it, so we can reproduce the problem. The replay shows the page as you saw it — including the IP addresses and network details it displayed. Anything you type stays masked.",
+          "Beyond what is visible in such replays, your IP address is not attached to telemetry data: we explicitly disable IP collection, and reports reach Sentry only via our own relay."
         ]
       },
       "why": {

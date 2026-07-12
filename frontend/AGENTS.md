@@ -74,7 +74,12 @@ philosophy as `firebase-init.js`). Two rules:
 
 Capture surface: uncaught errors; `console.error` (fallback-chain degradation
 is a tracked product signal — fingerprinted per message prefix so each source
-stays a distinct issue); route-change traces; error-only masked Replay.
+stays a distinct issue; pure-v6 chain failures are dropped in `beforeSend`
+since IPv4-only visitors make them routine — v6 source messages must contain
+"IPv6", and the dual-stack "IPv6/4" source is exempt); route-change traces;
+error-only Replay, page text deliberately unmasked (the visitor's on-screen
+network info IS the debugging context; typed input stays masked; disclosed
+in the privacy policy).
 Backend 5xx is deliberately NOT captured frontend-side — the backend SDK
 reports its own failures. Envelopes ship through the first-party tunnel
 `/api/monitoring` (`api/sentry-tunnel.js`) to beat ad blockers; source maps

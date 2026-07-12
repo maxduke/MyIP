@@ -40,8 +40,8 @@
         "bullets": [
           "Des rapports d'erreur techniques : ce qui a échoué dans le code, sur quelle page, ainsi que le type de votre navigateur et de votre système d'exploitation.",
           "Des mesures de performance, comme le temps de chargement des pages.",
-          "En cas d'erreur, une rediffusion des instants qui l'ont précédée — où tout texte et toute saisie sont masqués — pour nous aider à reproduire le problème.",
-          "Votre adresse IP n'est jamais jointe à ces données : la collecte d'IP est explicitement désactivée et les rapports n'atteignent Sentry que via notre propre relais."
+          "En cas d'erreur, une rediffusion des instants qui l'ont précédée, pour nous aider à reproduire le problème. Elle montre la page telle que vous la voyiez — y compris les adresses IP et informations réseau affichées ; ce que vous tapez reste masqué.",
+          "Au-delà de ce qui est visible dans ces rediffusions, votre adresse IP n'est pas jointe aux données de télémétrie : la collecte d'IP est explicitement désactivée et les rapports n'atteignent Sentry que via notre propre relais."
         ]
       },
       "why": {
