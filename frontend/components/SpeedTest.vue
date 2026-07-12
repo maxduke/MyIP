@@ -400,9 +400,10 @@ const setupTestEngine = async () => {
   testEngine.onFinish = (results) => {
     state.speedTest.status = 'finished';
     state.speedTest.progress = 100;
-    testEngine.onRunningChange = null;
-    testEngine.onResultsChange = null;
-    testEngine.onError = null;
+    // No-op, not null: the engine's queued timers call these unconditionally.
+    testEngine.onRunningChange = () => {};
+    testEngine.onResultsChange = () => {};
+    testEngine.onError = () => {};
     engineMethods.updateResults(results);
 
     // Engine's getScores() reads getSummary() internally; when packetLoss is
@@ -481,12 +482,13 @@ onMounted(() => { store.setMountingStatus('SpeedTest', true); });
 // If the user navigates away mid-test, detach the engine's callbacks before
 // dropping the reference — otherwise any in-flight async work inside the
 // SpeedTestEngine would still try to write state refs that no longer exist.
+// No-ops, not null: the engine's queued timers call these unconditionally.
 onUnmounted(() => {
   if (testEngine) {
-    testEngine.onRunningChange = null;
-    testEngine.onResultsChange = null;
-    testEngine.onFinish = null;
-    testEngine.onError = null;
+    testEngine.onRunningChange = () => {};
+    testEngine.onResultsChange = () => {};
+    testEngine.onFinish = () => {};
+    testEngine.onError = () => {};
     testEngine = null;
   }
   destroyCharts();
