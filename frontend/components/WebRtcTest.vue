@@ -326,6 +326,14 @@ const checkSTUNServer = (stun) => {
         failWith('StatusError');
       }, 5000);
     } catch (error) {
+      // Some browsers ship the constructor but forbid construction
+      // (permissions policy, hardened / lockdown modes) — the runtime
+      // sibling of the missing-API case above: a finding, not an error.
+      if (error?.name === 'NotAllowedError') {
+        log(`construction not allowed: ${error?.message || error}`);
+        failWith('StatusUnavailable');
+        return;
+      }
       console.error('STUN Server Test Error:', error);
       log(`exception: ${error?.message || error}`);
       failWith('StatusError');
