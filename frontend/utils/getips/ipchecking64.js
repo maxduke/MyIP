@@ -39,7 +39,7 @@ const getFromJson = async () => {
         const ip = data.ip;
         return ip;
     } catch (error) {
-        console.error("Error fetching IP from IPCheck.ing IPv6 JSON:", error);
+        console.warn("Error fetching IP from IPCheck.ing IPv6 JSON:", error);
     }
     return getFromTrace();
 };
