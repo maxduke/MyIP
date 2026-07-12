@@ -47,6 +47,10 @@ const initSentry = (app, router) => {
         sendDefaultPii: false,
         // Relay envelopes through our own backend (api/sentry-tunnel.js)
         tunnel: '/api/monitoring',
+        // Force a Content-Type on every envelope POST.
+        transportOptions: {
+            headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+        },
         // Console-captured events group by the console message instead of
         // the exception stack. The fallback chains all surface the same
         // "TypeError: Failed to fetch" from fetchWithTimeout, so stack
