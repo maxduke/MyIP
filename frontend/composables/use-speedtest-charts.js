@@ -88,6 +88,11 @@ export default function useSpeedTestCharts(t) {
         jitter: null
     };
 
+    // Single-flight guard for the async initCharts (it awaits a dynamic
+    // Chart.js import): rapid double-starts must share one init instead of
+    // racing two `new Chart()` calls onto the same canvas.
+    let chartInitInFlight = null;
+
     const chartData = reactive({
         download: {
             started: false,
@@ -179,6 +184,13 @@ export default function useSpeedTestCharts(t) {
         Chart.register(...registerables);
 
         const config = getChartConfig(t);
+
+        // Belt-and-suspenders: whatever instance is already bound to a
+        // canvas (orphaned by any path), destroy it before creating anew —
+        // Chart.js throws "Canvas is already in use" otherwise.
+        [downloadChart, uploadChart, latencyChart, jitterChart].forEach((c) => {
+            if (c.value) Chart.getChart(c.value)?.destroy();
+        });
 
         // Initialize each chart
         if (downloadChart.value) {
@@ -301,9 +313,12 @@ export default function useSpeedTestCharts(t) {
 
     // Initialize starting points of charts
     const initStartingPoints = async () => {
-        // Ensure charts are initialized
+        // Ensure charts are initialized (shared across concurrent callers)
         if (!charts.download || !charts.upload) {
-            await initCharts();
+            chartInitInFlight ||= initCharts().finally(() => {
+                chartInitInFlight = null;
+            });
+            await chartInitInFlight;
         }
 
         const currentTime = Date.now();
