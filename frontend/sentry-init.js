@@ -65,13 +65,19 @@ const initSentry = (app, router) => {
         transportOptions: {
             headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
         },
+        // Ignore some DNS-leak providers answering empty
+        ignoreErrors: ['no IP in response'],
         // Console-captured events group by the console message instead of
         // the exception stack. The fallback chains all surface the same
         // "TypeError: Failed to fetch" from fetchWithTimeout, so stack
         // grouping would collapse every source's degradation into ONE issue
         // — indistinguishable per source, and a single archive/discard on it
         // silently hides them all.
-        beforeSend(event) {
+        beforeSend(event, hint) {
+            // Timeout aborts (our own fetchWithTimeout firing on slow links)
+            // are visitor connectivity, not defects — drop them wherever
+            // they were logged from.
+            if (hint?.originalException?.name === 'AbortError') return null;
             if (event.logger === 'console') {
                 const firstArg = event.extra?.arguments?.[0];
                 if (typeof firstArg === 'string' && firstArg.trim()) {
