@@ -276,20 +276,27 @@ const getResult = async () => {
         const response = await authenticatedFetch(`/api/invisibility?id=${userID.value}`);
         const data = response;
 
-        if ((data.message === 'Data not found' || data.status === 'pending') && retryCount.value < 3) {
+        const isPending = data.message === 'Data not found' || data.status === 'pending';
+        if (isPending && retryCount.value < 3) {
             setTimeout(() => {
                 getResult();
                 retryCount.value++;
             }, 10000);
             return;
         }
-        testResults.value = data;
 
-        // Achievement rules (HiddenWell / SlipUp) live in data/achievement-rules.js.
-        emitAppEvent('invisibility:result', {
-            proxyScore: Math.floor(testResults.value.score.proxy),
-            vpnScore: Math.floor(testResults.value.score.vpn),
-        });
+        // Still pending after every retry, or a body without scores: surface
+        // the fetch error instead of rendering (and crashing on) a non-result.
+        if (isPending || !data.score) {
+            errorMsg.value = t('invisibilitytest.fetchError');
+        } else {
+            testResults.value = data;
+            // Achievement rules (HiddenWell / SlipUp) live in data/achievement-rules.js.
+            emitAppEvent('invisibility:result', {
+                proxyScore: Math.floor(data.score.proxy),
+                vpnScore: Math.floor(data.score.vpn),
+            });
+        }
     } catch (error) {
         console.error('Error fetching InvisibilityTest results:', error);
         if (error.message.includes('Invalid token')) {
