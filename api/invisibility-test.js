@@ -35,6 +35,13 @@ export default async (req, res) => {
             }
         });
 
+        // Upstream 404 = "result not computed yet" — a normal answer while
+        // the frontend polls after starting a test, not a failure. Translate
+        // to 200 {status:'pending'}
+        if (apiResponse.status === 404) {
+            return res.json({ status: 'pending' });
+        }
+
         // Catch upstream error
         if (!apiResponse.ok) {
             let errorDetail = '';
