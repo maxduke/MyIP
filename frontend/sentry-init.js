@@ -63,8 +63,16 @@ const initSentry = (app, router) => {
             headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
         },
         // Ignore visitor-side noise: DNS-leak providers answering empty,
-        // and auth endpoints unreachable from the visitor's network.
-        ignoreErrors: ['no IP in response', 'auth/network-request-failed'],
+        // auth endpoints unreachable from the visitor's network, the visitor
+        // dismissing / re-triggering the sign-in popup, and a known
+        // firebase-js-sdk popup race (its internal assertion, not our state).
+        ignoreErrors: [
+            'no IP in response',
+            'auth/network-request-failed',
+            'auth/popup-closed-by-user',
+            'auth/cancelled-popup-request',
+            'INTERNAL ASSERTION FAILED',
+        ],
         // Console-captured events group by the console message instead of
         // the exception stack. The fallback chains all surface the same
         // "TypeError: Failed to fetch" from fetchWithTimeout, so stack
