@@ -51,6 +51,19 @@ const store = useMainStore(pinia);
 app.use(i18n);
 app.use(router);
 
+// Sentry error monitoring — VITE_SENTRY_DSN_FRONTEND is a build-time
+// constant, so when it's unset Vite folds this branch away and the Sentry
+// chunk neither ships nor loads. The returned promise joins the mount gate
+// below: the chunk loads in parallel with the auth/config/locale fetches the
+// mount already waits for, so console/error instrumentation is guaranteed to
+// be in place before any component code runs (checkAllIPs fires immediately
+// at mount). A failed load must never block the app — hence the catch.
+const sentryReady = import.meta.env.VITE_SENTRY_DSN_FRONTEND
+    ? import('./sentry-init')
+        .then(({ initSentry }) => initSentry(app, router))
+        .catch(() => {})
+    : Promise.resolve();
+
 //
 // Initialize a series of operations
 //
@@ -91,7 +104,8 @@ Promise.all([
     store.isFireBaseSet ? store.initializeAuthListener() : Promise.resolve(),
     store.loadPreferences(), // Load user preferences
     store.fetchConfigs(),     // Fetch backend configs
-    loadActiveLocaleMessages() // Load the active language pack before first render
+    loadActiveLocaleMessages(), // Load the active language pack before first render
+    sentryReady               // Sentry instrumentation in place before first render
 ]).then(() => {
     app.mount('#app');
 }).catch(error => {

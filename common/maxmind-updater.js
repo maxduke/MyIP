@@ -7,6 +7,7 @@ import { pipeline } from 'stream/promises';
 import * as tar from 'tar';
 import maxmind from 'maxmind';
 import logger from './logger.js';
+import { withCronMonitor } from './sentry-cron.js';
 import {
     getMaxMindDbPaths,
     MAXMIND_ASN_DB,
@@ -69,8 +70,14 @@ export function startMaxMindAutoUpdate({ reload } = {}) {
     }
 
     // Run one update cycle and keep the scheduler alive if that cycle fails.
+    // withCronMonitor reports ok/error check-ins to Sentry Crons (no-op
+    // without a backend DSN) so a silently dead scheduler gets noticed.
     const run = () => {
-        updateMaxMindDatabases({ reload }).catch(error => {
+        withCronMonitor('maxmind-auto-update', () => updateMaxMindDatabases({ reload }), {
+            schedule: { type: 'interval', value: UPDATE_INTERVAL_MS / (60 * 60 * 1000), unit: 'hour' },
+            checkinMargin: 60,  // minutes of lateness tolerated before "missed"
+            maxRuntime: 30,     // minutes before an in-progress run counts as failed
+        }).catch(error => {
             logger.error({ err: error }, 'MaxMind auto update failed');
         });
     };

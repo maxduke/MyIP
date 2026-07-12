@@ -11,6 +11,7 @@
 
 import { fetchUpstream } from './fetch-with-timeout.js';
 import logger from './logger.js';
+import { withCronMonitor } from './sentry-cron.js';
 import { STATUS_PROVIDERS } from './service-status-providers.js';
 import { assembleProvider } from './service-status-transform.js';
 
@@ -106,8 +107,14 @@ export async function bootstrapServiceStatus() {
 export function startServiceStatusPolling() {
     if (schedulerStarted) return;
     schedulerStarted = true;
+    // withCronMonitor reports ok/error check-ins to Sentry Crons (no-op
+    // without a backend DSN) so a dead poller surfaces as a missed check-in.
     const tick = () => {
-        refreshServiceStatus().catch((error) => {
+        withCronMonitor('service-status-refresh', refreshServiceStatus, {
+            schedule: { type: 'interval', value: REFRESH_INTERVAL_MS / (60 * 1000), unit: 'minute' },
+            checkinMargin: 5,
+            maxRuntime: 5,
+        }).catch((error) => {
             logger.error({ err: error }, 'service-status refresh tick failed');
         });
     };
