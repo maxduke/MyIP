@@ -738,6 +738,7 @@
     "connectionFrom": "已完成从你的机器，IP：",
     "connectionTo": "与测速服务器：",
     "connectionEnd": " 的测试。",
+    "testFailed": "无法连接测速服务器，请检查网络后重试。",
     "quality": {
       "bad": "差",
       "poor": "较差",
