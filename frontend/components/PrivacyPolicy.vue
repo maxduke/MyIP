@@ -55,7 +55,11 @@ const store = useMainStore();
 const { isFireBaseSet } = storeToRefs(store);
 
 // Bump when the policy text changes materially.
-const LAST_UPDATED = '2026-06-28';
+const LAST_UPDATED = '2026-07-12';
+
+// Sentry telemetry is a build-time decision (see frontend/AGENTS.md): the
+// section only renders on deployments actually built with a DSN.
+const isSentryEnabled = !!(import.meta.env ?? {}).VITE_SENTRY_DSN_FRONTEND;
 
 // Privacy copy is loaded on demand per locale (mirrors the security-checklist
 // dataset pattern), then merged into i18n so t() / tm() can resolve it.
@@ -97,7 +101,8 @@ const order = computed(() => {
   const ids = ['tools'];
   if (isAnalyticsEnabled) ids.push('analytics');
   if (isFireBaseSet.value) ids.push('account');
-  if (isAnalyticsEnabled || isFireBaseSet.value) ids.push('why');
+  if (isSentryEnabled) ids.push('telemetry');
+  if (isAnalyticsEnabled || isFireBaseSet.value || isSentryEnabled) ids.push('why');
   ids.push('cookies');
   if (isAnalyticsEnabled) ids.push('eu');
   return ids;
@@ -111,6 +116,7 @@ const paragraphs = (id) => {
     const out = [];
     if (isAnalyticsEnabled) out.push(t('privacy.sections.why.analytics'));
     if (isFireBaseSet.value) out.push(t('privacy.sections.why.account'));
+    if (isSentryEnabled) out.push(t('privacy.sections.why.telemetry'));
     return out;
   }
   if (id === 'cookies') {

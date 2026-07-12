@@ -32,10 +32,23 @@
           "Gelişmiş özellikleri kullanım sayınız; başarımlarınızı hesaplamak için kullanılır."
         ]
       },
+      "telemetry": {
+        "title": "Hata ve performans telemetrisi",
+        "paragraphs": [
+          "Bu site, hataları fark edip düzeltebilmemiz için bir hata izleme servisi olan Sentry'yi kullanır. Telemetri verileri Sentry'ye kendi sunucu aktarıcımız üzerinden gönderilir ve başka hiç kimseyle paylaşılmaz. Şunları içerir:"
+        ],
+        "bullets": [
+          "Teknik hata raporları: kodda neyin ters gittiği, hangi sayfada olduğu, tarayıcı ve işletim sistemi türünüz.",
+          "Sayfa yükleme hızı gibi performans ölçümleri.",
+          "Bir hata olduğunda, sorunu yeniden üretebilmemiz için hatadan önceki anların kaydı — tüm metinler ve girişler maskelenmiş olarak.",
+          "IP adresiniz bu verilerin hiçbirine eklenmez: IP toplamayı açıkça devre dışı bıraktık ve raporlar Sentry'ye yalnızca kendi aktarıcımız üzerinden ulaşır."
+        ]
+      },
       "why": {
         "title": "Neden topluyoruz",
         "analytics": "Analiz verilerini kullanarak site nasıl kullanıldığını anlamak ve kullanıcı deneyimini iyileştirmek için kullanırız. Bu veriler sizi kişisel olarak tanımlamak için kullanılmaz ve asla satılmaz.",
-        "account": "Hesap verileriniz (e-posta ve gelişmiş özellik kullanım sayısı) yalnızca hesabınızı tanımlamak, oturum açma gerektiren özellikleri sunmak ve başarımlarınızı hesaplamak için kullanılır. Bunları reklam için kullanmayız ve asla satmayız."
+        "account": "Hesap verileriniz (e-posta ve gelişmiş özellik kullanım sayısı) yalnızca hesabınızı tanımlamak, oturum açma gerektiren özellikleri sunmak ve başarımlarınızı hesaplamak için kullanılır. Bunları reklam için kullanmayız ve asla satmayız.",
+        "telemetry": "Hata ve performans telemetrisi yalnızca kusurları bulmak ve düzeltmek için kullanılır. Sizi tanımlamak veya izlemek için asla kullanılmaz ve kısa bir saklama süresinin ardından otomatik olarak silinir."
       },
       "cookies": {
         "title": "Çerezler ve yerel depolama",

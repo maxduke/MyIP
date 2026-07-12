@@ -32,10 +32,23 @@
           "Your usage count of advanced features, used to calculate your achievements."
         ]
       },
+      "telemetry": {
+        "title": "Error & performance telemetry",
+        "paragraphs": [
+          "This deployment uses Sentry, an error-monitoring service, so we can find out when the site breaks and fix it. Telemetry is sent to Sentry through our own server relay and is not shared with anyone else. It includes:"
+        ],
+        "bullets": [
+          "Technical error reports: what went wrong in the code, on which page, and your browser and operating system type.",
+          "Performance timings, such as how fast pages load.",
+          "When an error occurs, a replay of the moments leading up to it — with all text and input masked — so we can reproduce the problem.",
+          "Your IP address is never attached to any of this: we explicitly disable IP collection, and reports reach Sentry only via our own relay."
+        ]
+      },
       "why": {
         "title": "Why we collect it",
         "analytics": "We use the analytics data to understand how the site is used and to improve the user experience. This data is not used to personally identify you, and we never sell it.",
-        "account": "Your account data (email and advanced-feature usage count) is used only to identify your account, to provide the features that require signing in, and to calculate your achievements. We do not use it for advertising and never sell it."
+        "account": "Your account data (email and advanced-feature usage count) is used only to identify your account, to provide the features that require signing in, and to calculate your achievements. We do not use it for advertising and never sell it.",
+        "telemetry": "Error and performance telemetry is used solely to find and fix defects. It is never used to identify or track you, and it is deleted automatically after a short retention period."
       },
       "cookies": {
         "title": "Cookies & local storage",
