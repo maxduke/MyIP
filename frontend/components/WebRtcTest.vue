@@ -161,18 +161,25 @@ const CANDIDATE_IP_RE = /([0-9a-f]{1,4}(:[0-9a-f]{1,4}){7}|[0-9a-f]{0,4}(:[0-9a-
 // the connection is created and removed once it's closed.
 const activeConnections = new Set();
 
-// Business status → 4 tone levels
-const toneOf = (stun) => ipFieldTone(stun.ip, {
-  waitLabels: t('webrtc.StatusWait'),
-  errorLabels: t('webrtc.StatusError'),
-});
+// WebRTC can be absent entirely: privacy-hardened browsers.
+const isWebRtcAvailable = typeof RTCPeerConnection === 'function';
+
+// Business status → 4 tone levels. "WebRTC unavailable" renders green on
+// purpose: for a leak test, a browser with WebRTC disabled is a protective
+// state (same visual language as InfoMask), not an error.
+const toneOf = (stun) => stun.ip === t('webrtc.StatusUnavailable')
+  ? 'ok-fast'
+  : ipFieldTone(stun.ip, {
+    waitLabels: t('webrtc.StatusWait'),
+    errorLabels: t('webrtc.StatusError'),
+  });
 
 // Single field in dl block is in "no data" state (waiting/error).
 // Fields may fail independently (e.g. IP success but country lookup fails),
 // so the check is run per-field in the template.
 const isFieldPending = (value) => isFieldPendingShared(value, {
   waitLabels: t('webrtc.StatusWait'),
-  errorLabels: t('webrtc.StatusError'),
+  errorLabels: [t('webrtc.StatusError'), t('webrtc.StatusUnavailable')],
 });
 
 // Run a STUN test against one server. ICE gathering with a 5s backstop.
@@ -341,6 +348,23 @@ const determineNATType = (candidate) => {
 const checkAllWebRTC = async (isRefresh) => {
   if (isRefresh) trackEvent('Section', 'RefreshClick', 'WebRTC');
   isStarted.value = true;
+
+  // No WebRTC in this browser: mark every card with the dedicated state
+  // (dl detail fields render as "—" via isFieldPending) and finish the
+  // section immediately.
+  if (!isWebRtcAvailable) {
+    const label = t('webrtc.StatusUnavailable');
+    stunServers.forEach((server) => {
+      server.ip = label;
+      server.natType = label;
+      server.country = label;
+      server.country_code = '';
+      server.org = label;
+    });
+    store.setLoadingStatus('WebRTC', true);
+    return;
+  }
+
   const promises = stunServers.map((server) => {
     server.ip = t('webrtc.StatusWait');
     server.natType = t('webrtc.StatusWait');

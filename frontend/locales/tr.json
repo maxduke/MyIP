@@ -699,6 +699,7 @@
     "Note": "WebRTC genellikle doğrudan UDP üzerinden bağlantı kurar. Test gerçek IP'nizi döndürürse, bu, proxy ayarlarınızın bu bağlantıları kapsamadığı anlamına gelir. WebRTC'ye bağlanırken kullandığınız IP'yi tespit etmenin yanı sıra, NAT türünüzü de tespit ediyoruz. Ancak, NAT türü tespiti %100 doğru değildir ve yalnızca referans amaçlıdır.",
     "StatusWait": "Test Bekleniyor",
     "StatusError": "Bağlantı Hatası",
+    "StatusUnavailable": "WebRTC Kullanılamıyor",
     "SdpLog": "SDP Günlüğü",
     "NATType": {
       "srflx": "Port Kısıtlı Koni veya Simetrik",
