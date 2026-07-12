@@ -31,6 +31,13 @@ const initSentry = (app, router) => {
             Sentry.replayIntegration({
                 maskAllText: false,
                 blockAllMedia: false,
+                // Ship recordings as plain JSON, not a deflate blob: WAF
+                // managed rules (Cloudflare, in front of the tunnel) inspect
+                // request bodies and challenge high-entropy binary payloads,
+                // which silently killed replay segments in production while
+                // text envelopes passed. Error-only mode keeps the extra
+                // bandwidth negligible.
+                useCompression: false,
             }),
             // console.error() → grouped Issues (tagged logger:console).
             Sentry.captureConsoleIntegration({ levels: ['error'] }),
