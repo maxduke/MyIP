@@ -137,6 +137,12 @@ Download `GeoLite2-City.mmdb` and `GeoLite2-ASN.mmdb` from your MaxMind account 
 | `LOG_LEVEL` | No | `"info"` | Minimum log level (`debug` / `info` / `warn` / `error`). Lower-level messages are suppressed. |
 | `LOG_FORMAT` | No | pretty | Set to `"json"` to emit one JSON event per line (for log aggregators / jq). Any other value (or unset) keeps the colored pretty output used in dev and pm2 log tails. |
 | `LOG_HTTP` | No | `"false"` | Set to `"true"` to enable per-request HTTP logging on `/api/*` (method, URL, status, response time). Off by default to keep pm2 logs lean. Handler-level 4xx/5xx errors are always logged regardless of this flag. |
+| `VITE_SENTRY_DSN_FRONTEND` | No | `""` | Sentry DSN for the frontend (build-time). When empty, no Sentry code is included in the bundle at all. Also read by the backend at runtime as the allowlist for `/api/monitoring`, the first-party tunnel that relays Sentry envelopes past ad blockers |
+| `SENTRY_DSN_BACKEND` | No | `""` | Sentry DSN for the backend (runtime). When empty, the Sentry SDK is never loaded |
+| `SENTRY_ENVIRONMENT` | No | `"production"` | Environment tag on backend Sentry events. Set to `"development"` on dev machines; the frontend tags itself automatically |
+| `SENTRY_ORG` | No | `""` | Sentry organization slug, used with `SENTRY_PROJECT_FRONTEND` and `SENTRY_AUTH_TOKEN` to upload source maps at build time |
+| `SENTRY_PROJECT_FRONTEND` | No | `""` | Sentry project slug of the frontend project, for build-time source map upload |
+| `SENTRY_AUTH_TOKEN` | No | `""` | Sentry auth token enabling source map upload at build time. Build-time secret only — never exposed to the browser |
 | `ALLOWED_DOMAINS` | No | `""` | Allowed domains for access, separated by commas, used to prevent misuse of the backend API |
 | `GOOGLE_MAP_API_KEY` | No | `""` | API Key for Google Maps, used to display the location of the IP on a map |
 | `IPCHECKING_API_ENDPOINT` | No | `""` | API endpoint for IPCheck.ing database, used to obtain accurate IP geolocation information |
@@ -230,6 +236,8 @@ Thanks to AI, it has given me, an unemployed product manager, a rapid opportunit
 
 As a open source project, I'm very grateful to the following sponsors for their support:
 
-<a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://opensource.nyc3.cdn.digitaloceanspaces.com/attribution/assets/SVG/DO_Logo_horizontal_blue.svg" height="40px" title="DigitalOcean" /></a>
+<a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://res.ipcheck.ing/img/digitalocean-logo.png" height="40px" title="DigitalOcean" /></a>
 
-<a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://cf-assets.www.cloudflare.com/zkvhlag99gkb/69RwBidpiEHCDZ9rFVVk7T/092507edbed698420b89658e5a6d5105/CF_logo_stacked_blktype.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" height="60px" /></a>
+<a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://res.ipcheck.ing/img/cloudflare-logo.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" height="60px" /></a>
+
+<a href="https://www.sentry.io"><img src="https://res.ipcheck.ing/img/sentry-logo.png" alt="Sentry" title="Sentry" height="60px" /></a>

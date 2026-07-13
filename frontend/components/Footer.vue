@@ -193,6 +193,8 @@ const thanksList = [
   { name: 'Nikolai Tschacher', link: 'https://incolumitas.com/pages/about/' },
   { name: 'Project Alexandria (Cloudflare)', link: 'https://www.cloudflare.com/lp/project-alexandria/' },
   { name: 'Cloudflare Speedtest', link: 'https://github.com/cloudflare/speedtest' },
+  { name: 'DigitalOcean', link: 'https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge' },
+  { name: 'Sentry', link: 'https://www.sentry.io/' },
   { name: 'Globalping by jsDelivr', link: 'https://globalping.io/' },
   { name: 'ProxyCheck.io', link: 'https://proxycheck.io/' },
   { name: 'Digital Defense', link: 'https://digital-defense.io/' },

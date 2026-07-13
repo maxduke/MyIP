@@ -137,6 +137,12 @@ Téléchargez `GeoLite2-City.mmdb` et `GeoLite2-ASN.mmdb` depuis votre compte Ma
 | `LOG_LEVEL` | Non | `"info"` | Niveau minimum des journaux (`debug` / `info` / `warn` / `error`). Les messages de niveau inférieur sont supprimés. |
 | `LOG_FORMAT` | Non | pretty | Définir sur `"json"` pour émettre un événement JSON par ligne (agrégateurs de logs / jq). Toute autre valeur (ou non défini) conserve la sortie colorée lisible utilisée en dev et lors du tail des logs pm2. |
 | `LOG_HTTP` | Non | `"false"` | Définir sur `"true"` pour activer la journalisation par requête HTTP sur `/api/*` (méthode, URL, statut, temps de réponse). Désactivé par défaut pour garder les logs pm2 légers. Les erreurs 4xx/5xx côté handler sont toujours loguées, que ce drapeau soit activé ou non. |
+| `VITE_SENTRY_DSN_FRONTEND` | Non | `""` | DSN Sentry du frontend (au moment du build). Si vide, aucun code Sentry n'est inclus dans le bundle. Également lu par le backend à l'exécution comme liste blanche pour `/api/monitoring`, le tunnel first-party qui fait passer les enveloppes Sentry malgré les bloqueurs de publicité |
+| `SENTRY_DSN_BACKEND` | Non | `""` | DSN Sentry du backend (à l'exécution). Si vide, le SDK Sentry n'est jamais chargé |
+| `SENTRY_ENVIRONMENT` | Non | `"production"` | Étiquette d'environnement des événements Sentry du backend. Définir sur `"development"` sur les machines de développement ; le frontend s'étiquette automatiquement |
+| `SENTRY_ORG` | Non | `""` | Slug de l'organisation Sentry, utilisé avec `SENTRY_PROJECT_FRONTEND` et `SENTRY_AUTH_TOKEN` pour téléverser les source maps au moment du build |
+| `SENTRY_PROJECT_FRONTEND` | Non | `""` | Slug du projet Sentry du frontend, pour le téléversement des source maps au moment du build |
+| `SENTRY_AUTH_TOKEN` | Non | `""` | Jeton Sentry activant le téléversement des source maps au moment du build. Secret de build uniquement — jamais exposé au navigateur |
 | `ALLOWED_DOMAINS` | Non | `""` | Domaines autorisés pour l'accès, séparés par des virgules, utilisés pour empêcher une utilisation abusive de l'API backend |
 | `GOOGLE_MAP_API_KEY` | Non | `""` | Clé API pour Google Maps, utilisée pour afficher l'emplacement de l'adresse IP sur une carte |
 | `IPCHECKING_API_ENDPOINT` | Non | `""` | endpoint de l'API pour IPCheck.ing database, utilisée pour obtenir des informations de géolocalisation précises sur l'adresse IP |
@@ -230,6 +236,8 @@ Merci à l'IA, qui m'a donné, à moi, un chef de produit au chômage, une oppor
 
 En tant que projet open source, je suis très reconnaissant aux sponsors suivants pour leur soutien :
 
-<a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://opensource.nyc3.cdn.digitaloceanspaces.com/attribution/assets/SVG/DO_Logo_horizontal_blue.svg" height="40px" title="DigitalOcean" /></a>
+<a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://res.ipcheck.ing/img/digitalocean-logo.png" height="40px" title="DigitalOcean" /></a>
 
-<a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://cf-assets.www.cloudflare.com/zkvhlag99gkb/69RwBidpiEHCDZ9rFVVk7T/092507edbed698420b89658e5a6d5105/CF_logo_stacked_blktype.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" height="60px" /></a>
+<a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://res.ipcheck.ing/img/cloudflare-logo.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" height="60px" /></a>
+
+<a href="https://www.sentry.io"><img src="https://res.ipcheck.ing/img/sentry-logo.png" alt="Sentry" title="Sentry" height="60px" /></a>

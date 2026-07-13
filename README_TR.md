@@ -137,6 +137,12 @@ MaxMind hesabınızdan `GeoLite2-City.mmdb` ve `GeoLite2-ASN.mmdb` dosyalarını
 | `LOG_LEVEL` | Hayır | `"info"` | Minimum log seviyesi (`debug` / `info` / `warn` / `error`). Daha düşük seviyedeki mesajlar bastırılır. |
 | `LOG_FORMAT` | Hayır | pretty | `"json"` olarak ayarlandığında satır başına bir JSON olayı çıkarır (log toplayıcılar / jq için). Diğer değerler (veya ayarlanmamışsa) dev ortamında ve pm2 log tail sırasında kullanılan renkli güzel biçimli çıktıyı korur. |
 | `LOG_HTTP` | Hayır | `"false"` | `"true"` yapıldığında `/api/*` üzerinde istek başı HTTP loglamasını etkinleştirir (metod, URL, durum, yanıt süresi). pm2 loglarını küçük tutmak için varsayılan olarak kapalıdır. Bu bayrak kapalı olsa bile handler düzeyindeki 4xx/5xx hataları her zaman loglanır. |
+| `VITE_SENTRY_DSN_FRONTEND` | Hayır | `""` | Frontend Sentry DSN'i (derleme zamanı). Boş bırakılırsa pakete hiçbir Sentry kodu dahil edilmez. Backend tarafından çalışma zamanında, Sentry zarflarını reklam engelleyicilerin ötesine taşıyan birinci taraf tünel `/api/monitoring` için izin listesi olarak da okunur |
+| `SENTRY_DSN_BACKEND` | Hayır | `""` | Backend Sentry DSN'i (çalışma zamanı). Boş bırakılırsa Sentry SDK hiç yüklenmez |
+| `SENTRY_ENVIRONMENT` | Hayır | `"production"` | Backend Sentry olaylarındaki ortam etiketi. Geliştirme makinelerinde `"development"` yapın; frontend kendini otomatik etiketler |
+| `SENTRY_ORG` | Hayır | `""` | Sentry organizasyon slug'ı; derleme zamanında source map yüklemek için `SENTRY_PROJECT_FRONTEND` ve `SENTRY_AUTH_TOKEN` ile birlikte kullanılır |
+| `SENTRY_PROJECT_FRONTEND` | Hayır | `""` | Frontend projesinin Sentry proje slug'ı, derleme zamanı source map yüklemesi için |
+| `SENTRY_AUTH_TOKEN` | Hayır | `""` | Derleme zamanında source map yüklemesini etkinleştiren Sentry jetonu. Yalnızca derleme zamanı sırrıdır — tarayıcıya asla açılmaz |
 | `ALLOWED_DOMAINS` | Hayır | `""` | Erişime izin verilen alan adları, virgülle ayrılmış; backend API kötüye kullanımını önlemek için kullanılır |
 | `GOOGLE_MAP_API_KEY` | Hayır | `""` | IP'nin konumunu haritada göstermek için Google Maps API Anahtarı |
 | `IPCHECKING_API_ENDPOINT` | Hayır | `""` | IPCheck.ing veritabanı API uç noktası, doğru IP konum bilgisi almak için |
@@ -229,6 +235,8 @@ Yapay zekâ sayesinde, işsiz bir ürün yöneticisi olarak programlamayı hızl
 
 Açık kaynak proje olarak, destekleri için aşağıdaki sponsorlarımıza minnettarım:
 
-<a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://opensource.nyc3.cdn.digitaloceanspaces.com/attribution/assets/SVG/DO_Logo_horizontal_blue.svg" height="40px" title="DigitalOcean" /></a>
+<a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://res.ipcheck.ing/img/digitalocean-logo.png" height="40px" title="DigitalOcean" /></a>
 
-<a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://cf-assets.www.cloudflare.com/zkvhlag99gkb/69RwBidpiEHCDZ9rFVVk7T/092507edbed698420b89658e5a6d5105/CF_logo_stacked_blktype.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" height="60px" /></a>
+<a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://res.ipcheck.ing/img/cloudflare-logo.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" height="60px" /></a>
+
+<a href="https://www.sentry.io"><img src="https://res.ipcheck.ing/img/sentry-logo.png" alt="Sentry" title="Sentry" height="60px" /></a>
