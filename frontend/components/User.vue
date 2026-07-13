@@ -76,8 +76,9 @@ const getUserInfo = async () => {
 const initUserAchievements = () => {
     if (!remoteUserInfo.value) return;
 
+    // A brand-new account may come back with no achievements payload yet.
     const { achievements, functionUses } = remoteUserInfo.value;
-    Object.entries(achievements).forEach(([key, value]) => {
+    Object.entries(achievements ?? {}).forEach(([key, value]) => {
         if (store.userAchievements[key]) {
             store.userAchievements[key].achieved = value.achieved;
             store.userAchievements[key].achievedTime = value.achievedTime;
