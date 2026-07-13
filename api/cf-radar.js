@@ -10,6 +10,10 @@ async function fetchFromCloudflare(endpoint) {
             'Content-Type': 'application/json',
         },
     });
+    // Outage pages come back as HTML — fail on status instead of JSON.parse.
+    if (!response.ok) {
+        throw new Error(`Cloudflare Radar responded ${response.status}`);
+    }
     return response.json();
 }
 
