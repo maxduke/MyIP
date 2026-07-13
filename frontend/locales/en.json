@@ -866,8 +866,8 @@
     "Sponsor": "Sponsor Us",
     "Privacy": "Privacy"
   },
-  "specialthanks": {
-    "Title": "Special Thanks",
+  "acknowledgement": {
+    "Title": "Acknowledgement",
     "Note1": "This project could not have been completed without the support and help from some enthusiastic individuals and organizations, as well as those who provided inspiration or open-sourced their code. Many thanks to them:"
   },
   "changelog": {

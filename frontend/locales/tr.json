@@ -866,8 +866,8 @@
     "Sponsor": "Destekleme",
     "Privacy": "Gizlilik"
   },
-  "specialthanks": {
-    "Title": "Özel Teşekkürler",
+  "acknowledgement": {
+    "Title": "Teşekkür Edilenler",
     "Note1": "Bu proje, bazı hevesli bireylerin ve kuruluşların desteği ve yardımı olmadan, ayrıca ilham veren veya kodlarını açık kaynak olarak paylaşanlar olmadan tamamlanamazdı. Onlara çok teşekkürler:"
   },
   "changelog": {

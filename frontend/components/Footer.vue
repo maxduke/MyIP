@@ -17,9 +17,9 @@
       <Button variant="link" size="default" @click="openAboutTab('changelog', 'Changelog')" class="cursor-pointer">
         {{ t('changelog.Title') }}
       </Button>
-      <Button variant="link" size="default" @click="openAboutTab('specialthanks', 'SpecialThanks')"
+      <Button variant="link" size="default" @click="openAboutTab('acknowledgement', 'Acknowledgement')"
         class="cursor-pointer">
-        {{ t('specialthanks.Title') }}
+        {{ t('acknowledgement.Title') }}
       </Button>
       <Button variant="link" size="default" @click="openAbout" class="cursor-pointer">
         {{ t('about.Title') }}
@@ -126,9 +126,9 @@
               </section>
             </TabsContent>
 
-            <!-- Special Thanks -->
-            <TabsContent value="specialthanks" class="space-y-4 mt-0">
-              <p class="text-sm text-muted-foreground leading-relaxed">{{ t('specialthanks.Note1') }}</p>
+            <!-- Acknowledgement -->
+            <TabsContent value="acknowledgement" class="space-y-4 mt-0">
+              <p class="text-sm text-muted-foreground leading-relaxed">{{ t('acknowledgement.Note1') }}</p>
               <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 list-none p-0">
                 <li v-for="(item, idx) in thanksList" :key="idx">
                   <Button v-if="item.link" variant="outline" size="sm" as-child class="w-full justify-start">
@@ -174,7 +174,7 @@ const store = useMainStore();
 const isMobile = computed(() => store.isMobile);
 const configs = computed(() => store.configs);
 
-const tabs = ['about', 'changelog', 'specialthanks'];
+const tabs = ['about', 'changelog', 'acknowledgement'];
 const content = ref('about');
 // Static data from JSON — reverse once via computed so the template stays tidy.
 const changelogReversed = computed(() => changelogData.slice().reverse());
@@ -225,7 +225,7 @@ const openAbout = () => {
 };
 
 // Direct-entry shortcuts: open the same About sheet but jump straight to the
-// changelog / special-thanks tab. Plain open (not toggle) so a second click
+// changelog / acknowledgement tab. Plain open (not toggle) so a second click
 // from another tab just switches tabs instead of closing the sheet.
 const openAboutTab = (tab, trackLabel) => {
   content.value = tab;

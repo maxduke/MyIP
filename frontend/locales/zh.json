@@ -866,8 +866,8 @@
     "Sponsor": "赞助我们",
     "Privacy": "隐私政策"
   },
-  "specialthanks": {
-    "Title": "特别鸣谢",
+  "acknowledgement": {
+    "Title": "致谢",
     "Note1": "这个项目之所以能够完成，少不了一些热心的人和组织的支持和帮助，以及给予灵感或开放的代码人们。非常感谢他们："
   },
   "changelog": {
