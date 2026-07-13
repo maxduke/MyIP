@@ -176,7 +176,7 @@ MAXMIND_ACCOUNT_ID="YOUR_ACCOUNT_ID"
 MAXMIND_LICENSE_KEY="YOUR_LICENSE_KEY"
 MAXMIND_AUTO_UPDATE="true"
 GOOGLE_MAP_API_KEY="YOUR_KEY_HERE"
-ALLOWED_DOMAINS="example.com"
+ALLOWED_DOMAINS="example.com,example.org"
 ```
 
 Ardından backend servisini yeniden başlatın.
@@ -191,7 +191,7 @@ docker run -d -p 18966:18966 \
   -e MAXMIND_LICENSE_KEY="YOUR_LICENSE_KEY" \
   -e MAXMIND_AUTO_UPDATE="true" \
   -e GOOGLE_MAP_API_KEY="YOUR_KEY_HERE" \
-  -e ALLOWED_DOMAINS="example.com" \
+  -e ALLOWED_DOMAINS="example.com,example.org" \
   --name myip \
   jason5ng32/myip:latest
 ```
@@ -224,5 +224,9 @@ Açık kaynak proje olarak, destekleri için aşağıdaki sponsorlarımıza minn
 <a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://res.ipcheck.ing/img/digitalocean_logo.png" width="180px" title="DigitalOcean" /></a>
 
 <a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://res.ipcheck.ing/img/cloudflare_logo.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" width="180px" /></a>
+
+<a href="https://www.1password.com"><img src="https://res.ipcheck.ing/img/1password_logo.png" alt="1Password" title="1Password" width="180px" /></a>
+
+<a href="https://www.greptile.com/"><img src="https://res.ipcheck.ing/img/greptile_logo.png" alt="Greptile" title="Greptile" width="180px" /></a>
 
 <a href="https://www.sentry.io"><img src="https://res.ipcheck.ing/img/sentry_logo.png" alt="Sentry" title="Sentry" width="180px" /></a>
