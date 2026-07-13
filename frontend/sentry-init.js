@@ -26,7 +26,13 @@ const initSentry = (app, router) => {
             // flood traces with dozens of meaningless spans per run.
             Sentry.browserTracingIntegration({
                 router,
-                shouldCreateSpanForRequest: (url) => !url.includes('speed.cloudflare.com'),
+                shouldCreateSpanForRequest: (url) => {
+                    try {
+                        return new URL(url, window.location.origin).hostname !== 'speed.cloudflare.com';
+                    } catch {
+                        return true;
+                    }
+                },
             }),
             // Session Replay, error-only: nothing is uploaded unless an error
             // event fires. Page text is deliberately UNMASKED — this site's
