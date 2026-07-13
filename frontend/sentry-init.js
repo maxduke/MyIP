@@ -83,6 +83,13 @@ const initSentry = (app, router) => {
             // are visitor connectivity, not defects — drop them wherever
             // they were logged from.
             if (hint?.originalException?.name === 'AbortError') return null;
+            // "All sources failed to fetch IP details for IP: <ip>" only sums
+            // up the per-source failures logged right before it, embeds the
+            // queried IP (unbounded fingerprints), and in practice means
+            // visitor network trouble or an edge-side block — drop it. The
+            // per-source console.error lines remain the health signal.
+            if (String(hint?.originalException?.message ?? '')
+                .startsWith('All sources failed to fetch IP details')) return null;
             if (event.logger === 'console') {
                 const firstArg = event.extra?.arguments?.[0];
                 if (typeof firstArg === 'string' && firstArg.trim()) {
