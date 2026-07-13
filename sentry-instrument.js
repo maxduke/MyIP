@@ -8,6 +8,8 @@
 // loaded. backend-server.js attaches the matching Express error handler.
 import dotenv from 'dotenv';
 
+import { scrubBreadcrumb, scrubEventRequest, scrubSpan } from './common/sentry-scrub.js';
+
 dotenv.config({ quiet: true });
 
 if (process.env.SENTRY_DSN_BACKEND) {
@@ -22,5 +24,12 @@ if (process.env.SENTRY_DSN_BACKEND) {
         enableLogs: true,
         // Never attach caller IPs / headers to events (privacy tool)
         sendDefaultPii: false,
+        // Upstream query strings carry API keys — redact those params in
+        // breadcrumbs, spans, and request contexts (the rest of the query
+        // stays: it's debugging context).
+        beforeBreadcrumb: scrubBreadcrumb,
+        beforeSendSpan: scrubSpan,
+        beforeSend: scrubEventRequest,
+        beforeSendTransaction: scrubEventRequest,
     });
 }

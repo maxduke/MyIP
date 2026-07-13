@@ -45,7 +45,10 @@ and purpose — read those for specifics.
   are automatic; caught failures stay on the logger — a hook in
   `common/logger.js` mirrors warn+ to Sentry Logs and elevates error+ to
   grouped, alertable Issues. Periodic jobs wrap their tick in
-  `common/sentry-cron.js` for Crons check-ins.
+  `common/sentry-cron.js` for Crons check-ins. API-key query params
+  (`key` / `token` / …) are redacted from telemetry URLs
+  (`common/sentry-scrub.js`, wired as `beforeBreadcrumb` / `beforeSendSpan`
+  / `beforeSend` hooks).
 
 ## Security & Boundaries
 
