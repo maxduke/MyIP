@@ -137,7 +137,7 @@ Download `GeoLite2-City.mmdb` and `GeoLite2-ASN.mmdb` from your MaxMind account 
 | `LOG_LEVEL` | No | `"info"` | Minimum log level (`debug` / `info` / `warn` / `error`). Lower-level messages are suppressed. |
 | `LOG_FORMAT` | No | pretty | Set to `"json"` to emit one JSON event per line (for log aggregators / jq). Any other value (or unset) keeps the colored pretty output used in dev and pm2 log tails. |
 | `LOG_HTTP` | No | `"false"` | Set to `"true"` to enable per-request HTTP logging on `/api/*` (method, URL, status, response time). Off by default to keep pm2 logs lean. Handler-level 4xx/5xx errors are always logged regardless of this flag. |
-| `VITE_SENTRY_DSN_FRONTEND` | No | `""` | Sentry DSN for the frontend (build-time). When empty, no Sentry code is included in the bundle at all. Also read by the backend at runtime as the allowlist for `/api/monitoring`, the first-party tunnel that relays Sentry envelopes past ad blockers |
+| `VITE_SENTRY_DSN_FRONTEND` | No | `""` | Sentry DSN for the frontend (build-time). When empty, no Sentry code is included in the bundle at all. Also read by the backend at runtime as the allowlist for `/api/monitoring`, the first-party tunnel that relays Sentry envelopes past ad blockers. If you bake it into a self-built Docker image at build time, pass the same value to the container at runtime too — otherwise the tunnel route stays disabled |
 | `SENTRY_DSN_BACKEND` | No | `""` | Sentry DSN for the backend (runtime). When empty, the Sentry SDK is never loaded |
 | `SENTRY_ENVIRONMENT` | No | `"production"` | Environment tag on backend Sentry events. Set to `"development"` on dev machines; the frontend tags itself automatically |
 | `SENTRY_ORG` | No | `""` | Sentry organization slug, used with `SENTRY_PROJECT_FRONTEND` and `SENTRY_AUTH_TOKEN` to upload source maps at build time |
@@ -220,12 +220,12 @@ DOMAIN,ptest-8.ipcheck.ing,Proxy8
 
 As a open source project, I'm very grateful to the following sponsors for their support:
 
-<a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://res.ipcheck.ing/img/digitalocean_logo.png" width="180px" title="DigitalOcean" /></a>
+<a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://res.ipcheck.ing/img/digitalocean_logo.png" width="240px"  title="DigitalOcean" /></a>
 
-<a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://res.ipcheck.ing/img/cloudflare_logo.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" width="180px" /></a>
+<a href="https://www.1password.com"><img src="https://res.ipcheck.ing/img/1password_logo.png" alt="1Password" title="1Password" width="240px"  /></a>
 
-<a href="https://www.1password.com"><img src="https://res.ipcheck.ing/img/1password_logo.png" alt="1Password" title="1Password" width="180px" /></a>
+<a href="https://www.greptile.com/"><img src="https://res.ipcheck.ing/img/greptile_logo.png" alt="Greptile" title="Greptile" width="240px"  /></a>
 
-<a href="https://www.greptile.com/"><img src="https://res.ipcheck.ing/img/greptile_logo.png" alt="Greptile" title="Greptile" width="180px" /></a>
+<a href="https://www.sentry.io"><img src="https://res.ipcheck.ing/img/sentry_logo.png" alt="Sentry" title="Sentry" width="240px" /></a>
 
-<a href="https://www.sentry.io"><img src="https://res.ipcheck.ing/img/sentry_logo.png" alt="Sentry" title="Sentry" width="180px" /></a>
+<a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://res.ipcheck.ing/img/cloudflare_logo.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" width="240px" /></a>

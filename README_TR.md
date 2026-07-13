@@ -137,7 +137,7 @@ MaxMind hesabınızdan `GeoLite2-City.mmdb` ve `GeoLite2-ASN.mmdb` dosyalarını
 | `LOG_LEVEL` | Hayır | `"info"` | Minimum log seviyesi (`debug` / `info` / `warn` / `error`). Daha düşük seviyedeki mesajlar bastırılır. |
 | `LOG_FORMAT` | Hayır | pretty | `"json"` olarak ayarlandığında satır başına bir JSON olayı çıkarır (log toplayıcılar / jq için). Diğer değerler (veya ayarlanmamışsa) dev ortamında ve pm2 log tail sırasında kullanılan renkli güzel biçimli çıktıyı korur. |
 | `LOG_HTTP` | Hayır | `"false"` | `"true"` yapıldığında `/api/*` üzerinde istek başı HTTP loglamasını etkinleştirir (metod, URL, durum, yanıt süresi). pm2 loglarını küçük tutmak için varsayılan olarak kapalıdır. Bu bayrak kapalı olsa bile handler düzeyindeki 4xx/5xx hataları her zaman loglanır. |
-| `VITE_SENTRY_DSN_FRONTEND` | Hayır | `""` | Frontend Sentry DSN'i (derleme zamanı). Boş bırakılırsa pakete hiçbir Sentry kodu dahil edilmez. Backend tarafından çalışma zamanında, Sentry zarflarını reklam engelleyicilerin ötesine taşıyan birinci taraf tünel `/api/monitoring` için izin listesi olarak da okunur |
+| `VITE_SENTRY_DSN_FRONTEND` | Hayır | `""` | Frontend Sentry DSN'i (derleme zamanı). Boş bırakılırsa pakete hiçbir Sentry kodu dahil edilmez. Backend tarafından çalışma zamanında, Sentry zarflarını reklam engelleyicilerin ötesine taşıyan birinci taraf tünel `/api/monitoring` için izin listesi olarak da okunur. Kendi Docker imajınızı derlerken bunu gömerseniz, aynı değeri çalışma zamanında da konteynere geçirin — aksi halde tünel rotası devre dışı kalır |
 | `SENTRY_DSN_BACKEND` | Hayır | `""` | Backend Sentry DSN'i (çalışma zamanı). Boş bırakılırsa Sentry SDK hiç yüklenmez |
 | `SENTRY_ENVIRONMENT` | Hayır | `"production"` | Backend Sentry olaylarındaki ortam etiketi. Geliştirme makinelerinde `"development"` yapın; frontend kendini otomatik etiketler |
 | `SENTRY_ORG` | Hayır | `""` | Sentry organizasyon slug'ı; derleme zamanında source map yüklemek için `SENTRY_PROJECT_FRONTEND` ve `SENTRY_AUTH_TOKEN` ile birlikte kullanılır |
@@ -219,12 +219,12 @@ DOMAIN,ptest-8.ipcheck.ing,Proxy8
 
 Açık kaynak proje olarak, destekleri için aşağıdaki sponsorlarımıza minnettarım:
 
-<a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://res.ipcheck.ing/img/digitalocean_logo.png" width="180px" title="DigitalOcean" /></a>
+<a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://res.ipcheck.ing/img/digitalocean_logo.png" width="240px"  title="DigitalOcean" /></a>
 
-<a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://res.ipcheck.ing/img/cloudflare_logo.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" width="180px" /></a>
+<a href="https://www.1password.com"><img src="https://res.ipcheck.ing/img/1password_logo.png" alt="1Password" title="1Password" width="240px"  /></a>
 
-<a href="https://www.1password.com"><img src="https://res.ipcheck.ing/img/1password_logo.png" alt="1Password" title="1Password" width="180px" /></a>
+<a href="https://www.greptile.com/"><img src="https://res.ipcheck.ing/img/greptile_logo.png" alt="Greptile" title="Greptile" width="240px"  /></a>
 
-<a href="https://www.greptile.com/"><img src="https://res.ipcheck.ing/img/greptile_logo.png" alt="Greptile" title="Greptile" width="180px" /></a>
+<a href="https://www.sentry.io"><img src="https://res.ipcheck.ing/img/sentry_logo.png" alt="Sentry" title="Sentry" width="240px" /></a>
 
-<a href="https://www.sentry.io"><img src="https://res.ipcheck.ing/img/sentry_logo.png" alt="Sentry" title="Sentry" width="180px" /></a>
+<a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://res.ipcheck.ing/img/cloudflare_logo.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" width="240px" /></a>

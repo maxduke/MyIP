@@ -137,7 +137,7 @@ Téléchargez `GeoLite2-City.mmdb` et `GeoLite2-ASN.mmdb` depuis votre compte Ma
 | `LOG_LEVEL` | Non | `"info"` | Niveau minimum des journaux (`debug` / `info` / `warn` / `error`). Les messages de niveau inférieur sont supprimés. |
 | `LOG_FORMAT` | Non | pretty | Définir sur `"json"` pour émettre un événement JSON par ligne (agrégateurs de logs / jq). Toute autre valeur (ou non défini) conserve la sortie colorée lisible utilisée en dev et lors du tail des logs pm2. |
 | `LOG_HTTP` | Non | `"false"` | Définir sur `"true"` pour activer la journalisation par requête HTTP sur `/api/*` (méthode, URL, statut, temps de réponse). Désactivé par défaut pour garder les logs pm2 légers. Les erreurs 4xx/5xx côté handler sont toujours loguées, que ce drapeau soit activé ou non. |
-| `VITE_SENTRY_DSN_FRONTEND` | Non | `""` | DSN Sentry du frontend (au moment du build). Si vide, aucun code Sentry n'est inclus dans le bundle. Également lu par le backend à l'exécution comme liste blanche pour `/api/monitoring`, le tunnel first-party qui fait passer les enveloppes Sentry malgré les bloqueurs de publicité |
+| `VITE_SENTRY_DSN_FRONTEND` | Non | `""` | DSN Sentry du frontend (au moment du build). Si vide, aucun code Sentry n'est inclus dans le bundle. Également lu par le backend à l'exécution comme liste blanche pour `/api/monitoring`, le tunnel first-party qui fait passer les enveloppes Sentry malgré les bloqueurs de publicité. Si vous l'intégrez dans une image Docker auto-construite au moment du build, passez aussi la même valeur au conteneur à l'exécution — sinon la route du tunnel reste désactivée |
 | `SENTRY_DSN_BACKEND` | Non | `""` | DSN Sentry du backend (à l'exécution). Si vide, le SDK Sentry n'est jamais chargé |
 | `SENTRY_ENVIRONMENT` | Non | `"production"` | Étiquette d'environnement des événements Sentry du backend. Définir sur `"development"` sur les machines de développement ; le frontend s'étiquette automatiquement |
 | `SENTRY_ORG` | Non | `""` | Slug de l'organisation Sentry, utilisé avec `SENTRY_PROJECT_FRONTEND` et `SENTRY_AUTH_TOKEN` pour téléverser les source maps au moment du build |
@@ -220,12 +220,12 @@ DOMAIN,ptest-8.ipcheck.ing,Proxy8
 
 En tant que projet open source, je suis très reconnaissant aux sponsors suivants pour leur soutien :
 
-<a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://res.ipcheck.ing/img/digitalocean_logo.png" width="180px" title="DigitalOcean" /></a>
+<a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://res.ipcheck.ing/img/digitalocean_logo.png" width="240px"  title="DigitalOcean" /></a>
 
-<a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://res.ipcheck.ing/img/cloudflare_logo.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" width="180px" /></a>
+<a href="https://www.1password.com"><img src="https://res.ipcheck.ing/img/1password_logo.png" alt="1Password" title="1Password" width="240px"  /></a>
 
-<a href="https://www.1password.com"><img src="https://res.ipcheck.ing/img/1password_logo.png" alt="1Password" title="1Password" width="180px" /></a>
+<a href="https://www.greptile.com/"><img src="https://res.ipcheck.ing/img/greptile_logo.png" alt="Greptile" title="Greptile" width="240px"  /></a>
 
-<a href="https://www.greptile.com/"><img src="https://res.ipcheck.ing/img/greptile_logo.png" alt="Greptile" title="Greptile" width="180px" /></a>
+<a href="https://www.sentry.io"><img src="https://res.ipcheck.ing/img/sentry_logo.png" alt="Sentry" title="Sentry" width="240px" /></a>
 
-<a href="https://www.sentry.io"><img src="https://res.ipcheck.ing/img/sentry_logo.png" alt="Sentry" title="Sentry" width="180px" /></a>
+<a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://res.ipcheck.ing/img/cloudflare_logo.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" width="240px" /></a>

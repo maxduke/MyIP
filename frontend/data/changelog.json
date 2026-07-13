@@ -1320,23 +1320,32 @@
     ]
   },
   {
-    "version": "v6.7.0",
-    "date": "Beta",
+    "version": "v7.0.0",
+    "date": "July 14, 2026",
     "content": [
       {
         "type": "add",
         "change": {
-          "en": "Added IP History panel",
-          "zh": "新增 IP 历史记录面板",
-          "fr": "Ajout du panneau Historique IP",
-          "tr": "IP Geçmişi panosu eklendi"
+          "en": "Added IP History panel with type and country filters",
+          "zh": "新增 IP 历史记录面板，并支持按类型和国家筛选",
+          "fr": "Ajout du panneau Historique IP avec filtres par type et par pays",
+          "tr": "Tür ve ülke filtreleriyle IP Geçmişi paneli eklendi"
+        }
+      },
+      {
+        "type": "add",
+        "change": {
+          "en": "Integrated error & performance monitoring, optional for developers to enable",
+          "zh": "集成错误与性能监控，开发者可选启用",
+          "fr": "Intégration de la surveillance des erreurs et des performances, activable en option par les développeurs",
+          "tr": "Hata ve performans izleme entegre edildi, geliştiriciler isteğe bağlı olarak etkinleştirebilir"
         }
       },
       {
         "type": "add",
         "change": {
           "en": "Added a humorous startup animation",
-          "zh": "新增一个幽默风格的启动动画",
+          "zh": "新增一个幽默的启动动画",
           "fr": "Ajout d'une animation de lancement humoristique",
           "tr": "Eğlenceli bir başlangıç animasyonu eklendi"
         }
@@ -1344,37 +1353,64 @@
       {
         "type": "improve",
         "change": {
-          "en": "Avoided political controversies in different regions",
-          "zh": "避免不同地区的政治争议",
-          "fr": "Evite les controverses politiques dans différentes régions",
-          "tr": "Farklı bölgelerde siyasi tartışmaları önlemek"
+          "en": "Country and region names now come from the user's browser built-in data, avoiding political controversies",
+          "zh": "使用用户浏览器内置国家地区名称，避免政治争议",
+          "fr": "Les noms de pays et de régions proviennent désormais des données intégrées au navigateur, évitant les controverses politiques",
+          "tr": "Ülke ve bölge adları artık kullanıcının tarayıcısındaki yerleşik verilerden geliyor, siyasi tartışmalardan kaçınılıyor"
         }
       },
       {
         "type": "improve",
         "change": {
-          "en": "Optimized mobile FAB button operation experience",
-          "zh": "优化手机端 FAB 按钮操作体验",
-          "fr": "Optimisation de l'expérience d'utilisation mobile des boutons FAB",
-          "tr": "Mobil FAB düğmeleri işlem deneyimi iyileştirildi"
+          "en": "IP source chain now degrades gracefully when a source fails",
+          "zh": "IP 信息源链路出现故障时优雅降级",
+          "fr": "La chaîne de sources IP se dégrade désormais en douceur en cas de panne",
+          "tr": "IP kaynak zinciri, bir kaynak arızalandığında artık zarifçe azalıyor"
         }
       },
       {
         "type": "improve",
         "change": {
-          "en": "Optimized code efficiency, reduced package size",
-          "zh": "优化代码效率，减少包大小",
-          "fr": "Optimisation du code pour réduire la taille des paquets",
-          "tr": "Kod optimizasyonu, paket boyutunu azaltıldı"
+          "en": "WebRTC test can now detect browser privacy hardening",
+          "zh": "WebRTC 测试可检测浏览器隐私加固情况",
+          "fr": "Le test WebRTC peut désormais détecter le renforcement de la confidentialité du navigateur",
+          "tr": "WebRTC testi artık tarayıcı gizlilik güçlendirmesini tespit edebiliyor"
+        }
+      },
+      {
+        "type": "improve",
+        "change": {
+          "en": "Optimized mobile FAB button experience",
+          "zh": "手机端 FAB 按钮体验优化",
+          "fr": "Optimisation de l'expérience des boutons FAB sur mobile",
+          "tr": "Mobil FAB düğmesi deneyimi iyileştirildi"
+        }
+      },
+      {
+        "type": "improve",
+        "change": {
+          "en": "Speed test now shows a clear error state when the connection gives up mid-run",
+          "zh": "网速测试在连接中途失败时会显示明确的错误状态",
+          "fr": "Le test de vitesse affiche désormais un état d'erreur clair lorsque la connexion échoue en cours d'exécution",
+          "tr": "Hız testi, bağlantı test sırasında koparsa artık net bir hata durumu gösteriyor"
+        }
+      },
+      {
+        "type": "improve",
+        "change": {
+          "en": "Dozens of other user experience improvements",
+          "zh": "其它数十处用户体验优化",
+          "fr": "Des dizaines d'autres améliorations de l'expérience utilisateur",
+          "tr": "Onlarca başka kullanıcı deneyimi iyileştirmesi"
         }
       },
       {
         "type": "fix",
         "change": {
-          "en": "Fixed 10+ minor issues",
-          "zh": "修复 10 多处小概率问题",
-          "fr": "Correction de 10+ petits problèmes",
-          "tr": "10+ küçük sorun düzeltildi"
+          "en": "Fixed 20+ issues across the tools, improving overall stability",
+          "zh": "修复各个工具的 20 多处问题，提升整体稳定性",
+          "fr": "Correction de plus de 20 problèmes dans les outils, améliorant la stabilité globale",
+          "tr": "Araçlar genelinde 20'den fazla sorun düzeltildi, genel kararlılık iyileştirildi"
         }
       }
     ]
