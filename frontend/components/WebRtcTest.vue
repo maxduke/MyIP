@@ -327,10 +327,14 @@ const checkSTUNServer = (stun) => {
       }, 5000);
     } catch (error) {
       // Some browsers ship the constructor but forbid construction
-      // (permissions policy, hardened / lockdown modes) — the runtime
-      // sibling of the missing-API case above: a finding, not an error.
-      if (error?.name === 'NotAllowedError') {
-        log(`construction not allowed: ${error?.message || error}`);
+      // (permissions policy, hardened / lockdown modes), and privacy
+      // extensions replace it with a non-constructable stub that passes
+      // the `typeof` check above — both are the runtime sibling of the
+      // missing-API case: a finding, not an error.
+      const constructionBlocked = error?.name === 'NotAllowedError'
+        || (error instanceof TypeError && /not a constructor/i.test(error?.message || ''));
+      if (constructionBlocked) {
+        log(`construction blocked: ${error?.message || error}`);
         failWith('StatusUnavailable');
         return;
       }

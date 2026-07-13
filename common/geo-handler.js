@@ -30,6 +30,11 @@ export function makeGeoHandler({ name, buildUrl, normalize }) {
 
         try {
             const apiRes = await fetchUpstream(url);
+            // Outage / gateway pages come back as HTML — fail on status
+            // instead of letting JSON.parse throw on "<html>".
+            if (!apiRes.ok) {
+                throw new Error(`Upstream responded ${apiRes.status}`);
+            }
             const json = await apiRes.json();
             res.json(normalize(json));
         } catch (e) {
