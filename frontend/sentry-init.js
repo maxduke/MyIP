@@ -69,6 +69,7 @@ const initSentry = (app, router) => {
             'no IP in response',
             'auth/network-request-failed',
             'auth/popup-closed-by-user',
+            'auth/popup-blocked',
             'auth/cancelled-popup-request',
             'INTERNAL ASSERTION FAILED',
         ],
