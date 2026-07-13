@@ -218,20 +218,6 @@ DOMAIN,ptest-7.ipcheck.ing,Proxy7
 DOMAIN,ptest-8.ipcheck.ing,Proxy8
 ```
 
-## 😶‍🌫️ Additional Notes
-
-When version 2.0 was released, I said that 70% of the code for this program was not written by me, but by AI. After about 90 interactions, plus some minor manual adjustments, the entire codebase was completed.
-
-Of course, the architecture and UI still required my own design.
-
-With the release of version 3.0 and subsequent versions, the proportion of code written with the help of AI has gradually decreased, now estimated to be between 40% and 50%. On the contrary, in this process, I went from having no knowledge of JavaScript and Vue to being able to understand most of the JS code, and I can now write some on my own.
-
-Thanks to AI, it has given me, an unemployed product manager, a rapid opportunity to learn programming.
-
-## 🌟 Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=jason5ng32/MyIP&type=Date)](https://star-history.com/#jason5ng32/MyIP&Date)
-
 ## 💖 Sponsors
 
 As a open source project, I'm very grateful to the following sponsors for their support:

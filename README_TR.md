@@ -217,20 +217,6 @@ DOMAIN,ptest-7.ipcheck.ing,Proxy7
 DOMAIN,ptest-8.ipcheck.ing,Proxy8
 ```
 
-## 😶‍🌫️ Ek Notlar
-
-Sürüm 2.0 yayımlandığında, bu programın kodunun %70'inin AI tarafından yazıldığını söylemiştim. Yaklaşık 90 etkileşim ve bazı küçük manuel düzeltmeler sonrasında, tüm kod tabanı tamamlandı.
-
-Elbette, mimari ve kullanıcı arayüzü hâlâ benim tasarımım oldu.
-
-Sürüm 3.0 ve sonrasıyla birlikte AI yardımıyla yazılan kod oranı giderek azaldı; şimdi tahmini %40–50 aralığında. Bu süreçte JavaScript ve Vue hakkında hiç bilgim yokken, çoğu JS kodunu anlayacak seviyeye geldim ve artık biraz da yazabiliyorum.
-
-Yapay zekâ sayesinde, işsiz bir ürün yöneticisi olarak programlamayı hızlıca öğrenme imkânı buldum.
-
-## 🌟 Yıldız Geçmişi
-
-[![Star History Chart](https://api.star-history.com/svg?repos=jason5ng32/MyIP&type=Date)](https://star-history.com/#jason5ng32/MyIP&Date)
-
 ## 💖 Sponsorlar
 
 Açık kaynak proje olarak, destekleri için aşağıdaki sponsorlarımıza minnettarım:
