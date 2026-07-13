@@ -1371,10 +1371,10 @@
       {
         "type": "fix",
         "change": {
-          "en": "Fixed some issues",
-          "zh": "修复一些问题",
-          "fr": "Correction de petits problèmes",
-          "tr": "Birkaç küçük sorun düzeltildi"
+          "en": "Fixed 10+ minor issues",
+          "zh": "修复 10 多处小概率问题",
+          "fr": "Correction de 10+ petits problèmes",
+          "tr": "10+ küçük sorun düzeltildi"
         }
       }
     ]

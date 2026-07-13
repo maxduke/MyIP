@@ -40,8 +40,9 @@
         "bullets": [
           "Teknik hata raporları: kodda neyin ters gittiği, hangi sayfada olduğu, tarayıcı ve işletim sistemi türünüz.",
           "Sayfa yükleme hızı gibi performans ölçümleri.",
-          "Bir hata olduğunda, sorunu yeniden üretebilmemiz için hatadan önceki anların kaydı alınır. Kayıt, sayfayı sizin gördüğünüz haliyle gösterir — sayfada görüntülenen IP adresleri ve ağ bilgileri dahil; yazdıklarınız maskelenmiş kalır.",
-          "Bu kayıtlarda görünenler dışında, IP adresiniz telemetri verilerine eklenmez: IP toplamayı açıkça devre dışı bıraktık ve raporlar Sentry'ye yalnızca kendi aktarıcımız üzerinden ulaşır."
+          "Bir hata olduğunda, sorunu yeniden üretebilmemiz için hatadan önceki anların kaydı alınır.",
+          "Bu kayıtlarda görünenler dışında, IP adresiniz telemetri verilerine eklenmez: IP toplamayı açıkça devre dışı bıraktık ve raporlar Sentry'ye yalnızca kendi aktarıcımız üzerinden ulaşır.",
+          "Tüm telemetri verileri 30 günlük saklama süresinin ardından otomatik olarak silinir."
         ]
       },
       "why": {
