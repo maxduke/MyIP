@@ -133,7 +133,7 @@ Téléchargez `GeoLite2-City.mmdb` et `GeoLite2-ASN.mmdb` depuis votre compte Ma
 | `FRONTEND_PORT` | Non | `"18966"` | Le port d'exécution de la partie frontend du programme |
 | `SECURITY_RATE_LIMIT` | Non | `"0"` | Contrôle le nombre de requêtes qu'une adresse IP peut faire au serveur backend toutes les 60 minutes (réglé sur 0 pour aucune limite) |
 | `SECURITY_DELAY_AFTER` | Non | `"0"` | Contrôle les premières X requêtes d'une adresse IP toutes les 20 minutes qui ne sont pas soumises à des limites de vitesse, et après X requêtes, le délai augmentera |
-| `SECURITY_BLACKLIST_LOG_FILE_PATH` | Non | `"logs/blacklist-ip.log"` | Paramètre de chemin. Enregistre la liste des adresses IP qui ont déclenché la limite après que `SECURITY_RATE_LIMIT` soit activé |
+| `SECURITY_BLACKLIST_LOG_FILE_PATH` | Non | `""` | Registre local optionnel des IP limitées (ex. `"logs/blacklist-ip.log"`). Vide = aucun fichier n'est écrit ; l'événement est de toute façon toujours journalisé via le logger partagé |
 | `LOG_LEVEL` | Non | `"info"` | Niveau minimum des journaux (`debug` / `info` / `warn` / `error`). Les messages de niveau inférieur sont supprimés. |
 | `LOG_FORMAT` | Non | pretty | Définir sur `"json"` pour émettre un événement JSON par ligne (agrégateurs de logs / jq). Toute autre valeur (ou non défini) conserve la sortie colorée lisible utilisée en dev et lors du tail des logs pm2. |
 | `LOG_HTTP` | Non | `"false"` | Définir sur `"true"` pour activer la journalisation par requête HTTP sur `/api/*` (méthode, URL, statut, temps de réponse). Désactivé par défaut pour garder les logs pm2 légers. Les erreurs 4xx/5xx côté handler sont toujours loguées, que ce drapeau soit activé ou non. |
@@ -236,8 +236,8 @@ Merci à l'IA, qui m'a donné, à moi, un chef de produit au chômage, une oppor
 
 En tant que projet open source, je suis très reconnaissant aux sponsors suivants pour leur soutien :
 
-<a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://res.ipcheck.ing/img/digitalocean-logo.png" height="40px" title="DigitalOcean" /></a>
+<a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://res.ipcheck.ing/img/digitalocean_logo.png" width="180px" title="DigitalOcean" /></a>
 
-<a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://res.ipcheck.ing/img/cloudflare-logo.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" height="60px" /></a>
+<a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://res.ipcheck.ing/img/cloudflare_logo.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" width="180px" /></a>
 
-<a href="https://www.sentry.io"><img src="https://res.ipcheck.ing/img/sentry-logo.png" alt="Sentry" title="Sentry" height="60px" /></a>
+<a href="https://www.sentry.io"><img src="https://res.ipcheck.ing/img/sentry_logo.png" alt="Sentry" title="Sentry" width="180px" /></a>

@@ -133,7 +133,7 @@ MaxMind hesabınızdan `GeoLite2-City.mmdb` ve `GeoLite2-ASN.mmdb` dosyalarını
 | `FRONTEND_PORT` | Hayır | `"18966"` | Frontend kısmının çalıştığı port |
 | `SECURITY_RATE_LIMIT` | Hayır | `"0"` | Bir IP'nin backend sunucusuna 60 dakikada yapabileceği istek sayısını kontrol eder (sınır yok için 0) |
 | `SECURITY_DELAY_AFTER` | Hayır | `"0"` | 20 dakikada bir IP'den gelen ilk X isteğin hız sınırına tabi olmadığını kontrol eder; X'ten sonra gecikme artar |
-| `SECURITY_BLACKLIST_LOG_FILE_PATH` | Hayır | `"logs/blacklist-ip.log"` | Yol ayarı. SECURITY_RATE_LIMIT etkinleştirildiğinde limit tetikleyen IP'leri kaydeder |
+| `SECURITY_BLACKLIST_LOG_FILE_PATH` | Hayır | `""` | Hız sınırına takılan IP'lerin isteğe bağlı yerel kayıt dosyası (örn. `"logs/blacklist-ip.log"`). Boş bırakılırsa dosya yazılmaz; olay her durumda paylaşılan logger ile loglanır |
 | `LOG_LEVEL` | Hayır | `"info"` | Minimum log seviyesi (`debug` / `info` / `warn` / `error`). Daha düşük seviyedeki mesajlar bastırılır. |
 | `LOG_FORMAT` | Hayır | pretty | `"json"` olarak ayarlandığında satır başına bir JSON olayı çıkarır (log toplayıcılar / jq için). Diğer değerler (veya ayarlanmamışsa) dev ortamında ve pm2 log tail sırasında kullanılan renkli güzel biçimli çıktıyı korur. |
 | `LOG_HTTP` | Hayır | `"false"` | `"true"` yapıldığında `/api/*` üzerinde istek başı HTTP loglamasını etkinleştirir (metod, URL, durum, yanıt süresi). pm2 loglarını küçük tutmak için varsayılan olarak kapalıdır. Bu bayrak kapalı olsa bile handler düzeyindeki 4xx/5xx hataları her zaman loglanır. |
@@ -235,8 +235,8 @@ Yapay zekâ sayesinde, işsiz bir ürün yöneticisi olarak programlamayı hızl
 
 Açık kaynak proje olarak, destekleri için aşağıdaki sponsorlarımıza minnettarım:
 
-<a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://res.ipcheck.ing/img/digitalocean-logo.png" height="40px" title="DigitalOcean" /></a>
+<a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://res.ipcheck.ing/img/digitalocean_logo.png" width="180px" title="DigitalOcean" /></a>
 
-<a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://res.ipcheck.ing/img/cloudflare-logo.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" height="60px" /></a>
+<a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://res.ipcheck.ing/img/cloudflare_logo.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" width="180px" /></a>
 
-<a href="https://www.sentry.io"><img src="https://res.ipcheck.ing/img/sentry-logo.png" alt="Sentry" title="Sentry" height="60px" /></a>
+<a href="https://www.sentry.io"><img src="https://res.ipcheck.ing/img/sentry_logo.png" alt="Sentry" title="Sentry" width="180px" /></a>

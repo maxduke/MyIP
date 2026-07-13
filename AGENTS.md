@@ -94,7 +94,7 @@ use npm / yarn — they'd produce a competing lockfile.
 - **Always the shared logger** (`common/logger.js`) in backend files; bare
   `console.*` is banned there (frontend keeps using `console.*`).
 - Pino first-arg-is-context: `logger.error({ err, ip }, 'short message')`.
-- Env knobs: `LOG_LEVEL` (default warn), `LOG_FORMAT=json` for shippers,
+- Env knobs: `LOG_LEVEL` (default info), `LOG_FORMAT=json` for shippers,
   `LOG_HTTP=true` to mount `pino-http` on `/api` (off by default; handlers
   never log "received request" lines themselves). No `NODE_ENV` anywhere.
 - Startup-only lines lead with an emoji (🚀 listening · 📦 ready ·
