@@ -21,19 +21,16 @@ globalThis.window = {
 };
 
 const { useShortcuts } = await import('../frontend/composables/use-shortcuts.js');
+const { onAppEvent } = await import('../frontend/utils/app-events.js');
 
 const t = (k) => `<${k}>`;
 
 function makeStoreStub() {
   const state = reactive({
-    userAchievements: { CleverTrickery: { achieved: false } },
-    triggered: null,
     refreshRequested: false,
   });
   return {
     state,
-    userAchievements: state.userAchievements,
-    setTriggerUpdateAchievements(name) { state.triggered = name; },
     setRefreshEveryThing(v) { state.refreshRequested = v; },
   };
 }
@@ -96,15 +93,14 @@ after(() => {
   globalThis.setTimeout = realSetTimeout;
 });
 
-function loadAndGetKeyMap({ originalSite = false, isSignedIn = false } = {}) {
+function loadAndGetKeyMap({ originalSite = false } = {}) {
   const store = makeStoreStub();
   const { refs, calls } = makeRefs();
   const configs = computed(() => ({ originalSite, map: true }));
   const userPreferences = computed(() => ({ ipCardsToShow: 2 }));
-  const signedInRef = computed(() => isSignedIn);
 
   const { loadShortcuts } = useShortcuts({
-    refs, store, t, configs, userPreferences, isSignedIn: signedInRef,
+    refs, store, t, configs, userPreferences,
   });
   loadShortcuts();
 
@@ -162,18 +158,17 @@ describe('useShortcuts()', () => {
     assert.deepEqual(calls.ipRefresh, [], 'num > ipCardsToShow → no-op');
   });
 
-  it('"?" opens help modal and triggers CleverTrickery achievement when signed in', () => {
-    const { keyMap, store } = loadAndGetKeyMap({ isSignedIn: true });
+  it('"?" opens help modal and emits the shortcut:help-opened app event', () => {
+    // The achievement itself (CleverTrickery) is the engine's concern —
+    // use-shortcuts only emits the domain event. See achievement-rules tests.
+    let emitted = 0;
+    const off = onAppEvent('shortcut:help-opened', () => { emitted += 1; });
+    const { keyMap, calls } = loadAndGetKeyMap();
     const entry = keyMap.findLast((e) => e.keys === '?');
     entry.action();
-    assert.equal(store.state.triggered, 'CleverTrickery');
-  });
-
-  it('"?" skips achievement trigger when user is not signed in', () => {
-    const { keyMap, store } = loadAndGetKeyMap({ isSignedIn: false });
-    const entry = keyMap.findLast((e) => e.keys === '?');
-    entry.action();
-    assert.equal(store.state.triggered, null);
+    off();
+    assert.equal(calls.helpOpen, 1);
+    assert.equal(emitted, 1);
   });
 
   it('"h" toggles info mask only when infos loaded', () => {

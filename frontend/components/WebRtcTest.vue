@@ -161,18 +161,25 @@ const CANDIDATE_IP_RE = /([0-9a-f]{1,4}(:[0-9a-f]{1,4}){7}|[0-9a-f]{0,4}(:[0-9a-
 // the connection is created and removed once it's closed.
 const activeConnections = new Set();
 
-// Business status → 4 tone levels
-const toneOf = (stun) => ipFieldTone(stun.ip, {
-  waitLabels: t('webrtc.StatusWait'),
-  errorLabels: t('webrtc.StatusError'),
-});
+// WebRTC can be absent entirely: privacy-hardened browsers.
+const isWebRtcAvailable = typeof RTCPeerConnection === 'function';
+
+// Business status → 4 tone levels. "WebRTC unavailable" renders green on
+// purpose: for a leak test, a browser with WebRTC disabled is a protective
+// state (same visual language as InfoMask), not an error.
+const toneOf = (stun) => stun.ip === t('webrtc.StatusUnavailable')
+  ? 'ok-fast'
+  : ipFieldTone(stun.ip, {
+    waitLabels: t('webrtc.StatusWait'),
+    errorLabels: t('webrtc.StatusError'),
+  });
 
 // Single field in dl block is in "no data" state (waiting/error).
 // Fields may fail independently (e.g. IP success but country lookup fails),
 // so the check is run per-field in the template.
 const isFieldPending = (value) => isFieldPendingShared(value, {
   waitLabels: t('webrtc.StatusWait'),
-  errorLabels: t('webrtc.StatusError'),
+  errorLabels: [t('webrtc.StatusError'), t('webrtc.StatusUnavailable')],
 });
 
 // Run a STUN test against one server. ICE gathering with a 5s backstop.
@@ -252,8 +259,8 @@ const checkSTUNServer = (stun) => {
         stun.country_code = geo.country_code;
         stun.country = geo.country;
         stun.org = geo.org;
-        // Back-fill the country for this IP in the Globalping picker.
-        IPArray.value = [...IPArray.value, { ip, country: geo.country_code }];
+        // Back-fill details for the Globalping picker + IP history.
+        IPArray.value = [...IPArray.value, { ip, country: geo.country_code, location: geo.country, asn: geo.asn, org: geo.org }];
       } else {
         stun.country = t('webrtc.StatusError');
         stun.org = t('webrtc.StatusError');
@@ -319,6 +326,18 @@ const checkSTUNServer = (stun) => {
         failWith('StatusError');
       }, 5000);
     } catch (error) {
+      // Some browsers ship the constructor but forbid construction
+      // (permissions policy, hardened / lockdown modes), and privacy
+      // extensions replace it with a non-constructable stub that passes
+      // the `typeof` check above — both are the runtime sibling of the
+      // missing-API case: a finding, not an error.
+      const constructionBlocked = error?.name === 'NotAllowedError'
+        || (error instanceof TypeError && /not a constructor/i.test(error?.message || ''));
+      if (constructionBlocked) {
+        log(`construction blocked: ${error?.message || error}`);
+        failWith('StatusUnavailable');
+        return;
+      }
       console.error('STUN Server Test Error:', error);
       log(`exception: ${error?.message || error}`);
       failWith('StatusError');
@@ -341,6 +360,23 @@ const determineNATType = (candidate) => {
 const checkAllWebRTC = async (isRefresh) => {
   if (isRefresh) trackEvent('Section', 'RefreshClick', 'WebRTC');
   isStarted.value = true;
+
+  // No WebRTC in this browser: mark every card with the dedicated state
+  // (dl detail fields render as "—" via isFieldPending) and finish the
+  // section immediately.
+  if (!isWebRtcAvailable) {
+    const label = t('webrtc.StatusUnavailable');
+    stunServers.forEach((server) => {
+      server.ip = label;
+      server.natType = label;
+      server.country = label;
+      server.country_code = '';
+      server.org = label;
+    });
+    store.setLoadingStatus('WebRTC', true);
+    return;
+  }
+
   const promises = stunServers.map((server) => {
     server.ip = t('webrtc.StatusWait');
     server.natType = t('webrtc.StatusWait');

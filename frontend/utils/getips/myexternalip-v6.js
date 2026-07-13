@@ -18,7 +18,7 @@ const getIPFromMyExternalIP_V6 = async () => {
                 source: source
             };
         } else { 
-            console.error("Invalid IP from MyExternalIP:", ip);
+            console.error("Invalid IP from MyExternalIP IPv6:", ip);
             return {
                 ip: null,
                 source: source

@@ -167,6 +167,10 @@
       "connectivityMultipleTestsTips": "When enabled, the app runs multiple checks at startup and displays the lowest latency.",
       "popupConnectivityNotifications": "Pop-up Connectivity Alerts",
       "popupConnectivityNotificationsTips": "When enabled, the initial check's results are shown as a pop-up alert.",
+      "ipHistory": "IP History",
+      "ipHistoryEnabled": "Record IP History",
+      "ipHistoryDays": "Retention Days",
+      "ipHistoryTips": "When enabled, detected IPs are recorded in this browser only and kept for the selected number of days. Turning it off stops recording; existing records stay until you clear them in the IP History panel.",
       "ipDB": "IP Geolocation Database",
       "ipDBTips": "You can select the default IP geolocation source to use. If the selected source is unavailable, the system will use the subsequent sources in order.",
       "language": "Language Setting",
@@ -296,6 +300,7 @@
     "Note": "When you use a proxy or VPN, do the websites you visit really not know that you are using a proxy? Are you truly invisible? We will use various methods to try to calculate the vulnerabilities in your disguise and find evidence that you are using a proxy. Although some test results may not be completely accurate, this test is still highly informative.",
     "Note2": "After clicking Run, the system will run a script that usually completes all tests within 10 seconds. During this process, your IP information, browser information, etc. will be collected and analyzed in the background.",
     "fetchError": "Unable to fetch test results",
+    "scriptLoadError": "The test script failed to load, so the test cannot continue. Please check your network and try again.",
     "yourIP": "Your main test IP is",
     "proxyScore": "Proxy Percentage",
     "VPNScore": "VPN Percentage",
@@ -529,8 +534,20 @@
     "CopySdpLog": "Copy SDP Log",
     "ViewOnMap": "View location on map",
     "InfoMask": "Hide IP Information",
+    "IPHistory": "View IP History",
     "QueryIP": "Query IP Address",
     "GithubLink": "View Source Code on GitHub"
+  },
+  "ipHistory": {
+    "Title": "IP History",
+    "Notes": "IPs detected while you use this site are recorded here. The data is stored only in this browser — it never syncs to your account or leaves your device. You can adjust the record retention time in the \"Preferences\".",
+    "Empty": "No records yet. IPs will appear here once the homepage tests detect them.",
+    "FilterByType": "Filter by IP type",
+    "FilterByCountry": "Filter by country / region",
+    "UnknownCountry": "Unknown",
+    "NoMatch": "No records match the selected filters.",
+    "ClearAll": "Clear History",
+    "ClearConfirm": "Click again to confirm"
   },
   "ipInfos": {
     "Title": "IP Infos",
@@ -683,6 +700,7 @@
     "Note": "WebRTC often establishes connections directly via UDP. If the test returns your real IP, it means your proxy settings do not cover these connections. In addition to detecting the IP you use when connecting to WebRTC, we also detect your NAT type. However, NAT type detection is not 100% accurate and is for reference only.",
     "StatusWait": "Awaiting Test",
     "StatusError": "Connection Error",
+    "StatusUnavailable": "WebRTC Unavailable",
     "SdpLog": "SDP Log",
     "NATType": {
       "srflx": "Port Restricted Cone or Symmetric",
@@ -721,6 +739,7 @@
     "connectionFrom": "Finished speed test from your machine, IP: ",
     "connectionTo": " to test server:",
     "connectionEnd": " .",
+    "testFailed": "Could not reach the speed test server. Please check your connection and try again.",
     "quality": {
       "bad": "Bad",
       "poor": "Poor",
@@ -775,9 +794,9 @@
     "OhNo_Message": "Connectivity test failed, some websites are not accessible.",
     "Congrats_Message": "All connectivity tests passed, you can access all websites.",
     "maskedInfoTitle": "IPs Masked",
-    "maskedInfoMessage": "IPs have been masked. Sharing screenshots won't reveal your IPs.",
+    "maskedInfoMessage": "Sharing screenshots won't reveal your IPs.",
     "unmaskedInfoTitle": "IPs Unmasked",
-    "unmaskedInfoMessage": "IPs have been unmasked. Be careful when sharing screenshots.",
+    "unmaskedInfoMessage": "Be careful when sharing screenshots.",
     "SignInFailed": "Sign In Failed",
     "SignInFailedReason": "Reason"
   },
@@ -797,6 +816,7 @@
     "DNSResolver": "Open DNS Resolution panel",
     "IPCheck": "Query IP Address",
     "ToggleInfoMask": "Toggle Info Masking",
+    "IPHistory": "Open IP History panel",
     "Help": "Show Shortcut Keys",
     "HelpNote": "People who use shortcuts are really awesome!",
     "GoNext": "Next Card",
@@ -846,8 +866,8 @@
     "Sponsor": "Sponsor Us",
     "Privacy": "Privacy"
   },
-  "specialthanks": {
-    "Title": "Special Thanks",
+  "acknowledgement": {
+    "Title": "Acknowledgement",
     "Note1": "This project could not have been completed without the support and help from some enthusiastic individuals and organizations, as well as those who provided inspiration or open-sourced their code. Many thanks to them:"
   },
   "changelog": {

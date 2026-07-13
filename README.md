@@ -133,18 +133,22 @@ Download `GeoLite2-City.mmdb` and `GeoLite2-ASN.mmdb` from your MaxMind account 
 | `FRONTEND_PORT` | No | `"18966"` | The running port of the frontend part of the program |
 | `SECURITY_RATE_LIMIT` | No | `"0"` | Controls the number of requests an IP can make to the backend server every 60 minutes (set to 0 for no limit) |
 | `SECURITY_DELAY_AFTER` | No | `"0"` | Controls the first X requests from an IP every 20 minutes that are not subject to speed limits, and after X requests, the delay will increase |
-| `SECURITY_BLACKLIST_LOG_FILE_PATH` | No | `"logs/blacklist-ip.log"` | Path setting. Records the list of IPs that triggered the limit after SECURITY_RATE_LIMIT is enabled |
+| `SECURITY_BLACKLIST_LOG_FILE_PATH` | No | `""` | Opt-in on-disk ledger of rate-limited IPs (e.g. `"logs/blacklist-ip.log"`). Empty = no file is written; the event is always logged via the shared logger either way |
 | `LOG_LEVEL` | No | `"info"` | Minimum log level (`debug` / `info` / `warn` / `error`). Lower-level messages are suppressed. |
 | `LOG_FORMAT` | No | pretty | Set to `"json"` to emit one JSON event per line (for log aggregators / jq). Any other value (or unset) keeps the colored pretty output used in dev and pm2 log tails. |
 | `LOG_HTTP` | No | `"false"` | Set to `"true"` to enable per-request HTTP logging on `/api/*` (method, URL, status, response time). Off by default to keep pm2 logs lean. Handler-level 4xx/5xx errors are always logged regardless of this flag. |
+| `VITE_SENTRY_DSN_FRONTEND` | No | `""` | Sentry DSN for the frontend (build-time). When empty, no Sentry code is included in the bundle at all. Also read by the backend at runtime as the allowlist for `/api/monitoring`, the first-party tunnel that relays Sentry envelopes past ad blockers. If you bake it into a self-built Docker image at build time, pass the same value to the container at runtime too — otherwise the tunnel route stays disabled |
+| `SENTRY_DSN_BACKEND` | No | `""` | Sentry DSN for the backend (runtime). When empty, the Sentry SDK is never loaded |
+| `SENTRY_ENVIRONMENT` | No | `"production"` | Environment tag on backend Sentry events. Set to `"development"` on dev machines; the frontend tags itself automatically |
+| `SENTRY_ORG` | No | `""` | Sentry organization slug, used with `SENTRY_PROJECT_FRONTEND` and `SENTRY_AUTH_TOKEN` to upload source maps at build time |
+| `SENTRY_PROJECT_FRONTEND` | No | `""` | Sentry project slug of the frontend project, for build-time source map upload |
+| `SENTRY_AUTH_TOKEN` | No | `""` | Sentry auth token enabling source map upload at build time. Build-time secret only — never exposed to the browser |
 | `ALLOWED_DOMAINS` | No | `""` | Allowed domains for access, separated by commas, used to prevent misuse of the backend API |
 | `GOOGLE_MAP_API_KEY` | No | `""` | API Key for Google Maps, used to display the location of the IP on a map |
-| `IPCHECKING_API_ENDPOINT` | No | `""` | API endpoint for IPCheck.ing database, used to obtain accurate IP geolocation information |
-| `IPCHECKING_API_KEY` | No | `""` | API Key for IPCheck.ing database, used to obtain accurate IP geolocation information |
-| `IPINFO_API_TOKEN` | No | `""` | API Token for IPInfo.io, used to obtain IP geolocation information through IPInfo.io |
+| `IPINFO_API_KEY` | No | `""` | API Token for IPInfo.io, used to obtain IP geolocation information through IPInfo.io |
 | `IPAPIIS_API_KEY` | No | `""` | API Key for IPAPI.is, used to obtain IP geolocation information through IPAPI.is |
 | `IP2LOCATION_API_KEY` | No | `""` | API Key for IP2Location.io, used to obtain IP geolocation information through IP2Location.io |
-| `CLOUDFLARE_API` | No | `""` | API Key for Cloudflare, used to obtain AS system information through Cloudflare |
+| `CLOUDFLARE_API_KEY` | No | `""` | API Key for Cloudflare, used to obtain AS system information through Cloudflare |
 | `RIPESTAT_SOURCE_APP` | No | `""` | Source app name for RIPE.net, used to obtain ASN history information through RIPE.net |
 | `MAC_LOOKUP_API_KEY` | No | `""` | API Key for MAC Lookup, used to obtain MAC address information |
 | `VITE_CURL_IPV4_DOMAIN` | No | `""` | Provides the IPv4 domain for the CURL API to users |
@@ -170,7 +174,7 @@ MAXMIND_ACCOUNT_ID="YOUR_ACCOUNT_ID"
 MAXMIND_LICENSE_KEY="YOUR_LICENSE_KEY"
 MAXMIND_AUTO_UPDATE="true"
 GOOGLE_MAP_API_KEY="YOUR_KEY_HERE"
-ALLOWED_DOMAINS="example.com"
+ALLOWED_DOMAINS="example.com,example.org"
 ```
 
 Then restart the backend service.
@@ -185,7 +189,7 @@ docker run -d -p 18966:18966 \
   -e MAXMIND_LICENSE_KEY="YOUR_LICENSE_KEY" \
   -e MAXMIND_AUTO_UPDATE="true" \
   -e GOOGLE_MAP_API_KEY="YOUR_KEY_HERE" \
-  -e ALLOWED_DOMAINS="example.com" \
+  -e ALLOWED_DOMAINS="example.com,example.org" \
   --name myip \
   jason5ng32/myip:latest
 
@@ -212,24 +216,16 @@ DOMAIN,ptest-7.ipcheck.ing,Proxy7
 DOMAIN,ptest-8.ipcheck.ing,Proxy8
 ```
 
-## 😶‍🌫️ Additional Notes
-
-When version 2.0 was released, I said that 70% of the code for this program was not written by me, but by AI. After about 90 interactions, plus some minor manual adjustments, the entire codebase was completed.
-
-Of course, the architecture and UI still required my own design.
-
-With the release of version 3.0 and subsequent versions, the proportion of code written with the help of AI has gradually decreased, now estimated to be between 40% and 50%. On the contrary, in this process, I went from having no knowledge of JavaScript and Vue to being able to understand most of the JS code, and I can now write some on my own.
-
-Thanks to AI, it has given me, an unemployed product manager, a rapid opportunity to learn programming.
-
-## 🌟 Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=jason5ng32/MyIP&type=Date)](https://star-history.com/#jason5ng32/MyIP&Date)
-
 ## 💖 Sponsors
 
 As a open source project, I'm very grateful to the following sponsors for their support:
 
-<a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://opensource.nyc3.cdn.digitaloceanspaces.com/attribution/assets/SVG/DO_Logo_horizontal_blue.svg" height="40px" title="DigitalOcean" /></a>
+<a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://res.ipcheck.ing/img/digitalocean_logo.png" width="240px"  title="DigitalOcean" /></a>
 
-<a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://cf-assets.www.cloudflare.com/zkvhlag99gkb/69RwBidpiEHCDZ9rFVVk7T/092507edbed698420b89658e5a6d5105/CF_logo_stacked_blktype.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" height="60px" /></a>
+<a href="https://www.1password.com"><img src="https://res.ipcheck.ing/img/1password_logo.png" alt="1Password" title="1Password" width="240px"  /></a>
+
+<a href="https://www.greptile.com/"><img src="https://res.ipcheck.ing/img/greptile_logo.png" alt="Greptile" title="Greptile" width="240px"  /></a>
+
+<a href="https://www.sentry.io"><img src="https://res.ipcheck.ing/img/sentry_logo.png" alt="Sentry" title="Sentry" width="240px" /></a>
+
+<a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://res.ipcheck.ing/img/cloudflare_logo.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" width="240px" /></a>

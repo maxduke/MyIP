@@ -6,8 +6,8 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { isValidIP as isValidCommonIP, isValidDomain as isValidCommonDomain } from '../common/valid-ip.js';
-import { isValidIP as isValidFrontendIP, isValidDomain as isValidFrontendDomain } from '../frontend/utils/valid-ip.js';
+import { isValidIP as isValidCommonIP, isValidDomain as isValidCommonDomain, isIPv6 as isCommonIPv6 } from '../common/valid-ip.js';
+import { isValidIP as isValidFrontendIP, isValidDomain as isValidFrontendDomain, isIPv6 as isFrontendIPv6 } from '../frontend/utils/valid-ip.js';
 
 const validAddresses = [
   '1.1.1.1',
@@ -80,4 +80,23 @@ describe('Domain validation helpers', () => {
       assert.equal(isValidFrontendDomain(d), false);
     });
   }
+});
+
+describe('isIPv6', () => {
+  it('separates v6 from v4 for valid IPs, both import paths agreeing', () => {
+    for (const [ip, expected] of [
+      ['2001:4860:4860::8888', true],
+      ['::1', true],
+      ['1.1.1.1', false],
+      ['255.255.255.255', false],
+    ]) {
+      assert.equal(isCommonIPv6(ip), expected);
+      assert.equal(isFrontendIPv6(ip), expected);
+    }
+  });
+
+  it('is false for non-strings (it does not validate, only discriminates)', () => {
+    assert.equal(isCommonIPv6(null), false);
+    assert.equal(isCommonIPv6(42), false);
+  });
 });

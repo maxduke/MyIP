@@ -18,7 +18,7 @@ const getIPFromIpify_V6 = async () => {
                 source: source
             };
         } else { 
-            console.error("Invalid IP from IPify:", ip);
+            console.error("Invalid IP from IPify IPv6:", ip);
             return {
                 ip: null,
                 source: source

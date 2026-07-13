@@ -133,18 +133,22 @@ MaxMind hesabınızdan `GeoLite2-City.mmdb` ve `GeoLite2-ASN.mmdb` dosyalarını
 | `FRONTEND_PORT` | Hayır | `"18966"` | Frontend kısmının çalıştığı port |
 | `SECURITY_RATE_LIMIT` | Hayır | `"0"` | Bir IP'nin backend sunucusuna 60 dakikada yapabileceği istek sayısını kontrol eder (sınır yok için 0) |
 | `SECURITY_DELAY_AFTER` | Hayır | `"0"` | 20 dakikada bir IP'den gelen ilk X isteğin hız sınırına tabi olmadığını kontrol eder; X'ten sonra gecikme artar |
-| `SECURITY_BLACKLIST_LOG_FILE_PATH` | Hayır | `"logs/blacklist-ip.log"` | Yol ayarı. SECURITY_RATE_LIMIT etkinleştirildiğinde limit tetikleyen IP'leri kaydeder |
+| `SECURITY_BLACKLIST_LOG_FILE_PATH` | Hayır | `""` | Hız sınırına takılan IP'lerin isteğe bağlı yerel kayıt dosyası (örn. `"logs/blacklist-ip.log"`). Boş bırakılırsa dosya yazılmaz; olay her durumda paylaşılan logger ile loglanır |
 | `LOG_LEVEL` | Hayır | `"info"` | Minimum log seviyesi (`debug` / `info` / `warn` / `error`). Daha düşük seviyedeki mesajlar bastırılır. |
 | `LOG_FORMAT` | Hayır | pretty | `"json"` olarak ayarlandığında satır başına bir JSON olayı çıkarır (log toplayıcılar / jq için). Diğer değerler (veya ayarlanmamışsa) dev ortamında ve pm2 log tail sırasında kullanılan renkli güzel biçimli çıktıyı korur. |
 | `LOG_HTTP` | Hayır | `"false"` | `"true"` yapıldığında `/api/*` üzerinde istek başı HTTP loglamasını etkinleştirir (metod, URL, durum, yanıt süresi). pm2 loglarını küçük tutmak için varsayılan olarak kapalıdır. Bu bayrak kapalı olsa bile handler düzeyindeki 4xx/5xx hataları her zaman loglanır. |
+| `VITE_SENTRY_DSN_FRONTEND` | Hayır | `""` | Frontend Sentry DSN'i (derleme zamanı). Boş bırakılırsa pakete hiçbir Sentry kodu dahil edilmez. Backend tarafından çalışma zamanında, Sentry zarflarını reklam engelleyicilerin ötesine taşıyan birinci taraf tünel `/api/monitoring` için izin listesi olarak da okunur. Kendi Docker imajınızı derlerken bunu gömerseniz, aynı değeri çalışma zamanında da konteynere geçirin — aksi halde tünel rotası devre dışı kalır |
+| `SENTRY_DSN_BACKEND` | Hayır | `""` | Backend Sentry DSN'i (çalışma zamanı). Boş bırakılırsa Sentry SDK hiç yüklenmez |
+| `SENTRY_ENVIRONMENT` | Hayır | `"production"` | Backend Sentry olaylarındaki ortam etiketi. Geliştirme makinelerinde `"development"` yapın; frontend kendini otomatik etiketler |
+| `SENTRY_ORG` | Hayır | `""` | Sentry organizasyon slug'ı; derleme zamanında source map yüklemek için `SENTRY_PROJECT_FRONTEND` ve `SENTRY_AUTH_TOKEN` ile birlikte kullanılır |
+| `SENTRY_PROJECT_FRONTEND` | Hayır | `""` | Frontend projesinin Sentry proje slug'ı, derleme zamanı source map yüklemesi için |
+| `SENTRY_AUTH_TOKEN` | Hayır | `""` | Derleme zamanında source map yüklemesini etkinleştiren Sentry jetonu. Yalnızca derleme zamanı sırrıdır — tarayıcıya asla açılmaz |
 | `ALLOWED_DOMAINS` | Hayır | `""` | Erişime izin verilen alan adları, virgülle ayrılmış; backend API kötüye kullanımını önlemek için kullanılır |
 | `GOOGLE_MAP_API_KEY` | Hayır | `""` | IP'nin konumunu haritada göstermek için Google Maps API Anahtarı |
-| `IPCHECKING_API_ENDPOINT` | Hayır | `""` | IPCheck.ing veritabanı API uç noktası, doğru IP konum bilgisi almak için |
-| `IPCHECKING_API_KEY` | Hayır | `""` | IPCheck.ing veritabanı API anahtarı, doğru IP konum bilgisi almak için |
-| `IPINFO_API_TOKEN` | Hayır | `""` | IPInfo.io API token'ı, IP konum bilgisi almak için |
+| `IPINFO_API_KEY` | Hayır | `""` | IPInfo.io API token'ı, IP konum bilgisi almak için |
 | `IPAPIIS_API_KEY` | Hayır | `""` | IPAPI.is API anahtarı, IP konum bilgisi almak için |
 | `IP2LOCATION_API_KEY` | Hayır | `""` | IP2Location.io API anahtarı, IP konum bilgisi almak için |
-| `CLOUDFLARE_API` | Hayır | `""` | Cloudflare API anahtarı, AS sistemi bilgisi almak için |
+| `CLOUDFLARE_API_KEY` | Hayır | `""` | Cloudflare API anahtarı, AS sistemi bilgisi almak için |
 | `RIPESTAT_SOURCE_APP` | Hayır | `""` | RIPE.net kaynak uygulama adı, RIPE.net üzerinden ASN geçmiş bilgisi almak için |
 | `MAC_LOOKUP_API_KEY` | Hayır | `""` | MAC Lookup API anahtarı, MAC adresi bilgisi almak için |
 | `VITE_CURL_IPV4_DOMAIN` | Hayır | `""` | Kullanıcılara CURL API için IPv4 domain sağlar |
@@ -170,7 +174,7 @@ MAXMIND_ACCOUNT_ID="YOUR_ACCOUNT_ID"
 MAXMIND_LICENSE_KEY="YOUR_LICENSE_KEY"
 MAXMIND_AUTO_UPDATE="true"
 GOOGLE_MAP_API_KEY="YOUR_KEY_HERE"
-ALLOWED_DOMAINS="example.com"
+ALLOWED_DOMAINS="example.com,example.org"
 ```
 
 Ardından backend servisini yeniden başlatın.
@@ -185,7 +189,7 @@ docker run -d -p 18966:18966 \
   -e MAXMIND_LICENSE_KEY="YOUR_LICENSE_KEY" \
   -e MAXMIND_AUTO_UPDATE="true" \
   -e GOOGLE_MAP_API_KEY="YOUR_KEY_HERE" \
-  -e ALLOWED_DOMAINS="example.com" \
+  -e ALLOWED_DOMAINS="example.com,example.org" \
   --name myip \
   jason5ng32/myip:latest
 ```
@@ -211,24 +215,16 @@ DOMAIN,ptest-7.ipcheck.ing,Proxy7
 DOMAIN,ptest-8.ipcheck.ing,Proxy8
 ```
 
-## 😶‍🌫️ Ek Notlar
-
-Sürüm 2.0 yayımlandığında, bu programın kodunun %70'inin AI tarafından yazıldığını söylemiştim. Yaklaşık 90 etkileşim ve bazı küçük manuel düzeltmeler sonrasında, tüm kod tabanı tamamlandı.
-
-Elbette, mimari ve kullanıcı arayüzü hâlâ benim tasarımım oldu.
-
-Sürüm 3.0 ve sonrasıyla birlikte AI yardımıyla yazılan kod oranı giderek azaldı; şimdi tahmini %40–50 aralığında. Bu süreçte JavaScript ve Vue hakkında hiç bilgim yokken, çoğu JS kodunu anlayacak seviyeye geldim ve artık biraz da yazabiliyorum.
-
-Yapay zekâ sayesinde, işsiz bir ürün yöneticisi olarak programlamayı hızlıca öğrenme imkânı buldum.
-
-## 🌟 Yıldız Geçmişi
-
-[![Star History Chart](https://api.star-history.com/svg?repos=jason5ng32/MyIP&type=Date)](https://star-history.com/#jason5ng32/MyIP&Date)
-
 ## 💖 Sponsorlar
 
 Açık kaynak proje olarak, destekleri için aşağıdaki sponsorlarımıza minnettarım:
 
-<a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://opensource.nyc3.cdn.digitaloceanspaces.com/attribution/assets/SVG/DO_Logo_horizontal_blue.svg" height="40px" title="DigitalOcean" /></a>
+<a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://res.ipcheck.ing/img/digitalocean_logo.png" width="240px"  title="DigitalOcean" /></a>
 
-<a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://cf-assets.www.cloudflare.com/zkvhlag99gkb/69RwBidpiEHCDZ9rFVVk7T/092507edbed698420b89658e5a6d5105/CF_logo_stacked_blktype.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" height="60px" /></a>
+<a href="https://www.1password.com"><img src="https://res.ipcheck.ing/img/1password_logo.png" alt="1Password" title="1Password" width="240px"  /></a>
+
+<a href="https://www.greptile.com/"><img src="https://res.ipcheck.ing/img/greptile_logo.png" alt="Greptile" title="Greptile" width="240px"  /></a>
+
+<a href="https://www.sentry.io"><img src="https://res.ipcheck.ing/img/sentry_logo.png" alt="Sentry" title="Sentry" width="240px" /></a>
+
+<a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://res.ipcheck.ing/img/cloudflare_logo.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" width="240px" /></a>

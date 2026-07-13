@@ -13,9 +13,10 @@
       <AdvancedTools ref="advancedToolsRef" />
     </div>
   </main>
-  <FloatingDock>
+  <FloatingDock :ready="showMaskButton" :mask-active="infoMaskLevel > 0">
     <InfoMask :showMaskButton.value="showMaskButton" :infoMaskLevel.value="infoMaskLevel"
       :toggleInfoMask="toggleInfoMask" />
+    <IPHistory />
     <QueryIP ref="queryIPRef" />
   </FloatingDock>
   <HelpModal ref="helpModalRef" />
@@ -47,6 +48,7 @@ import Preferences from './widgets/Preferences.vue';
 import QueryIP from './widgets/QueryIP.vue';
 import HelpModal from './widgets/Help.vue';
 import InfoMask from './widgets/InfoMask.vue';
+import IPHistory from './widgets/IPHistory.vue';
 import FloatingDock from './widgets/FloatingDock.vue';
 
 // Vue + Store
@@ -67,7 +69,6 @@ const store = useMainStore();
 const route = useRoute();
 const configs = computed(() => store.configs);
 const userPreferences = computed(() => store.userPreferences);
-const isSignedIn = computed(() => store.isSignedIn);
 // A tool drawer is open iff the home route carries a `?tool=` query (set by
 // Advanced.vue). Drives the `f` fullscreen shortcut gate.
 const isToolOpen = computed(() => !!route.query.tool);
@@ -110,7 +111,7 @@ const { loadShortcuts } = useShortcuts({
         speedTestRef, advancedToolsRef, IPCheckRef, connectivityRef, webRTCRef, dnsLeaksRef,
         isInfosLoaded, isToolOpen, toggleInfoMask,
     },
-    store, t, configs, userPreferences, isSignedIn,
+    store, t, configs, userPreferences,
 });
 
 // Scroll monitoring + section tracking (logic from widgets/Patch.vue)

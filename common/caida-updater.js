@@ -17,6 +17,7 @@ import path from 'path';
 import { Readable } from 'stream';
 import { pipeline } from 'stream/promises';
 import logger from './logger.js';
+import { withCronMonitor } from './sentry-cron.js';
 import { createDecompressor } from './decompress.js';
 import { AS_ORG_DB_DIR, AS_ORG_FILE, reloadAsOrgDatabase } from './as-org-db.js';
 import { AS_REL_DB_DIR, AS_REL_FILE, reloadAsRelDatabase } from './as-rel-db.js';
@@ -96,8 +97,15 @@ export function startCaidaAutoUpdate() {
     schedulerStarted = true;
     if (!isAutoUpdateEnabled()) return;
 
+    // withCronMonitor reports ok/error check-ins to Sentry Crons (no-op
+    // without a backend DSN). Note runAllUpdates degrades per-dataset
+    // internally, so the monitor mainly catches a dead/hung scheduler.
     const run = () => {
-        runAllUpdates().catch(error => {
+        withCronMonitor('caida-auto-update', runAllUpdates, {
+            schedule: { type: 'interval', value: UPDATE_INTERVAL_MS / (60 * 60 * 1000), unit: 'hour' },
+            checkinMargin: 60,
+            maxRuntime: 30,
+        }).catch(error => {
             logger.error({ err: error }, 'CAIDA auto update tick failed');
         });
     };

@@ -16,6 +16,7 @@ import { TooltipProvider } from './components/ui/tooltip';
 import Alert from './components/widgets/Toast.vue';
 import PWA from './components/widgets/PWA.vue';
 import { useTheme } from '@/composables/use-theme.js';
+import { useAchievementEngine } from '@/composables/use-achievement-engine.js';
 
 // The standalone pages (/tools/:slug, /privacy) carry their own header, so they
 // drop the homepage's fixed-Nav body padding (see the `body.jn-standalone-page`
@@ -60,6 +61,10 @@ if (loadingElement) {
 
 // Theme orchestration: initial apply, OS flip listener, preference watcher.
 useTheme();
+
+// Achievement engine: listens for domain events emitted across the app and
+// evaluates the rules in data/achievement-rules.js.
+useAchievementEngine();
 </script>
 
 <style scoped></style>

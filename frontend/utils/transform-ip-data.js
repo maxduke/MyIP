@@ -1,3 +1,5 @@
+import getCountryName from '../data/country-name.js';
+
 // The static map renders at zoom 3 (continent scale), where ~0.176° spans a
 // single pixel. Quantizing the request coords to 1 decimal (~0.1°, sub-pixel)
 // leaves the marker visually unchanged while collapsing every IP in the same
@@ -19,7 +21,11 @@ function transformDataFromIPapi(data, ipGeoSource, t, mapLanguage) {
     const mapLon = hasCoords ? mapCoord(data.longitude) : "";
 
     const baseData = {
-        country_name: data.country_name || "",
+        // Country display name is derived from the code locally (CLDR via
+        // getCountryName) so every geo source shows the same, UI-language
+        // name; the upstream's own string is only a fallback for payloads
+        // without a usable code.
+        country_name: getCountryName(data.country, mapLanguage) || data.country_name || "",
         country_code: data.country === 'N/A' ? '' : data.country,
         region: data.region || "",
         city: data.city || "",

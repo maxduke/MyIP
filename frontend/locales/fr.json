@@ -167,6 +167,10 @@
       "connectivityMultipleTestsTips": "Activé, l'appli effectue plusieurs vérifications au démarrage et affiche le délai le plus bas.",
       "popupConnectivityNotifications": "Alertes de Connectivité Pop-up",
       "popupConnectivityNotificationsTips": "Activé, les résultats de la première vérification sont affichés sous forme d'alerte pop-up.",
+      "ipHistory": "Historique des IP",
+      "ipHistoryEnabled": "Enregistrer l'historique des IP",
+      "ipHistoryDays": "Jours de conservation",
+      "ipHistoryTips": "Activé, les IP détectées sont enregistrées uniquement dans ce navigateur et conservées pendant le nombre de jours choisi. Désactivé, l'enregistrement s'arrête ; les enregistrements existants restent jusqu'à ce que vous les effaciez dans le panneau Historique des IP.",
       "ipDB": "Base de données de géolocalisation IP",
       "ipDBTips": "Vous pouvez sélectionner la source de données de géolocalisation IP par défaut. Si la source sélectionnée n'est pas disponible, le système utilisera les sources suivantes.",
       "language": "Paramètres de langue",
@@ -277,6 +281,7 @@
     "Note": "Lorsque vous utilisez un proxy ou un VPN, les sites que vous visitez ne savent-ils vraiment pas que vous utilisez un proxy ? Êtes-vous réellement invisible ? Nous utiliserons plusieurs méthodes pour essayer de détecter les failles de votre anonymat et trouver des preuves de l'utilisation d'un proxy. Bien que certains résultats de test puissent ne pas être entièrement précis, ce test reste très instructif.",
     "Note2": "Après avoir cliqué sur Exécuter, le système exécutera un script qui terminera généralement tous les tests en moins de 10 secondes. Pendant ce processus, vos informations IP, les informations de votre navigateur, etc. seront collectées et analysées en arrière-plan.",
     "fetchError": "Impossible de récupérer les résultats du test",
+    "scriptLoadError": "Le script de test n'a pas pu être chargé, le test ne peut donc pas continuer. Vérifiez votre réseau et réessayez.",
     "yourIP": "Votre adresse IP principale est",
     "proxyScore": "Pourcentage de proxy",
     "VPNScore": "Pourcentage de VPN",
@@ -529,8 +534,20 @@
     "CopySdpLog": "Copier le journal SDP",
     "ViewOnMap": "Voir l'emplacement sur la carte",
     "InfoMask": "Masquer les informations IP",
+    "IPHistory": "Voir l'historique des IP",
     "QueryIP": "Interroger l'adresse IP",
     "GithubLink": "Voir le code source sur GitHub"
+  },
+  "ipHistory": {
+    "Title": "Historique des IP",
+    "Notes": "Les IP détectées lors de votre utilisation du site sont enregistrées ici. Les données sont stockées uniquement dans ce navigateur — elles ne sont jamais synchronisées avec votre compte et ne quittent pas votre appareil. Vous pouvez ajuster le délai de conservation des enregistrements dans les \"Préférences\".",
+    "Empty": "Aucun enregistrement pour le moment. Les IP apparaîtront ici dès que les tests de la page d'accueil les détecteront.",
+    "FilterByType": "Filtrer par type d'IP",
+    "FilterByCountry": "Filtrer par pays / région",
+    "UnknownCountry": "Inconnu",
+    "NoMatch": "Aucun enregistrement ne correspond aux filtres sélectionnés.",
+    "ClearAll": "Effacer l'historique",
+    "ClearConfirm": "Cliquez à nouveau pour confirmer"
   },
   "ipInfos": {
     "Title": "Infos IP",
@@ -683,6 +700,7 @@
     "Note": "WebRTC établit souvent des connexions directes via UDP. Si le test renvoie votre véritable adresse IP, cela signifie que vos paramètres de proxy ne couvrent pas ces connexions. En plus de détecter l'adresse IP que vous utilisez lors de la connexion à WebRTC, nous détectons également votre type de NAT. Cependant, la détection du type de NAT n'est pas précise à 100% et est fournie à titre indicatif uniquement.",
     "StatusWait": "En attente du test",
     "StatusError": "Erreur de connexion",
+    "StatusUnavailable": "WebRTC indisponible",
     "SdpLog": "Journal SDP",
     "NATType": {
       "srflx": "Port Restricted Cone ou Symmetric",
@@ -721,6 +739,7 @@
     "connectionFrom": "Test de vitesse terminé depuis votre machine, IP: ",
     "connectionTo": " vers le serveur de test:",
     "connectionEnd": " .",
+    "testFailed": "Impossible de joindre le serveur de test de vitesse. Vérifiez votre connexion et réessayez.",
     "quality": {
       "bad": "Mauvais",
       "poor": "Faible",
@@ -775,9 +794,9 @@
     "OhNo_Message": "Le test de connectivité a échoué, certains sites web ne sont pas accessibles.",
     "Congrats_Message": "Tous les tests de connectivité ont réussi, vous pouvez accéder à tous les sites web.",
     "maskedInfoTitle": "IPs masquées",
-    "maskedInfoMessage": "Les adresses IP ont été masquées. Partager des captures d'écran ne révélera pas vos IP.",
+    "maskedInfoMessage": "Partager des captures d'écran ne révélera pas vos IP.",
     "unmaskedInfoTitle": "IPs démasquées",
-    "unmaskedInfoMessage": "Les adresses IP ont été démasquées. Faites attention lors de la partage des captures d'écran.",
+    "unmaskedInfoMessage": "Faites attention lors de la partage des captures d'écran.",
     "SignInFailed": "Echec de connexion",
     "SignInFailedReason": "Raison"
   },
@@ -797,6 +816,7 @@
     "DNSResolver": "Ouvrir le Résolution DNS",
     "IPCheck": "Vérification IP",
     "ToggleInfoMask": "Masquer/Démasquer les informations",
+    "IPHistory": "Ouvrir l'historique des IP",
     "Help": "Afficher les raccourcis clavier",
     "HelpNote": "Les personnes qui utilisent des raccourcis clavier sont vraiment géniales !",
     "GoNext": "Carte suivante",
@@ -846,8 +866,8 @@
     "Sponsor": "Nous soutenir",
     "Privacy": "Confidentialité"
   },
-  "specialthanks": {
-    "Title": "Merci spécial",
+  "acknowledgement": {
+    "Title": "Remerciements",
     "Note1": "Ce projet n'aurait pas pu être achevé sans le soutien et l'aide de certaines personnes et organisations enthousiastes, ainsi que de ceux qui ont fourni l'inspiration ou partagé leur code en open-source. Un grand merci à eux :"
   },
   "changelog": {

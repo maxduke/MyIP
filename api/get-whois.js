@@ -62,6 +62,10 @@ export default async (req, res) => {
         const rdap = await rdapDomain(query);
         return res.json(rdap);
     } catch (e) {
+        if (e.message.startsWith('No RDAP endpoint for ')) {
+            logger.warn({ query }, 'whois: TLD has no RDAP endpoint');
+            return res.status(404).json({ error: e.message });
+        }
         logger.error({ err: e, query }, 'Failed to get RDAP info');
         return res.status(500).json({ error: e.message });
     }

@@ -17,9 +17,9 @@
       <Button variant="link" size="default" @click="openAboutTab('changelog', 'Changelog')" class="cursor-pointer">
         {{ t('changelog.Title') }}
       </Button>
-      <Button variant="link" size="default" @click="openAboutTab('specialthanks', 'SpecialThanks')"
+      <Button variant="link" size="default" @click="openAboutTab('acknowledgement', 'Acknowledgement')"
         class="cursor-pointer">
-        {{ t('specialthanks.Title') }}
+        {{ t('acknowledgement.Title') }}
       </Button>
       <Button variant="link" size="default" @click="openAbout" class="cursor-pointer">
         {{ t('about.Title') }}
@@ -126,22 +126,22 @@
               </section>
             </TabsContent>
 
-            <!-- Special Thanks -->
-            <TabsContent value="specialthanks" class="space-y-4 mt-0">
-              <p class="text-sm text-muted-foreground leading-relaxed">{{ t('specialthanks.Note1') }}</p>
-              <ul class="grid grid-cols-1 sm:grid-cols-2 gap-2 list-none p-0">
-                <li v-for="(item, idx) in thanksList" :key="idx">
+            <!-- Acknowledgement -->
+            <TabsContent value="acknowledgement" class="space-y-4 mt-0">
+              <p class="text-sm text-muted-foreground leading-relaxed">{{ t('acknowledgement.Note1') }}</p>
+              <ul class="grid grid-cols-1 gap-2 list-none p-0">
+                <li v-for="(item, idx) in acknowledgementsList" :key="idx">
                   <Button v-if="item.link" variant="outline" size="sm" as-child class="w-full justify-start">
                     <a :href="item.link" target="_blank" rel="noopener">
                       <Smile />
-                      <span class="flex-1 text-left truncate">{{ item.name }}</span>
-                      <SquareArrowOutUpRight class="opacity-50" />
+                      <span class="flex-1 text-left truncate text-xs">{{ item.name }}</span>
+                      <ExternalLink class="opacity-50" />
                     </a>
                   </Button>
                   <div v-else
                     class="flex items-center gap-2 h-8 px-3 text-sm rounded-md border bg-card text-foreground/80">
                     <Smile class="size-4 text-muted-foreground shrink-0" />
-                    <span class="truncate">{{ item.name }}</span>
+                    <span class="truncate text-xs">{{ item.name }}</span>
                   </div>
                 </li>
               </ul>
@@ -165,7 +165,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Compass, ExternalLink, Smile, SquareArrowOutUpRight, CircleFadingArrowUp, CirclePlus, BugOff } from '@lucide/vue';
+import { Compass, ExternalLink, CircleFadingArrowUp, CirclePlus, BugOff, Smile } from '@lucide/vue';
 import { Icon } from '@iconify/vue';
 
 const { t, locale } = useI18n();
@@ -174,7 +174,7 @@ const store = useMainStore();
 const isMobile = computed(() => store.isMobile);
 const configs = computed(() => store.configs);
 
-const tabs = ['about', 'changelog', 'specialthanks'];
+const tabs = ['about', 'changelog', 'acknowledgement'];
 const content = ref('about');
 // Static data from JSON — reverse once via computed so the template stays tidy.
 const changelogReversed = computed(() => changelogData.slice().reverse());
@@ -187,12 +187,16 @@ const personalLinks = [
   { href: 'https://twitter.com/jason5ng32', labelKey: 'about.twitter' },
 ];
 
-const thanksList = [
+const acknowledgementsList = [
   { name: 'Setilis Hu', link: '' },
   { name: 'Seven Yu', link: 'https://github.com/dofy' },
   { name: 'Nikolai Tschacher', link: 'https://incolumitas.com/pages/about/' },
   { name: 'Project Alexandria (Cloudflare)', link: 'https://www.cloudflare.com/lp/project-alexandria/' },
   { name: 'Cloudflare Speedtest', link: 'https://github.com/cloudflare/speedtest' },
+  { name: 'DigitalOcean', link: 'https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge' },
+  { name: 'Sentry', link: 'https://www.sentry.io/' },
+  { name: '1Password', link: 'https://www.1password.com/' },
+  { name: 'Greptile', link: 'https://www.greptile.com/' },
   { name: 'Globalping by jsDelivr', link: 'https://globalping.io/' },
   { name: 'ProxyCheck.io', link: 'https://proxycheck.io/' },
   { name: 'Digital Defense', link: 'https://digital-defense.io/' },
@@ -223,7 +227,7 @@ const openAbout = () => {
 };
 
 // Direct-entry shortcuts: open the same About sheet but jump straight to the
-// changelog / special-thanks tab. Plain open (not toggle) so a second click
+// changelog / acknowledgement tab. Plain open (not toggle) so a second click
 // from another tab just switches tabs instead of closing the sheet.
 const openAboutTab = (tab, trackLabel) => {
   content.value = tab;

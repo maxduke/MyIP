@@ -23,6 +23,8 @@ describe('DEFAULT_PREFERENCES', () => {
       popupConnectivityNotifications: false,
       ipCardsToShow: 2,
       ipGeoSource: 0,
+      ipHistoryEnabled: true,
+      ipHistoryDays: 90,
       lang: 'auto',
       customConnectivityTargets: [],
     });
