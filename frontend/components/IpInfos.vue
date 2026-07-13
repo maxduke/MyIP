@@ -253,7 +253,11 @@ const fetchIPDetails = async (cardIndex, ip, sourceID = null) => {
   const fetchPromise = (async () => {
     const sources = store.ipDBs.filter(source => source.enabled);
 
+    // The preferred source may no longer be in the enabled list (disabled by
+    // a concurrent card's failure, or a stale stored preference); findIndex
+    // then yields -1 and sources[-1] is undefined — start from the first one.
     let currentSourceIndex = sourceID !== null ? sources.findIndex(source => source.id === sourceID) : 0;
+    if (currentSourceIndex === -1) currentSourceIndex = 0;
     let attempts = 0;
 
     while (attempts < sources.length) {
