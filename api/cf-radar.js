@@ -1,12 +1,14 @@
 import { fetchUpstream } from '../common/fetch-with-timeout.js';
 import logger from '../common/logger.js';
 
-// Common fetch request function
+// Common fetch request function.
+// CLOUDFLARE_API is the pre-rename spelling — keep reading it so existing
+// deployments don't lose the key on upgrade.
 async function fetchFromCloudflare(endpoint) {
     const url = `https://api.cloudflare.com/client/v4${endpoint}`;
     const response = await fetchUpstream(url, {
         headers: {
-            'Authorization': `Bearer ${process.env.CLOUDFLARE_API}`,
+            'Authorization': `Bearer ${process.env.CLOUDFLARE_API_KEY || process.env.CLOUDFLARE_API}`,
             'Content-Type': 'application/json',
         },
     });

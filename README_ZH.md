@@ -145,12 +145,10 @@ MyIP 依赖 MaxMind 提供的免费 **GeoLite2** 数据库（City + ASN）来进
 | `SENTRY_AUTH_TOKEN` | 否 | `""` | 用于构建时上传 source map 的 Sentry 令牌。仅构建时使用的机密，绝不会暴露给浏览器 |
 | `ALLOWED_DOMAINS` | 否 | `""` | 允许访问的域名，用逗号分隔，用于防止后端 API 被滥用 |
 | `GOOGLE_MAP_API_KEY` | 否 | `""` | Google 地图的 API Key，用于展示 IP 所在地的地图 |
-| `IPCHECKING_API_ENDPOINT` | 否 | `""` | IPCheck.ing 数据库的 API 端点 URL |
-| `IPCHECKING_API_KEY` | 否 | `""` | IPCheck.ing 数据库的 API Key，用于获取精准的 IP 归属地信息 |
-| `IPINFO_API_TOKEN` | 否 | `""` | IPInfo.io 的 API Token，用于通过 IPInfo.io 获取 IP 归属地信息 |
+| `IPINFO_API_KEY` | 否 | `""` | IPInfo.io 的 API Token，用于通过 IPInfo.io 获取 IP 归属地信息 |
 | `IPAPIIS_API_KEY` | 否 | `""` | IPAPI.is 的 API Key，用于通过 IPAPI.is 获取 IP 归属地信息 |
 | `IP2LOCATION_API_KEY` | 否 | `""` | IP2Location.io 的 API Key，用于通过 IP2Location.io 获取 IP 归属地信息 |
-| `CLOUDFLARE_API` | 否 | `""` | Cloudflare 的 API Key，用于通过 Cloudflare 获取 AS 系统的信息 |
+| `CLOUDFLARE_API_KEY` | 否 | `""` | Cloudflare 的 API Key，用于通过 Cloudflare 获取 AS 系统的信息 |
 | `RIPESTAT_SOURCE_APP` | 否 | `""` | RIPE.net 的源应用名称，用于通过 RIPE.net 获取 ASN 的历史信息 |
 | `MAC_LOOKUP_API_KEY` | 否 | `""` | MAC 查询的 API Key，用于通过 MAC Lookup 获取 MAC 地址的归属信息 |
 | `VITE_CURL_IPV4_DOMAIN` | 否 | `""` | 为用户提供 CURL API 的 IPv4 域名 |

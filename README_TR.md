@@ -145,12 +145,10 @@ MaxMind hesabınızdan `GeoLite2-City.mmdb` ve `GeoLite2-ASN.mmdb` dosyalarını
 | `SENTRY_AUTH_TOKEN` | Hayır | `""` | Derleme zamanında source map yüklemesini etkinleştiren Sentry jetonu. Yalnızca derleme zamanı sırrıdır — tarayıcıya asla açılmaz |
 | `ALLOWED_DOMAINS` | Hayır | `""` | Erişime izin verilen alan adları, virgülle ayrılmış; backend API kötüye kullanımını önlemek için kullanılır |
 | `GOOGLE_MAP_API_KEY` | Hayır | `""` | IP'nin konumunu haritada göstermek için Google Maps API Anahtarı |
-| `IPCHECKING_API_ENDPOINT` | Hayır | `""` | IPCheck.ing veritabanı API uç noktası, doğru IP konum bilgisi almak için |
-| `IPCHECKING_API_KEY` | Hayır | `""` | IPCheck.ing veritabanı API anahtarı, doğru IP konum bilgisi almak için |
-| `IPINFO_API_TOKEN` | Hayır | `""` | IPInfo.io API token'ı, IP konum bilgisi almak için |
+| `IPINFO_API_KEY` | Hayır | `""` | IPInfo.io API token'ı, IP konum bilgisi almak için |
 | `IPAPIIS_API_KEY` | Hayır | `""` | IPAPI.is API anahtarı, IP konum bilgisi almak için |
 | `IP2LOCATION_API_KEY` | Hayır | `""` | IP2Location.io API anahtarı, IP konum bilgisi almak için |
-| `CLOUDFLARE_API` | Hayır | `""` | Cloudflare API anahtarı, AS sistemi bilgisi almak için |
+| `CLOUDFLARE_API_KEY` | Hayır | `""` | Cloudflare API anahtarı, AS sistemi bilgisi almak için |
 | `RIPESTAT_SOURCE_APP` | Hayır | `""` | RIPE.net kaynak uygulama adı, RIPE.net üzerinden ASN geçmiş bilgisi almak için |
 | `MAC_LOOKUP_API_KEY` | Hayır | `""` | MAC Lookup API anahtarı, MAC adresi bilgisi almak için |
 | `VITE_CURL_IPV4_DOMAIN` | Hayır | `""` | Kullanıcılara CURL API için IPv4 domain sağlar |

@@ -53,8 +53,10 @@ function createResponse() {
 const ENV_KEYS = [
     'IPCHECKING_API_KEY', 'IPCHECKING_API_ENDPOINT',
     'MAC_LOOKUP_API_KEY', 'IPAPIIS_API_KEY',
-    'IPINFO_API_TOKEN', 'IP2LOCATION_API_KEY',
-    'CLOUDFLARE_API',
+    'IPINFO_API_KEY', 'IP2LOCATION_API_KEY',
+    'CLOUDFLARE_API_KEY',
+    // Pre-rename spellings, still honored as fallbacks.
+    'IPINFO_API_TOKEN', 'CLOUDFLARE_API',
 ];
 let envBackup = {};
 
@@ -88,6 +90,17 @@ describe('configs handler', () => {
             assert.equal(typeof res.body[key], 'boolean');
         }
         assert.equal(res.body.originalSite, false);
+    });
+
+    it('honors the pre-rename env spellings as fallbacks', () => {
+        delete process.env.IPINFO_API_KEY;
+        delete process.env.CLOUDFLARE_API_KEY;
+        process.env.IPINFO_API_TOKEN = 'legacy-token';
+        process.env.CLOUDFLARE_API = 'legacy-key';
+        const res = createResponse();
+        configsHandler(createRequest(), res);
+        assert.equal(res.body.ipInfo, true);
+        assert.equal(res.body.cloudFlare, true);
     });
 });
 
