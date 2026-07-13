@@ -25,6 +25,13 @@ describe('redactQueryString', () => {
         assert.equal(redactQueryString('flag&ip=1.2.3.4'), 'flag&ip=1.2.3.4');
         assert.equal(redactQueryString(undefined), undefined);
     });
+
+    it('redacts the first param even with a leading question mark', () => {
+        assert.equal(
+            redactQueryString('?key=secret&ip=8.8.8.8&lang=en'),
+            '?key=[redacted]&ip=8.8.8.8&lang=en'
+        );
+    });
 });
 
 describe('redactUrlQuery', () => {
@@ -53,6 +60,18 @@ describe('scrubBreadcrumb', () => {
         const crumb = { data: { url: 'https://api.example.com/geo?q=1.2.3.4&key=secret', status_code: 502 } };
         assert.equal(scrubBreadcrumb(crumb).data.url, 'https://api.example.com/geo?q=1.2.3.4&key=[redacted]');
         assert.equal(crumb.data.status_code, 502);
+    });
+
+    it('redacts http.query breadcrumb data including the leading question mark form', () => {
+        const crumb = {
+            data: {
+                'http.method': 'GET',
+                'http.query': '?key=secret&ip=8.8.8.8&lang=en',
+                status_code: 400,
+            },
+        };
+        assert.equal(scrubBreadcrumb(crumb).data['http.query'], '?key=[redacted]&ip=8.8.8.8&lang=en');
+        assert.equal(crumb.data['http.method'], 'GET');
     });
 
     it('tolerates breadcrumbs without url data', () => {

@@ -8,18 +8,22 @@
 // Param names whose values must never reach Sentry.
 const SENSITIVE_PARAMS = /^(key|api[-_]?key|token|secret|password|auth)$/i;
 
-// Span / trace attributes that may hold a URL, or a bare query string.
-const URL_ATTRS = ['url.full', 'http.url', 'http.target'];
+// Breadcrumb / span / trace attributes that may hold a URL, or a bare
+// query string.
+const URL_ATTRS = ['url', 'url.full', 'http.url', 'http.target'];
 const QUERY_ATTRS = ['url.query', 'http.query'];
 
-// Redact sensitive values in a bare query string ("q=1&key=abc").
+// Redact sensitive values in a bare query string ("q=1&key=abc"). Node's
+// http instrumentation stores query attributes with a leading `?`
+// ("?key=abc&ip=…") — tolerate it so the first param still matches.
 export const redactQueryString = (query) => {
     if (typeof query !== 'string') return query;
     return query.split('&').map((pair) => {
         const eq = pair.indexOf('=');
         if (eq === -1) return pair;
-        const name = pair.slice(0, eq);
-        return SENSITIVE_PARAMS.test(name) ? `${name}=[redacted]` : pair;
+        const rawName = pair.slice(0, eq);
+        const name = rawName.charAt(0) === '?' ? rawName.slice(1) : rawName;
+        return SENSITIVE_PARAMS.test(name) ? `${rawName}=[redacted]` : pair;
     }).join('&');
 };
 
@@ -42,11 +46,10 @@ const scrubAttributes = (data) => {
     }
 };
 
-// beforeBreadcrumb: the http integration records the full outgoing URL.
+// beforeBreadcrumb: the http integration records the outgoing URL across
+// several data attributes (url, http.query, …) — scrub them all.
 export const scrubBreadcrumb = (breadcrumb) => {
-    if (typeof breadcrumb?.data?.url === 'string') {
-        breadcrumb.data.url = redactUrlQuery(breadcrumb.data.url);
-    }
+    scrubAttributes(breadcrumb?.data);
     return breadcrumb;
 };
 
