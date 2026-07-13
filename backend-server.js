@@ -85,10 +85,19 @@ function getClientIp(req) {
     return cfIp || forwardedIps || cfIpV6 || req.ip;
 }
 
-// Singapore TZ — fixed for log consistency across deployments regardless of host locale.
-function formatDate(timestamp) {
-    return new Date(timestamp).toLocaleString('en-US', { timeZone: 'Asia/Singapore' });
-}
+// Host-local time with an explicit UTC offset ("2026-07-14 10:23:45 +0800"),
+// matching the pretty-log timestamp style — ledger entries stay unambiguous
+// whatever timezone the deployment runs in.
+const formatDate = (timestamp) => {
+    const d = new Date(timestamp);
+    const pad = (n) => String(n).padStart(2, '0');
+    const offsetMin = -d.getTimezoneOffset();
+    const sign = offsetMin >= 0 ? '+' : '-';
+    const abs = Math.abs(offsetMin);
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} `
+        + `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} `
+        + `${sign}${pad(Math.floor(abs / 60))}${pad(abs % 60)}`;
+};
 
 // Append-or-update one line in the rate-limit log, keeping the original
 // timestamp on repeat offenders so we can see when an IP *first* showed up.

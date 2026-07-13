@@ -101,7 +101,9 @@ const logger = pino({
             target: 'pino-pretty',
             options: {
                 colorize: true,
-                translateTime: 'HH:MM:ss.l',
+                // SYS: = host-local time; 'standard' carries date + UTC offset
+                // (same rendering as the MyIP-api repo's logger)
+                translateTime: 'SYS:standard',
                 ignore: 'pid,hostname',
                 singleLine: true,
             },
