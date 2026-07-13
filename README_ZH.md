@@ -133,10 +133,16 @@ MyIP 依赖 MaxMind 提供的免费 **GeoLite2** 数据库（City + ASN）来进
 | `FRONTEND_PORT` | 否 | `"18966"` | 程序前端部分的运行端口 |
 | `SECURITY_RATE_LIMIT` | 否 | `"0"` | 控制每 60 分钟一个 IP 可以对后端服务器请求的次数（设置为 0 则为不限制） |
 | `SECURITY_DELAY_AFTER` | 否 | `"0"` | 控制每 20 分钟一个 IP 的前 X 次请求不受速度限制，超过 X 次后会逐次增加延迟 |
-| `SECURITY_BLACKLIST_LOG_FILE_PATH` | 否 | `"logs/blacklist-ip.log"` | 路径设置。记录由 SECURITY_RATE_LIMIT 开启后，触发限制的 IP 列表 |
+| `SECURITY_BLACKLIST_LOG_FILE_PATH` | 否 | `""` | 可选的本地黑名单文件（如 `"logs/blacklist-ip.log"`），记录触发限流的 IP。留空则不写文件；无论是否设置，事件都会通过共享 logger 记录 |
 | `LOG_LEVEL` | 否 | `"info"` | 日志最低级别（`debug` / `info` / `warn` / `error`），低于该级别的日志会被过滤 |
 | `LOG_FORMAT` | 否 | pretty | 设置为 `"json"` 时每行输出一个 JSON 事件（给日志聚合器 / jq 使用）；其它值（或未设置）则使用带颜色的 pretty 格式，适合开发及 pm2 log tail |
 | `LOG_HTTP` | 否 | `"false"` | 设置为 `"true"` 时启用 `/api/*` 的按请求日志（方法、URL、状态码、响应时间）。默认关闭以控制 pm2 日志体积。即使关闭，handler 层的 4xx/5xx 错误日志依然会被记录 |
+| `VITE_SENTRY_DSN_FRONTEND` | 否 | `""` | 前端 Sentry DSN（构建时）。留空则构建产物中完全不包含 Sentry 代码。后端运行时也会读取它，作为 `/api/monitoring`（绕过广告拦截器的第一方转发隧道）的白名单 |
+| `SENTRY_DSN_BACKEND` | 否 | `""` | 后端 Sentry DSN（运行时）。留空则完全不加载 Sentry SDK |
+| `SENTRY_ENVIRONMENT` | 否 | `"production"` | 后端 Sentry 事件的环境标签。开发机上设为 `"development"`；前端会自动打标签 |
+| `SENTRY_ORG` | 否 | `""` | Sentry 组织 slug，与 `SENTRY_PROJECT_FRONTEND`、`SENTRY_AUTH_TOKEN` 配合，在构建时上传 source map |
+| `SENTRY_PROJECT_FRONTEND` | 否 | `""` | 前端项目的 Sentry 项目 slug，用于构建时上传 source map |
+| `SENTRY_AUTH_TOKEN` | 否 | `""` | 用于构建时上传 source map 的 Sentry 令牌。仅构建时使用的机密，绝不会暴露给浏览器 |
 | `ALLOWED_DOMAINS` | 否 | `""` | 允许访问的域名，用逗号分隔，用于防止后端 API 被滥用 |
 | `GOOGLE_MAP_API_KEY` | 否 | `""` | Google 地图的 API Key，用于展示 IP 所在地的地图 |
 | `IPCHECKING_API_ENDPOINT` | 否 | `""` | IPCheck.ing 数据库的 API 端点 URL |
@@ -230,6 +236,8 @@ DOMAIN,ptest-8.ipcheck.ing,Proxy8
 
 作为一个开源项目，我非常感谢以下赞助者对我的支持：
 
-<a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://opensource.nyc3.cdn.digitaloceanspaces.com/attribution/assets/SVG/DO_Logo_horizontal_blue.svg" height="40px" title="DigitalOcean" /></a>
+<a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://res.ipcheck.ing/img/digitalocean_logo.png" width="180px" title="DigitalOcean" /></a>
 
-<a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://cf-assets.www.cloudflare.com/zkvhlag99gkb/69RwBidpiEHCDZ9rFVVk7T/092507edbed698420b89658e5a6d5105/CF_logo_stacked_blktype.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" height="60px" /></a>
+<a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://res.ipcheck.ing/img/cloudflare_logo.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" width="180px" /></a>
+
+<a href="https://www.sentry.io"><img src="https://res.ipcheck.ing/img/sentry_logo.png" alt="Sentry" title="Sentry" width="180px" /></a>

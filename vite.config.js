@@ -3,8 +3,13 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import { CodeInspectorPlugin } from 'code-inspector-plugin';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 
 dotenv.config();
+
+// Sentry source-map upload — build-time only, gated on SENTRY_AUTH_TOKEN
+// uploaded to Sentry, then deleted from dist/ — users never download them.
+const sentryUploadEnabled = !!process.env.SENTRY_AUTH_TOKEN;
 
 const backEndPort = parseInt(process.env.BACKEND_PORT || 11966, 10);
 const frontEndPort = parseInt(process.env.FRONTEND_PORT || 18966, 10);
@@ -98,6 +103,21 @@ export default defineConfig({
         copy: '{file}',
       },
     }),
+    // Must stay last so it sees the final emitted chunks. Release name
+    // defaults to the current git commit SHA; the plugin injects the same
+    // release into the SDK at runtime, tying events to their sourcemaps.
+    sentryUploadEnabled && sentryVitePlugin({
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT_FRONTEND,
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      telemetry: false,
+      sourcemaps: {
+        // Rolldown's module-loading runtime chunk has no source to map —
+        // skip it so every build doesn't warn about its missing .map
+        ignore: ['**/rolldown-runtime*.js'],
+        filesToDeleteAfterUpload: ['dist/**/*.map'],
+      },
+    }),
   ],
   resolve: {
     alias: {
@@ -105,6 +125,9 @@ export default defineConfig({
     },
   },
   build: {
+    // Hidden sourcemaps exist only for the Sentry upload; without a token,
+    // don't generate them at all (they'd end up publicly served from dist/)
+    sourcemap: sentryUploadEnabled ? 'hidden' : false,
     rollupOptions: {
       // @vueuse/core ships a couple of /* #__PURE__ */ comments in positions
       // Rolldown (Vite 8's new bundler) can't interpret. They're harmless —

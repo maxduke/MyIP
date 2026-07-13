@@ -22,6 +22,8 @@ COPY --from=build-stage /app/package.json ./
 COPY --from=build-stage /app/dist ./dist
 COPY --from=build-stage /app/backend-server.js ./
 COPY --from=build-stage /app/frontend-server.js ./
+# npm start boots the backend with `--import ./sentry-instrument.js`
+COPY --from=build-stage /app/sentry-instrument.js ./
 COPY --from=build-stage /app/api ./api
 COPY --from=build-stage /app/common ./common
 
