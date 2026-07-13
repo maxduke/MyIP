@@ -300,6 +300,7 @@
     "Note": "Bir proxy veya VPN kullandığınızda, ziyaret ettiğiniz web siteleri gerçekten bir proxy kullandığınızı bilmiyor mu? Gerçekten görünmez misiniz? Kılığınızdaki açıkları hesaplamak ve bir proxy kullandığınıza dair kanıt bulmak için çeşitli yöntemler kullanacağız. Bazı test sonuçları tamamen doğru olmasa da, bu test yine de oldukça bilgilendiricidir.",
     "Note2": "Çalıştır'a tıkladıktan sonra, sistem genellikle tüm testleri 10 saniye içinde tamamlayan bir komut dosyası çalıştıracaktır. Bu süreçte IP bilgileriniz, tarayıcı bilgileriniz vb. toplanacak ve arka planda analiz edilecektir.",
     "fetchError": "Test sonuçları alınamadı",
+    "scriptLoadError": "Test betiği yüklenemediği için teste devam edilemiyor. Lütfen ağınızı kontrol edip tekrar deneyin.",
     "yourIP": "Ana test IP'niz",
     "proxyScore": "Proxy Yüzdesi",
     "VPNScore": "VPN Yüzdesi",

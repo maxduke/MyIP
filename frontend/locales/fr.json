@@ -281,6 +281,7 @@
     "Note": "Lorsque vous utilisez un proxy ou un VPN, les sites que vous visitez ne savent-ils vraiment pas que vous utilisez un proxy ? Êtes-vous réellement invisible ? Nous utiliserons plusieurs méthodes pour essayer de détecter les failles de votre anonymat et trouver des preuves de l'utilisation d'un proxy. Bien que certains résultats de test puissent ne pas être entièrement précis, ce test reste très instructif.",
     "Note2": "Après avoir cliqué sur Exécuter, le système exécutera un script qui terminera généralement tous les tests en moins de 10 secondes. Pendant ce processus, vos informations IP, les informations de votre navigateur, etc. seront collectées et analysées en arrière-plan.",
     "fetchError": "Impossible de récupérer les résultats du test",
+    "scriptLoadError": "Le script de test n'a pas pu être chargé, le test ne peut donc pas continuer. Vérifiez votre réseau et réessayez.",
     "yourIP": "Votre adresse IP principale est",
     "proxyScore": "Pourcentage de proxy",
     "VPNScore": "Pourcentage de VPN",
