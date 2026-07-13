@@ -250,7 +250,16 @@ const loadScript = () => {
     script.src = `https://proxydetectjs.ipcheck.ing/?pdKey=${import.meta.env.VITE_INVISIBILITY_TEST_KEY}&pdVal=${userID.value}`;
     script.async = true;
     script.setAttribute('data-tag', 'invisibilityTestScript');
-    script.onerror = (error) => { console.error('Script load error:', error); };
+    // No script means no probe data server-side — polling for a result is
+    // pointless, so abort the run and tell the user right away.
+    script.onerror = () => {
+        console.error('Script load error: proxy detect script failed to load');
+        clearTimeout(resultTimer);
+        removeScript();
+        errorMsg.value = t('invisibilitytest.scriptLoadError');
+        checkingStatus.value = 'idle';
+        retryCount.value = 0;
+    };
     document.head.appendChild(script);
 };
 
@@ -258,6 +267,8 @@ const removeScript = () => {
     const scripts = document.querySelectorAll('script[data-tag="invisibilityTestScript"]');
     scripts.forEach(script => script.remove());
 };
+
+let resultTimer = null;
 
 const onSubmit = () => {
     checkingStatus.value = 'running';
@@ -268,7 +279,7 @@ const onSubmit = () => {
     loadScript();
     // Achievement rule (JustInCase) lives in data/achievement-rules.js.
     emitAppEvent('invisibility:started');
-    setTimeout(() => { getResult(); }, 10000);
+    resultTimer = setTimeout(() => { getResult(); }, 10000);
 };
 
 const getResult = async () => {
