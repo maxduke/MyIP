@@ -7,7 +7,6 @@
 // the main bundle and bypass the gating). For explicit signals, emit a domain
 // event on utils/app-events.js and subscribe to it here instead.
 import * as Sentry from '@sentry/vue';
-import { onAppEvent } from '@/utils/app-events';
 
 const env = import.meta.env ?? {};
 
@@ -103,20 +102,11 @@ const initSentry = (app, router) => {
         },
     });
 
-    // Explicit product signals arrive via the app-events bus — business code
-    // stays Sentry-free and just emits domain events (see frontend/AGENTS.md).
-
-    // A whole IP source chain (primary + every fallback) failed. v6
-    // exhaustion is routine for IPv4-only visitors, so only v4 is reported;
-    // per-hop degradation inside a chain is already covered by the
-    // console.error capture above.
-    onAppEvent('ip-source:exhausted', ({ source, ipVersion }) => {
-        if (ipVersion !== 'v4') return;
-        Sentry.captureMessage(`IP source chain exhausted: ${source}`, {
-            level: 'error',
-            tags: { source, ipVersion },
-        });
-    });
+    // Explicit product signals would arrive via the app-events bus — business
+    // code stays Sentry-free and just emits domain events (see
+    // frontend/AGENTS.md). No signal is currently captured: chain exhaustion
+    // (`ip-source:exhausted`) proved to be pure visitor-network noise —
+    // clients that block every third-party request — and was dropped.
 };
 
 export { initSentry };

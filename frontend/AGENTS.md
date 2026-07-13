@@ -69,8 +69,9 @@ philosophy as `firebase-init.js`). Two rules:
 - **Never import `@sentry/vue` in app code** — a static import would drag the
   SDK back into the main bundle. All Sentry config lives in `sentry-init.js`.
 - **Explicit signals go through the app-events bus**, like achievements: the
-  component emits, `sentry-init.js` subscribes. Current signal:
-  `ip-source:exhausted` (v4 source chain incl. fallbacks yielded no IP).
+  component emits, `sentry-init.js` subscribes. No signal is currently
+  captured — `ip-source:exhausted` proved to be visitor-network noise and
+  was dropped (the event itself is still emitted for future subscribers).
 
 Capture surface: uncaught errors; `console.error` (fallback-chain degradation
 is a tracked product signal — fingerprinted per message prefix so each source
