@@ -326,12 +326,14 @@ const checkSTUNServer = (stun) => {
         failWith('StatusError');
       }, 5000);
     } catch (error) {
-      // Some browsers ship the constructor but forbid construction
-      // (permissions policy, hardened / lockdown modes), and privacy
-      // extensions replace it with a non-constructable stub that passes
-      // the `typeof` check above — both are the runtime sibling of the
-      // missing-API case: a finding, not an error.
+      // Some browsers ship the constructor but forbid construction —
+      // NotAllowedError (permissions policy), NotSupportedError (Chromium
+      // with WebRTC disabled) — and privacy extensions replace it with a
+      // non-constructable stub that passes the `typeof` check above. All
+      // are the runtime sibling of the missing-API case: a finding, not
+      // an error.
       const constructionBlocked = error?.name === 'NotAllowedError'
+        || error?.name === 'NotSupportedError'
         || (error instanceof TypeError && /not a constructor/i.test(error?.message || ''));
       if (constructionBlocked) {
         log(`construction blocked: ${error?.message || error}`);
