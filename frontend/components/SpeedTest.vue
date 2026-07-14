@@ -155,6 +155,14 @@
             </span>
           </div>
         </div>
+
+        <!-- Error Block — the engine gave up (e.g. speed test server unreachable). -->
+        <div v-else-if="isError" class="jn-slide-in rounded-md border border-destructive/30 bg-destructive/10 p-4">
+          <div class="flex items-start gap-2">
+            <CircleAlert class="size-5 text-destructive shrink-0 mt-0.5" />
+            <span class="text-base text-destructive">{{ t('speedtest.testFailed') }}</span>
+          </div>
+        </div>
       </CardContent>
     </Card>
   </section>
@@ -165,6 +173,7 @@ import { reactive, computed, onMounted, markRaw, onUnmounted } from 'vue';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
+import { emitAppEvent } from '@/utils/app-events.js';
 import { fetchWithTimeout } from '@/utils/fetch-with-timeout.js';
 import { isValidIP } from '@/utils/valid-ip.js';
 import getCountryName from '@/data/country-name.js';
@@ -176,7 +185,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  ArrowLeftRight, CalendarCheck2, Play, CloudDownload, CloudUpload,
+  ArrowLeftRight, CalendarCheck2, CircleAlert, Play, CloudDownload, CloudUpload,
   Globe, Pause, PersonStanding, RotateCw,
 } from '@lucide/vue';
 import { Icon } from '@iconify/vue';
@@ -184,7 +193,6 @@ import { Icon } from '@iconify/vue';
 const { t } = useI18n();
 const store = useMainStore();
 const lang = computed(() => store.lang);
-const isSignedIn = computed(() => store.isSignedIn);
 const userPreferences = computed(() => store.userPreferences);
 const isSimpleMode = computed(() => userPreferences.value.simpleMode);
 // State Management
@@ -327,14 +335,16 @@ const engineMethods = {
 
   updateResults(results) {
     const summary = results.getSummary();
+    // Any field can be null when its measurement produced no samples.
+    const fmt = (v, div = 1) => (v == null ? 0 : parseFloat((v / div).toFixed(2)));
     Object.assign(state.speedTest, {
-      downloadSpeed: parseFloat((summary.download / 1000000).toFixed(2)),
-      uploadSpeed: parseFloat((summary.upload / 1000000).toFixed(2)),
-      latency: parseFloat(summary.latency.toFixed(2)),
-      jitter: parseFloat(summary.jitter.toFixed(2)),
+      downloadSpeed: fmt(summary.download, 1000000),
+      uploadSpeed: fmt(summary.upload, 1000000),
+      latency: fmt(summary.latency),
+      jitter: fmt(summary.jitter),
       // Loaded latency only present when the engine measured it.
-      downLoadedLatency: summary.downLoadedLatency == null ? '-' : parseFloat(summary.downLoadedLatency.toFixed(2)),
-      upLoadedLatency: summary.upLoadedLatency == null ? '-' : parseFloat(summary.upLoadedLatency.toFixed(2)),
+      downLoadedLatency: summary.downLoadedLatency == null ? '-' : fmt(summary.downLoadedLatency),
+      upLoadedLatency: summary.upLoadedLatency == null ? '-' : fmt(summary.upLoadedLatency),
     });
   },
 
@@ -380,43 +390,16 @@ const engineMethods = {
   },
 };
 
-// --- Achievements --------------------------------------------------------------
-
-const achievementHandler = {
-  checkAndUpdate() {
-    if (state.speedTest.status !== 'finished') return;
-    const achievements = this.getQualifiedAchievements();
-    this.triggerAchievementsWithDelay(achievements);
-  },
-
-  getQualifiedAchievements() {
-    const { downloadSpeed, uploadSpeed } = state.speedTest;
-    const achievements = [];
-    if (downloadSpeed >= 100) achievements.push('BarelyEnough');
-    if (downloadSpeed >= 500) achievements.push('RapidPace');
-    if (downloadSpeed >= 1000) achievements.push('TorrentFlow');
-    if (uploadSpeed >= 50) achievements.push('SteadyGoing');
-    if (uploadSpeed >= 200) achievements.push('TooFastTooSimple');
-    if (uploadSpeed >= 1000) achievements.push('SwiftAscent');
-    return achievements.filter((a) => !store.userAchievements[a].achieved);
-  },
-
-  triggerAchievementsWithDelay(achievements, delay = 2000) {
-    if (!achievements.length) return;
-    const achievement = achievements.shift();
-    store.setTriggerUpdateAchievements(achievement);
-    if (achievements.length) {
-      setTimeout(() => this.triggerAchievementsWithDelay(achievements, delay), delay);
-    }
-  },
-};
-
 // --- Test Control ----------------------------------------------------------
 
 const setupTestEngine = async () => {
   if (!state.connection.ip) {
     const connectionData = await connectionMethods.getIPFromSpeedTest();
-    if (connectionData) Object.assign(state.connection, connectionData);
+    if (connectionData) {
+      Object.assign(state.connection, connectionData);
+      // Feed the Globalping picker + IP history.
+      store.updateAllIPs([{ ip: connectionData.ip, country: connectionData.loc || '', location: connectionData.country || '' }]);
+    }
   }
 
   testEngine.onRunningChange = () => { state.speedTest.status = 'running'; };
@@ -425,11 +408,27 @@ const setupTestEngine = async () => {
     engineMethods.updateSpeedInRealTime();
   };
   testEngine.onFinish = (results) => {
+    // The engine fires onFinish even after giving up (e.g. every request to
+    // the test server failed). An error already reported by onError is final,
+    // and a run with no positive measurement (the engine reports 0 for zero
+    // samples) is a failure — never flip either to a green all-zero result.
+    const summary = results?.getSummary?.() ?? {};
+    const measured = (v) => Number.isFinite(v) && v > 0;
+    const hasData = [summary.download, summary.upload, summary.latency].some(measured);
+    if (state.speedTest.status === 'error' || !hasData) {
+      state.speedTest.status = 'error';
+      testEngine.onRunningChange = () => {};
+      testEngine.onResultsChange = () => {};
+      testEngine.onError = () => {};
+      testEngine = null;
+      return;
+    }
     state.speedTest.status = 'finished';
     state.speedTest.progress = 100;
-    testEngine.onRunningChange = null;
-    testEngine.onResultsChange = null;
-    testEngine.onError = null;
+    // No-op, not null: the engine's queued timers call these unconditionally.
+    testEngine.onRunningChange = () => {};
+    testEngine.onResultsChange = () => {};
+    testEngine.onError = () => {};
     engineMethods.updateResults(results);
 
     // Engine's getScores() reads getSummary() internally; when packetLoss is
@@ -453,7 +452,11 @@ const setupTestEngine = async () => {
     }
 
     testEngine = null;
-    if (isSignedIn.value) achievementHandler.checkAndUpdate();
+    // Achievement rules for speed thresholds live in data/achievement-rules.js.
+    emitAppEvent('speedtest:finished', {
+      downloadSpeed: state.speedTest.downloadSpeed,
+      uploadSpeed: state.speedTest.uploadSpeed,
+    });
   };
   testEngine.onError = (e) => {
     if (typeof e === 'string' && !e.includes('ICE')) {
@@ -504,12 +507,13 @@ onMounted(() => { store.setMountingStatus('SpeedTest', true); });
 // If the user navigates away mid-test, detach the engine's callbacks before
 // dropping the reference — otherwise any in-flight async work inside the
 // SpeedTestEngine would still try to write state refs that no longer exist.
+// No-ops, not null: the engine's queued timers call these unconditionally.
 onUnmounted(() => {
   if (testEngine) {
-    testEngine.onRunningChange = null;
-    testEngine.onResultsChange = null;
-    testEngine.onFinish = null;
-    testEngine.onError = null;
+    testEngine.onRunningChange = () => {};
+    testEngine.onResultsChange = () => {};
+    testEngine.onFinish = () => {};
+    testEngine.onError = () => {};
     testEngine = null;
   }
   destroyCharts();

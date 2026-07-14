@@ -6,7 +6,6 @@
 //   - t: i18n translation function
 //   - configs: computed(() => store.configs)
 //   - userPreferences: computed(() => store.userPreferences)
-//   - isSignedIn: computed(() => store.isSignedIn)
 //
 // Output:
 //   - loadShortcuts(): should be called onMounted, internally will delay 2s to wait for configs to load,
@@ -17,10 +16,11 @@
 //   - `h` key infoMask switch only executes when isInfosLoaded is true
 
 import { trackEvent } from '../utils/analytics.js';
+import { emitAppEvent } from '../utils/app-events.js';
 import { mappingKeys, keyMap, navigateCards } from '../utils/shortcut.js';
 import { scrollToElement } from '../utils/scroll-to.js';
 
-function buildShortcutConfig({ refs, store, t, configs, userPreferences, isSignedIn }) {
+function buildShortcutConfig({ refs, store, t, configs, userPreferences }) {
     const {
         navBarRef,
         preferencesRef,
@@ -179,6 +179,15 @@ function buildShortcutConfig({ refs, store, t, configs, userPreferences, isSigne
             description: t('shortcutKeys.ToggleInfoMask'),
         },
         {
+            keys: 'H',
+            action: () => {
+                if (userPreferences.value.ipHistoryEnabled === false) return;
+                store.toggleSheet('ipHistory');
+                trackEvent('ShortCut', 'ShortCut', 'IPHistory');
+            },
+            description: t('shortcutKeys.IPHistory'),
+        },
+        {
             keys: 'p',
             action: () => { navBarRef.value.OpenPreferences(); trackEvent('ShortCut', 'ShortCut', 'Preferences'); },
             description: t('shortcutKeys.Preferences'),
@@ -198,9 +207,8 @@ function buildShortcutConfig({ refs, store, t, configs, userPreferences, isSigne
             action: () => {
                 helpModalRef.value.openModal();
                 trackEvent('ShortCut', 'ShortCut', 'Help');
-                if (isSignedIn.value && !store.userAchievements.CleverTrickery.achieved) {
-                    store.setTriggerUpdateAchievements('CleverTrickery');
-                }
+                // Achievement rule (CleverTrickery) lives in data/achievement-rules.js.
+                emitAppEvent('shortcut:help-opened');
             },
             description: t('shortcutKeys.Help'),
         },
@@ -225,9 +233,9 @@ function buildShortcutConfig({ refs, store, t, configs, userPreferences, isSigne
     return config;
 }
 
-export function useShortcuts({ refs, store, t, configs, userPreferences, isSignedIn }) {
+export function useShortcuts({ refs, store, t, configs, userPreferences }) {
     const registerShortcutKeys = () => {
-        const shortcuts = buildShortcutConfig({ refs, store, t, configs, userPreferences, isSignedIn });
+        const shortcuts = buildShortcutConfig({ refs, store, t, configs, userPreferences });
         shortcuts.forEach((entry) => mappingKeys(entry));
     };
 

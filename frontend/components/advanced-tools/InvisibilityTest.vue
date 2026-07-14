@@ -166,6 +166,7 @@ import { ref, computed } from 'vue';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
+import { emitAppEvent } from '@/utils/app-events.js';
 import { authenticatedFetch } from '@/utils/authenticated-fetch';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -175,7 +176,6 @@ import { CircleCheck, CircleX, Info, ListChecks, Lock, Shield, Play } from '@luc
 const { t } = useI18n();
 
 const store = useMainStore();
-const isSignedIn = computed(() => store.isSignedIn);
 
 const checkingStatus = ref('idle');
 const errorMsg = ref('');
@@ -250,7 +250,16 @@ const loadScript = () => {
     script.src = `https://proxydetectjs.ipcheck.ing/?pdKey=${import.meta.env.VITE_INVISIBILITY_TEST_KEY}&pdVal=${userID.value}`;
     script.async = true;
     script.setAttribute('data-tag', 'invisibilityTestScript');
-    script.onerror = (error) => { console.error('Script load error:', error); };
+    // No script means no probe data server-side — polling for a result is
+    // pointless, so abort the run and tell the user right away.
+    script.onerror = () => {
+        console.error('Script load error: proxy detect script failed to load');
+        clearTimeout(resultTimer);
+        removeScript();
+        errorMsg.value = t('invisibilitytest.scriptLoadError');
+        checkingStatus.value = 'idle';
+        retryCount.value = 0;
+    };
     document.head.appendChild(script);
 };
 
@@ -259,6 +268,8 @@ const removeScript = () => {
     scripts.forEach(script => script.remove());
 };
 
+let resultTimer = null;
+
 const onSubmit = () => {
     checkingStatus.value = 'running';
     userID.value = generate28DigitString();
@@ -266,10 +277,9 @@ const onSubmit = () => {
     errorMsg.value = '';
     testResults.value = {};
     loadScript();
-    if (isSignedIn.value && !store.userAchievements.JustInCase.achieved) {
-        store.setTriggerUpdateAchievements('JustInCase');
-    }
-    setTimeout(() => { getResult(); }, 10000);
+    // Achievement rule (JustInCase) lives in data/achievement-rules.js.
+    emitAppEvent('invisibility:started');
+    resultTimer = setTimeout(() => { getResult(); }, 10000);
 };
 
 const getResult = async () => {
@@ -277,22 +287,26 @@ const getResult = async () => {
         const response = await authenticatedFetch(`/api/invisibility?id=${userID.value}`);
         const data = response;
 
-        if ((data.message === 'Data not found' || data.status === 'pending') && retryCount.value < 3) {
+        const isPending = data.message === 'Data not found' || data.status === 'pending';
+        if (isPending && retryCount.value < 3) {
             setTimeout(() => {
                 getResult();
                 retryCount.value++;
             }, 10000);
             return;
         }
-        testResults.value = data;
 
-        const proxyScore = Math.floor(testResults.value.score.proxy);
-        const vpnScore = Math.floor(testResults.value.score.vpn);
-        if (isSignedIn.value && !store.userAchievements.HiddenWell.achieved && proxyScore === 0 && vpnScore === 0) {
-            store.setTriggerUpdateAchievements('HiddenWell');
-        }
-        if (isSignedIn.value && !store.userAchievements.SlipUp.achieved && (proxyScore > 50 || vpnScore > 50)) {
-            store.setTriggerUpdateAchievements('SlipUp');
+        // Still pending after every retry, or a body without scores: surface
+        // the fetch error instead of rendering (and crashing on) a non-result.
+        if (isPending || !data.score) {
+            errorMsg.value = t('invisibilitytest.fetchError');
+        } else {
+            testResults.value = data;
+            // Achievement rules (HiddenWell / SlipUp) live in data/achievement-rules.js.
+            emitAppEvent('invisibility:result', {
+                proxyScore: Math.floor(data.score.proxy),
+                vpnScore: Math.floor(data.score.vpn),
+            });
         }
     } catch (error) {
         console.error('Error fetching InvisibilityTest results:', error);

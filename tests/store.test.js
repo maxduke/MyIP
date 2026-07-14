@@ -121,7 +121,18 @@ describe('store — IPDBs / allIPs', () => {
   it('updateAllIPs tolerates bare-string entries', () => {
     const s = useMainStore();
     s.updateAllIPs(['9.9.9.9']);
-    assert.deepEqual(s.allIPs, [{ ip: '9.9.9.9', country: '' }]);
+    assert.deepEqual(s.allIPs, [{ ip: '9.9.9.9', country: '', location: '', asn: '', org: '' }]);
+  });
+
+  it('updateAllIPs back-fills location / asn / org left empty by an earlier source', () => {
+    const s = useMainStore();
+    s.updateAllIPs([{ ip: '1.1.1.1', country: 'US' }]);
+    s.updateAllIPs([{ ip: '1.1.1.1', location: 'United States · LA', asn: 'AS13335', org: 'Cloudflare' }]);
+    // A later entry must not overwrite a field that already has a value.
+    s.updateAllIPs([{ ip: '1.1.1.1', asn: 'AS9999' }]);
+    assert.deepEqual(s.allIPs, [{
+      ip: '1.1.1.1', country: 'US', location: 'United States · LA', asn: 'AS13335', org: 'Cloudflare',
+    }]);
   });
 });
 

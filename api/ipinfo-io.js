@@ -8,8 +8,10 @@ import { makeGeoHandler } from '../common/geo-handler.js';
 function buildUrl(req) {
     const ipAddress = req.query.ip;
 
-    // Build request URL for ipinfo.io
-    const tokens = (process.env.IPINFO_API_TOKEN || '').split(',');
+    // Build request URL for ipinfo.io.
+    // IPINFO_API_TOKEN is the pre-rename spelling — keep reading it so
+    // existing deployments don't lose the token on upgrade.
+    const tokens = (process.env.IPINFO_API_KEY || process.env.IPINFO_API_TOKEN || '').split(',');
     const token = tokens[Math.floor(Math.random() * tokens.length)];
 
     const url_hasToken = `https://ipinfo.io/${ipAddress}?token=${token}`;

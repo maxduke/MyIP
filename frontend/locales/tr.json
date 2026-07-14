@@ -167,6 +167,10 @@
       "connectivityMultipleTestsTips": "Etkinleştirildiğinde, uygulama başlangıçta birden fazla kontrol çalıştırır ve en düşük gecikmeyi görüntüler.",
       "popupConnectivityNotifications": "Açılır Bağlantı Uyarıları",
       "popupConnectivityNotificationsTips": "Etkinleştirildiğinde, ilk kontrolün sonuçları açılır bir uyarı olarak gösterilir.",
+      "ipHistory": "IP Geçmişi",
+      "ipHistoryEnabled": "IP Geçmişini Kaydet",
+      "ipHistoryDays": "Saklama Süresi (Gün)",
+      "ipHistoryTips": "Etkinleştirildiğinde, tespit edilen IP'ler yalnızca bu tarayıcıda kaydedilir ve seçilen gün sayısı kadar saklanır. Kapatıldığında kayıt durur; mevcut kayıtlar IP Geçmişi panelinden temizlenene kadar kalır.",
       "ipDB": "IP Coğrafi Konum Veritabanı",
       "ipDBTips": "Kullanılacak varsayılan IP coğrafi konum kaynağını seçebilirsiniz. Seçilen kaynak kullanılamıyorsa, sistem sırayla sonraki kaynakları kullanacaktır.",
       "language": "Dil Ayarı",
@@ -296,6 +300,7 @@
     "Note": "Bir proxy veya VPN kullandığınızda, ziyaret ettiğiniz web siteleri gerçekten bir proxy kullandığınızı bilmiyor mu? Gerçekten görünmez misiniz? Kılığınızdaki açıkları hesaplamak ve bir proxy kullandığınıza dair kanıt bulmak için çeşitli yöntemler kullanacağız. Bazı test sonuçları tamamen doğru olmasa da, bu test yine de oldukça bilgilendiricidir.",
     "Note2": "Çalıştır'a tıkladıktan sonra, sistem genellikle tüm testleri 10 saniye içinde tamamlayan bir komut dosyası çalıştıracaktır. Bu süreçte IP bilgileriniz, tarayıcı bilgileriniz vb. toplanacak ve arka planda analiz edilecektir.",
     "fetchError": "Test sonuçları alınamadı",
+    "scriptLoadError": "Test betiği yüklenemediği için teste devam edilemiyor. Lütfen ağınızı kontrol edip tekrar deneyin.",
     "yourIP": "Ana test IP'niz",
     "proxyScore": "Proxy Yüzdesi",
     "VPNScore": "VPN Yüzdesi",
@@ -529,8 +534,20 @@
     "CopySdpLog": "SDP Günlüğünü Kopyala",
     "ViewOnMap": "Konumu haritada görüntüle",
     "InfoMask": "IP Bilgilerini Gizle",
+    "IPHistory": "IP Geçmişini Görüntüle",
     "QueryIP": "IP Adresini Sorgula",
     "GithubLink": "Kaynak Kodunu GitHub'da Görüntüle"
+  },
+  "ipHistory": {
+    "Title": "IP Geçmişi",
+    "Notes": "Siteyi kullanırken tespit edilen IP'ler burada kaydedilir. Veriler yalnızca bu tarayıcıda saklanır — hesabınızla asla eşitlenmez ve cihazınızdan ayrılmaz. Kayıtların saklanma süresini \"Tercihler\" bölümünde ayarlayabilirsiniz.",
+    "Empty": "Henüz kayıt yok. Ana sayfadaki testler IP tespit ettiğinde burada görünecek.",
+    "FilterByType": "IP türüne göre filtrele",
+    "FilterByCountry": "Ülkeye / bölgeye göre filtrele",
+    "UnknownCountry": "Bilinmiyor",
+    "NoMatch": "Seçilen filtrelerle eşleşen kayıt yok.",
+    "ClearAll": "Geçmişi Temizle",
+    "ClearConfirm": "Onaylamak için tekrar tıklayın"
   },
   "ipInfos": {
     "Title": "IP Bilgileri",
@@ -683,6 +700,7 @@
     "Note": "WebRTC genellikle doğrudan UDP üzerinden bağlantı kurar. Test gerçek IP'nizi döndürürse, bu, proxy ayarlarınızın bu bağlantıları kapsamadığı anlamına gelir. WebRTC'ye bağlanırken kullandığınız IP'yi tespit etmenin yanı sıra, NAT türünüzü de tespit ediyoruz. Ancak, NAT türü tespiti %100 doğru değildir ve yalnızca referans amaçlıdır.",
     "StatusWait": "Test Bekleniyor",
     "StatusError": "Bağlantı Hatası",
+    "StatusUnavailable": "WebRTC Kullanılamıyor",
     "SdpLog": "SDP Günlüğü",
     "NATType": {
       "srflx": "Port Kısıtlı Koni veya Simetrik",
@@ -721,6 +739,7 @@
     "connectionFrom": "Makinenizden hız testi tamamlandı, IP: ",
     "connectionTo": " test sunucusuna:",
     "connectionEnd": " .",
+    "testFailed": "Hız testi sunucusuna ulaşılamadı. Bağlantınızı kontrol edip tekrar deneyin.",
     "quality": {
       "bad": "Kötü",
       "poor": "Zayıf",
@@ -775,9 +794,9 @@
     "OhNo_Message": "Bağlantı testi başarısız oldu, bazı web sitelerine erişilemiyor.",
     "Congrats_Message": "Tüm bağlantı testleri geçti, tüm web sitelerine erişebilirsiniz.",
     "maskedInfoTitle": "IP Bilgileri Gizlendi",
-    "maskedInfoMessage": "IP bilgileri gizlendi. Ekran görüntülerini paylaştığınızda IP bilgilerinizi gözetmez.",
+    "maskedInfoMessage": "Ekran görüntülerini paylaştığınızda IP bilgilerinizi gözetmez.",
     "unmaskedInfoTitle": "IP Bilgileri Görünür",
-    "unmaskedInfoMessage": "IP bilgileri görünür. Ekran görüntülerini paylaştığınızda IP bilgilerinizi görünür.",
+    "unmaskedInfoMessage": "Ekran görüntülerini paylaştığınızda IP bilgilerinizi görünür.",
     "SignInFailed": "Giriş Başarısız",
     "SignInFailedReason": "Neden"
   },
@@ -797,6 +816,7 @@
     "DNSResolver": "DNS Çözümlemesi panelini aç",
     "IPCheck": "IP Adresini Sorgula",
     "ToggleInfoMask": "Bilgi Gizlemeyi Değiştir",
+    "IPHistory": "IP Geçmişi panelini aç",
     "Help": "Klavye Kısayollarını Göster",
     "HelpNote": "Kısayolları kullanan insanlar gerçekten harika!",
     "GoNext": "Sonraki Kart",
@@ -846,8 +866,8 @@
     "Sponsor": "Destekleme",
     "Privacy": "Gizlilik"
   },
-  "specialthanks": {
-    "Title": "Özel Teşekkürler",
+  "acknowledgement": {
+    "Title": "Teşekkür Edilenler",
     "Note1": "Bu proje, bazı hevesli bireylerin ve kuruluşların desteği ve yardımı olmadan, ayrıca ilham veren veya kodlarını açık kaynak olarak paylaşanlar olmadan tamamlanamazdı. Onlara çok teşekkürler:"
   },
   "changelog": {

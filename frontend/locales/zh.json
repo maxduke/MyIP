@@ -167,6 +167,10 @@
       "connectivityMultipleTestsTips": "开启多次刷新后，程序在启动时将运行多次检测，并显示最小延迟值。",
       "popupConnectivityNotifications": "显示网络连通性检测气泡",
       "popupConnectivityNotificationsTips": "开启后，将会在首次检测时以气泡形式提示网络连通性结果。",
+      "ipHistory": "IP 历史记录",
+      "ipHistoryEnabled": "记录 IP 历史",
+      "ipHistoryDays": "保留天数",
+      "ipHistoryTips": "开启后，被侦测到的 IP 仅记录在当前浏览器本地，并按所选天数保留。关闭后停止记录；已有记录不会被删除，可在 IP 历史记录面板中手动清空。",
       "ipDB": "IP 解析数据源",
       "ipDBTips": "你可以选择你默认使用的 IP 地理位置数据源，如果你选定的不可用，系统会依次使用后续的数据源。",
       "language": "语言设置",
@@ -277,6 +281,7 @@
     "Note": "当你挂上代理或 VPN 之后，你访问的网站真的不知道你挂着代理吗？你真的隐身了么？我们会通过多种手段，尝试计算出你伪装后的漏洞，找到你正在使用代理的证据。尽管可能部分测试结果不完全准确，但本测试依然有较高的参考意义。",
     "Note2": "点击运行后，系统将会运行一个脚本，通常在 10s 内将会完成所有的测试，在这个过程中，你的 IP 信息、浏览器信息等将会被收集并在后台进行分析。",
     "fetchError": "无法获取测试结果",
+    "scriptLoadError": "测试脚本加载失败，无法继续测试。请检查网络后重试。",
     "yourIP": "你的主测 IP 是",
     "proxyScore": "代理概率",
     "VPNScore": "VPN 概率",
@@ -529,8 +534,20 @@
     "CopySdpLog": "复制 SDP 日志",
     "ViewOnMap": "在地图上查看位置",
     "InfoMask": "隐藏信息",
+    "IPHistory": "查看 IP 历史记录",
     "QueryIP": "查询 IP 信息",
     "GithubLink": "查看源代码"
+  },
+  "ipHistory": {
+    "Title": "IP 历史记录",
+    "Notes": "这里记录你使用本站时被侦测到的 IP。数据仅保存在当前浏览器本地，不会同步到账号，也不会离开你的设备。你可以在「偏好设置」中调整记录保留时间。",
+    "Empty": "暂无记录。主页检测到 IP 后会自动记录在这里。",
+    "FilterByType": "按 IP 类型筛选",
+    "FilterByCountry": "按国家或地区筛选",
+    "UnknownCountry": "未知",
+    "NoMatch": "没有符合筛选条件的记录。",
+    "ClearAll": "清空记录",
+    "ClearConfirm": "再次点击确认清空"
   },
   "ipInfos": {
     "Title": "IP 信息",
@@ -683,6 +700,7 @@
     "Note": "WebRTC 往往通过 UDP 直连进行建立，如果测试返回了真实 IP，则意味着你的代理设置没有覆盖这些连接。除了检测你连接 WebRTC 时所使用的 IP，我们还会检测你的 NAT 类型。然而，NAT 类型的检测并不是 100% 准确的，仅供参考。",
     "StatusWait": "待检测",
     "StatusError": "连接错误",
+    "StatusUnavailable": "WebRTC 不可用",
     "SdpLog": "SDP 日志",
     "NATType": {
       "srflx": "端口限制型或对称型",
@@ -721,6 +739,7 @@
     "connectionFrom": "已完成从你的机器，IP：",
     "connectionTo": "与测速服务器：",
     "connectionEnd": " 的测试。",
+    "testFailed": "无法连接测速服务器，请检查网络后重试。",
     "quality": {
       "bad": "差",
       "poor": "较差",
@@ -775,9 +794,9 @@
     "OhNo_Message": "连通性检测没有通过，部分网站无法访问。",
     "Congrats_Message": "所有的连通性检测均通过，你可以访问所有网站。",
     "maskedInfoTitle": "IP 信息已隐藏",
-    "maskedInfoMessage": "IP 信息已隐藏。分享截图不会泄露你的 IP 信息。",
+    "maskedInfoMessage": "分享截图不会泄露你的 IP 信息。",
     "unmaskedInfoTitle": "IP 信息已显示",
-    "unmaskedInfoMessage": "IP 信息已显示。分享截图时请注意隐私。",
+    "unmaskedInfoMessage": "分享截图时请注意隐私。",
     "SignInFailed": "登录失败",
     "SignInFailedReason": "原因"
   },
@@ -797,6 +816,7 @@
     "DNSResolver": "打开 DNS 解析器面板",
     "IPCheck": "IP 查询",
     "ToggleInfoMask": "切换信息隐藏",
+    "IPHistory": "打开 IP 历史记录面板",
     "Help": "显示快捷键",
     "HelpNote": "使用快捷键的人，是喜欢效率的人，你真棒！",
     "GoNext": "下一张卡片",
@@ -846,8 +866,8 @@
     "Sponsor": "赞助我们",
     "Privacy": "隐私政策"
   },
-  "specialthanks": {
-    "Title": "特别鸣谢",
+  "acknowledgement": {
+    "Title": "致谢",
     "Note1": "这个项目之所以能够完成，少不了一些热心的人和组织的支持和帮助，以及给予灵感或开放的代码人们。非常感谢他们："
   },
   "changelog": {

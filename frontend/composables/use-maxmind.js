@@ -1,11 +1,8 @@
 // Shared client-side MaxMind lookup for components that need to enrich a
-// raw IP with country + ISP. 
-// Returns `{ country_code, country, org }` on success. Returns `null` on
+// raw IP with country + ISP + ASN.
+// Returns `{ country_code, country, org, asn }` on success. Returns `null` on
 // every failure path (no MaxMind source, network error, malformed
 // upstream payload) so callers don't have to disambiguate.
-//
-// Callers that don't need `org` (e.g. WebRtcTest) just destructure the
-// fields they care about.
 
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
@@ -35,7 +32,9 @@ export function useMaxmind() {
             const country = country_code
                 ? getCountryName(ipData.country_code, lang)
                 : '';
-            return { country_code, country, org: ipData.isp || '' };
+            // Upstream reports unknown ASN as the literal 'N/A' — normalize to ''.
+            const asn = ipData.asn && ipData.asn !== 'N/A' ? ipData.asn : '';
+            return { country_code, country, org: ipData.isp || '', asn };
         } catch (error) {
             console.error('useMaxmind lookup failed', error);
             return null;

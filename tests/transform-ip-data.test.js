@@ -77,6 +77,19 @@ describe('transformDataFromIPapi()', () => {
     assert.equal(out.country_code, '');
   });
 
+  it('localizes country_name from the code, ignoring the upstream string', () => {
+    // upstream said 'Japan' but the UI language is zh → CLDR name wins
+    const out = transformDataFromIPapi(basicRaw, 1, t, 'zh');
+    assert.equal(out.country_name, '日本');
+  });
+
+  it('falls back to the upstream country_name when the code is unusable', () => {
+    const na = transformDataFromIPapi({ ...basicRaw, country: 'N/A' }, 1, t, 'zh');
+    assert.equal(na.country_name, 'Japan');
+    const none = transformDataFromIPapi({ ...basicRaw, country: undefined, country_name: undefined }, 1, t, 'zh');
+    assert.equal(none.country_name, '');
+  });
+
   it('merges advancedData when ipGeoSource === 0', () => {
     const withAdvanced = {
       ...basicRaw,

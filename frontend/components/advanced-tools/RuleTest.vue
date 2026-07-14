@@ -84,6 +84,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
+import { emitAppEvent } from '@/utils/app-events.js';
 import getCountryName from '@/data/country-name.js';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -100,7 +101,6 @@ const { t } = useI18n();
 const store = useMainStore();
 const isMobile = computed(() => store.isMobile);
 const lang = computed(() => store.lang);
-const isSignedIn = computed(() => store.isSignedIn);
 const { dotClass, textClass } = useStatusTone();
 const { lookupMaxmind } = useMaxmind();
 
@@ -156,8 +156,19 @@ const fetchTrace = async (id, url) => {
         // trace (authoritative for each ptest worker's egress), so a
         // MaxMind miss leaves the existing country untouched.
         if (ipLine) {
-            const geo = await lookupMaxmind(ruleTests.value[id].ip);
+            const ip = ruleTests.value[id].ip;
+            const geo = await lookupMaxmind(ip);
             ruleTests.value[id].org = geo ? geo.org : t('ruletest.StatusError');
+            if (geo) {
+                // Back-fill details for the Globalping picker + IP history.
+                IPArray.value = [...IPArray.value, {
+                    ip,
+                    country,
+                    location: ruleTests.value[id].country || geo.country,
+                    asn: geo.asn,
+                    org: geo.org,
+                }];
+            }
         }
     } catch (error) {
         ruleTests.value[id].ip = t('ruletest.StatusError');
@@ -189,21 +200,16 @@ const checkAllRuleTest = async (refresh = false) => {
                 processTest(index + 1);
                 if (index === testCount.value - 1) {
                     finishAll.value = true;
-                    if (isSignedIn.value) checkAchievements();
+                    // Achievement rule (CrossingTheWall) lives in data/achievement-rules.js.
+                    emitAppEvent('ruletest:finished', {
+                        uniqueIPCount: new Set(ruleTests.value.map((test) => test.ip)).size,
+                    });
                 }
             }
         }
     };
 
     processTest(0);
-};
-
-const checkAchievements = () => {
-    const allIPs = ruleTests.value.map((test) => test.ip);
-    const uniqueIPs = [...new Set(allIPs)];
-    if (uniqueIPs.length === 8 && !store.userAchievements.CrossingTheWall.achieved) {
-        store.setTriggerUpdateAchievements('CrossingTheWall');
-    }
 };
 
 onMounted(() => {

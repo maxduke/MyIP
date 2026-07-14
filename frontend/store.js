@@ -37,9 +37,10 @@ export const useMainStore = defineStore('main', {
     isDarkMode: false,
     isMobile: false,
     shouldRefreshEveryThing: false,
-    // Collected user IPs for the Globalping tools' picker.
-    // Shape: Array<{ ip: string, country: string }> — country is a 2-letter
-    // code ('' when unknown). Populated by IpInfos / WebRTC / RuleTest.
+    // Collected user IPs, consumed by the Globalping tools' picker and the
+    // IP-history recorder. Shape: Array<{ ip, country, location, asn, org }>
+    // — country is a 2-letter code; location / asn / org are display strings
+    // ('' when unknown). Populated by IpInfos / WebRTC / RuleTest / SpeedTest.
     allIPs: [],
     configs: {},
     userPreferences: {},
@@ -83,19 +84,24 @@ export const useMainStore = defineStore('main', {
       this.alert = { alertToShow, alertStyle, alertMessage, alertTitle, alertDuration };
     },
     // Collect and merge IP data from different components. Entries are
-    // { ip, country } objects (bare strings are tolerated for safety).
-    // Deduped by `ip`; a later source can back-fill a country left empty by an
-    // earlier one.
+    // { ip, country, location, asn, org } objects (bare strings are tolerated
+    // for safety; detail fields are optional). Deduped by `ip`; a later source
+    // can back-fill any field left empty by an earlier one.
     updateAllIPs(payload) {
+      const detailFields = ['country', 'location', 'asn', 'org'];
       const byIp = new Map(this.allIPs.map((e) => [e.ip, { ...e }]));
       for (const raw of payload) {
-        const entry = typeof raw === 'string' ? { ip: raw, country: '' } : raw;
+        const entry = typeof raw === 'string' ? { ip: raw } : raw;
         if (!entry || !entry.ip) continue;
         const existing = byIp.get(entry.ip);
         if (!existing) {
-          byIp.set(entry.ip, { ip: entry.ip, country: entry.country || '' });
-        } else if (!existing.country && entry.country) {
-          existing.country = entry.country;
+          const fresh = { ip: entry.ip };
+          for (const field of detailFields) fresh[field] = entry[field] || '';
+          byIp.set(entry.ip, fresh);
+        } else {
+          for (const field of detailFields) {
+            if (!existing[field] && entry[field]) existing[field] = entry[field];
+          }
         }
       }
       this.allIPs = Array.from(byIp.values());

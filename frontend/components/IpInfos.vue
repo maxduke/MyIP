@@ -34,6 +34,7 @@ import { trackEvent } from '@/utils/analytics';
 import { isValidIP } from '@/utils/valid-ip.js';
 import { transformDataFromIPapi } from '@/utils/transform-ip-data.js';
 import { getIPFromIPIP, getIPFromCloudflare_V4, getIPFromCloudflare_V6, getIPFromIPChecking64, getIPFromIPChecking4, getIPFromIPChecking6 } from '@/utils/getips';
+import { emitAppEvent } from '@/utils/app-events';
 import { authenticatedFetch } from '@/utils/authenticated-fetch';
 import IPCard from './ip-infos/IPCard.vue';
 
@@ -136,6 +137,18 @@ const markFetched = (cardID) => {
   trackFetchStatus(fetchStatus);
 };
 
+// Stable source slugs by card ID, used in the ip-source:exhausted domain
+// event (function names would be mangled by minification). Order matches the
+// ipSources table in checkAllIPs.
+const CARD_SOURCE_SLUGS = [
+  'ipchecking-v4',
+  'ipchecking-v6',
+  'cloudflare-v4',
+  'cloudflare-v6',
+  'ipip',
+  'ipchecking-64',
+];
+
 // Phase 1 — resolve one card's IP and render it immediately.
 const resolveIP = async (cardID, getFromSource) => {
   let ip = null;
@@ -153,9 +166,17 @@ const resolveIP = async (cardID, getFromSource) => {
     IPArray.value = [...IPArray.value, { ip, country: '' }];
   } else {
     // v6 cards: ipchecking_v6 (1), cloudflare_v6 (3).
-    ipDataCards[cardID].ip = (cardID === 1 || cardID === 3)
+    const isV6Card = cardID === 1 || cardID === 3;
+    ipDataCards[cardID].ip = isV6Card
       ? t('ipInfos.IPv6Error')
       : t('ipInfos.IPv4Error');
+    // Domain event: this source AND all its internal fallbacks failed to
+    // produce an IP. Emitted unconditionally (bus semantics); subscribers
+    // decide what matters — e.g. sentry-init.js reports v4 exhaustion.
+    emitAppEvent('ip-source:exhausted', {
+      source: CARD_SOURCE_SLUGS[cardID] ?? `card-${cardID}`,
+      ipVersion: isV6Card ? 'v6' : 'v4',
+    });
     markFetched(cardID); // no IP → no detail phase
   }
   return { cardID, ip };
@@ -166,8 +187,16 @@ const resolveIP = async (cardID, getFromSource) => {
 const loadCardDetails = async (cardID, ip) => {
   try {
     await fetchIPDetails(cardID, ip);
-    if (ipDataCards[cardID].country_code) {
-      IPArray.value = [...IPArray.value, { ip, country: ipDataCards[cardID].country_code }];
+    const card = ipDataCards[cardID];
+    if (card.country_code) {
+      // Full detail entry for the Globalping picker + IP history.
+      IPArray.value = [...IPArray.value, {
+        ip,
+        country: card.country_code,
+        location: [card.country_name, card.city].filter(Boolean).join(' · '),
+        asn: card.asn || '',
+        org: card.isp || '',
+      }];
     }
   } catch {
     // fetchIPDetails already logged; swallow so it can't reject the batch.
@@ -245,7 +274,11 @@ const fetchIPDetails = async (cardIndex, ip, sourceID = null) => {
   const fetchPromise = (async () => {
     const sources = store.ipDBs.filter(source => source.enabled);
 
+    // The preferred source may no longer be in the enabled list (disabled by
+    // a concurrent card's failure, or a stale stored preference); findIndex
+    // then yields -1 and sources[-1] is undefined — start from the first one.
     let currentSourceIndex = sourceID !== null ? sources.findIndex(source => source.id === sourceID) : 0;
+    if (currentSourceIndex === -1) currentSourceIndex = 0;
     let attempts = 0;
 
     while (attempts < sources.length) {

@@ -5,7 +5,7 @@ import getCountryName from '../frontend/data/country-name.js';
 
 describe('getCountryName(abbr, lang)', () => {
   it('returns English name for known code', () => {
-    assert.equal(getCountryName('US', 'en'), 'USA');
+    assert.equal(getCountryName('US', 'en'), 'United States');
     assert.equal(getCountryName('CN', 'en'), 'China');
     assert.equal(getCountryName('FR', 'en'), 'France');
   });
@@ -18,6 +18,11 @@ describe('getCountryName(abbr, lang)', () => {
   it('returns French name for fr', () => {
     assert.equal(getCountryName('FR', 'fr'), 'France');
     assert.equal(getCountryName('US', 'fr'), 'États-Unis');
+    // regressions from the old hand-maintained table
+    assert.equal(getCountryName('CA', 'fr'), 'Canada');
+    assert.equal(getCountryName('AU', 'fr'), 'Australie');
+    assert.equal(getCountryName('KZ', 'fr'), 'Kazakhstan');
+    assert.equal(getCountryName('UG', 'fr'), 'Ouganda');
   });
 
   it('returns Turkish name for tr', () => {
@@ -25,14 +30,23 @@ describe('getCountryName(abbr, lang)', () => {
     assert.equal(getCountryName('US', 'tr'), 'Amerika Birleşik Devletleri');
   });
 
-  it('returns empty string for unknown abbr', () => {
+  it('is case-insensitive on the country code', () => {
+    assert.equal(getCountryName('us', 'en'), 'United States');
+  });
+
+  it('covers locales beyond the four bundled ones', () => {
+    assert.equal(getCountryName('US', 'de'), 'Vereinigte Staaten');
+  });
+
+  it('returns empty string for unknown or malformed abbr', () => {
     assert.equal(getCountryName('ZZ', 'en'), '');
+    assert.equal(getCountryName('T1', 'en'), '');
     assert.equal(getCountryName('', 'en'), '');
     assert.equal(getCountryName(null, 'en'), '');
   });
 
-  it('returns undefined for known abbr but unknown lang', () => {
-    // unsupported language key will not fallback to other languages
-    assert.equal(getCountryName('US', 'de'), undefined);
+  it('returns empty string for a malformed lang', () => {
+    assert.equal(getCountryName('US', 'not a locale!'), '');
+    assert.equal(getCountryName('US', null), '');
   });
 });

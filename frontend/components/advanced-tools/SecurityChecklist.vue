@@ -250,6 +250,7 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
+import { emitAppEvent } from '@/utils/app-events.js';
 import { CircleProgressBar } from 'circle-progress.vue';
 import VueMarkdown from 'vue-markdown-render';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
@@ -331,7 +332,6 @@ const loadSecurityChecklist = async () => {
 
 const store = useMainStore();
 const isDarkMode = computed(() => store.isDarkMode);
-const isSignedIn = computed(() => store.isSignedIn);
 
 const categories = ref([]);
 const currentList = ref('authentication');
@@ -494,7 +494,12 @@ const checkItem = (item) => {
     if (item.ignored) return;
     item.checked = !item.checked;
     updateSlugs(item.slug, item.checked ? 'checked' : '');
-    if (isSignedIn.value) updateAchievement();
+    // Achievement rules (SurfaceCheck / HalfwayThere / FullySecured) live in
+    // data/achievement-rules.js.
+    emitAppEvent('securitychecklist:progress', {
+        checked: checkedItems.value,
+        total: totalItems.value,
+    });
 };
 
 const countItems = ({ action, category, priority }) => {
@@ -527,16 +532,6 @@ const uncheckedItems = computed(() => totalItems.value - checkedItems.value - ig
 const getProgressStyle = (category) => {
     return (action) =>
         `width: ${countItems({ action, category }) / countItems({ action: 'total', category }) * 100}%`;
-};
-
-const updateAchievement = () => {
-    if (!store.userAchievements.SurfaceCheck.achieved && checkedItems.value) {
-        store.setTriggerUpdateAchievements('SurfaceCheck');
-    } else if (!store.userAchievements.HalfwayThere.achieved && checkedItems.value / totalItems.value > 0.5) {
-        store.setTriggerUpdateAchievements('HalfwayThere');
-    } else if (!store.userAchievements.FullySecured.achieved && checkedItems.value === totalItems.value) {
-        store.setTriggerUpdateAchievements('FullySecured');
-    }
 };
 
 onMounted(async () => {

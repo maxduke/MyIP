@@ -29,6 +29,7 @@ import serviceStatusHandler, {
 } from './api/service-status.js';
 import { getSessionResult as dnsLeakGetResult } from './api/dns-leak-test.js';
 import getWhois from './api/get-whois.js';
+import sentryTunnelHandler from './api/sentry-tunnel.js';
 import invisibilitytestHandler from './api/invisibility-test.js';
 import macChecker from './api/mac-checker.js';
 import githubStarsHandler from './api/github-stars.js';
@@ -45,7 +46,12 @@ dotenv.config({ quiet: true });
 
 const app = express();
 const backEndPort = parseInt(process.env.BACKEND_PORT || 11966, 10);
-const blackListIPLogFilePath = process.env.SECURITY_BLACKLIST_LOG_FILE_PATH || 'logs/blacklist-ip.log';
+// Local rate-limit ledger file — opt-in: empty means no file is written.
+// The logger.warn in the limiter handler always fires regardless (and flows
+// to Sentry Logs when a backend DSN is configured), so the file only adds a
+// permanent on-disk record for deployments that want one (e.g. Sentry-less
+// self-hosts, or feeding a firewall script).
+const blackListIPLogFilePath = process.env.SECURITY_BLACKLIST_LOG_FILE_PATH || '';
 const rateLimitSet = parseInt(process.env.SECURITY_RATE_LIMIT || 0, 10);
 const speedLimitSet = parseInt(process.env.SECURITY_DELAY_AFTER || 0, 10);
 
@@ -79,10 +85,19 @@ function getClientIp(req) {
     return cfIp || forwardedIps || cfIpV6 || req.ip;
 }
 
-// Shanghai TZ — fixed for log consistency across deployments regardless of host locale.
-function formatDate(timestamp) {
-    return new Date(timestamp).toLocaleString('en-US', { timeZone: 'Asia/Shanghai' });
-}
+// Host-local time with an explicit UTC offset ("2026-07-14 10:23:45 +0800"),
+// matching the pretty-log timestamp style — ledger entries stay unambiguous
+// whatever timezone the deployment runs in.
+const formatDate = (timestamp) => {
+    const d = new Date(timestamp);
+    const pad = (n) => String(n).padStart(2, '0');
+    const offsetMin = -d.getTimezoneOffset();
+    const sign = offsetMin >= 0 ? '+' : '-';
+    const abs = Math.abs(offsetMin);
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} `
+        + `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} `
+        + `${sign}${pad(Math.floor(abs / 60))}${pad(abs % 60)}`;
+};
 
 // Append-or-update one line in the rate-limit log, keeping the original
 // timestamp on repeat offenders so we can see when an IP *first* showed up.
@@ -113,7 +128,6 @@ function logLimitedIP(ip) {
                 if (currentIp === ip) {
                     newCount = parseInt(count, 10) + 1;
                     logExists = true;
-                    logger.warn({ ip, count: newCount }, 'Rate-limited IP hit again');
                     return `${ip},${newCount},${timestamp}`;
                 }
                 return line;
@@ -123,7 +137,6 @@ function logLimitedIP(ip) {
         if (!logExists) {
             const newLine = `${ip},${newCount},${formatDate(now)}`;
             updatedData += (updatedData ? '\n' : '') + newLine;
-            logger.warn({ ip }, 'IP rate-limited for the first time');
         }
 
         fs.writeFile(logPath, updatedData, 'utf8', err => {
@@ -138,13 +151,22 @@ const rateLimiter = rateLimit({
     windowMs: 20 * 60 * 1000,
     max: rateLimitSet,
     message: 'Too Many Requests',
+    // The Sentry tunnel is exempted — it has its own limiter at the route.
+    // Telemetry sharing the app quota is how reporting silently dies: one
+    // 429 and the browser SDK drops every event for the next minute.
+    skip: (req) => req.path === '/monitoring',
     handler: (req, res, next) => {
         const ip = getClientIp(req);
         // Log on the exact transition into rate-limited state — not every
         // blocked request — to avoid log flooding when an abusive client
-        // keeps hammering after being limited.
-        if (req.rateLimit.current === req.rateLimit.limit + 1 && blackListIPLogFilePath) {
-            logLimitedIP(ip);
+        // keeps hammering after being limited. The warn line is the primary
+        // record (mirrored to Sentry Logs when configured); the on-disk
+        // ledger is the opt-in extra.
+        if (req.rateLimit.current === req.rateLimit.limit + 1) {
+            logger.warn({ ip }, 'IP rate-limited');
+            if (blackListIPLogFilePath) {
+                logLimitedIP(ip);
+            }
         }
         res.status(429).json({ message: 'Too Many Requests' });
     }
@@ -154,6 +176,7 @@ const speedLimiter = slowDown({
     windowMs: 60 * 60 * 1000,
     delayAfter: speedLimitSet,
     delayMs: (hits) => hits * 400,
+    skip: (req) => req.path === '/monitoring',
 })
 
 if (rateLimitSet !== 0) {
@@ -231,10 +254,36 @@ app.get('/api/getuserinfo', getUserinfo);
 app.put('/api/updateuserachievement', updateUserAchievement);
 app.get('/api/configs', validateConfigs);
 
+// Sentry tunnel — first-party relay for the frontend SDK's envelopes
+// Mounted only when this deployment actually built the frontend with a DSN.
+//
+// `type` must be a catch-all FUNCTION: Replay envelopes are binary
+// (deflate-compressed recording) and fetch sends those with NO Content-Type
+// header at all — a '*/*' string matcher skips such requests and req.body
+// would never be populated.
+if (process.env.VITE_SENTRY_DSN_FRONTEND) {
+    // Dedicated, more generous per-IP limiter
+    const monitoringLimiter = rateLimit({
+        windowMs: 20 * 60 * 1000,
+        max: 600,
+        message: 'Too Many Requests',
+    });
+    app.post('/api/monitoring', monitoringLimiter, express.raw({ type: () => true, limit: '10mb' }), sentryTunnelHandler);
+}
+
 // Set static file server
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, './dist')));
+
+// Sentry error capture — the SDK itself is initialized (or not) by
+// sentry-instrument.js via `node --import`; this attaches the Express error
+// handler only when a DSN made that init happen. Must come after every route.
+if (process.env.SENTRY_DSN_BACKEND) {
+    const Sentry = await import('@sentry/node');
+    Sentry.setupExpressErrorHandler(app);
+    logger.info('🛰️ Sentry backend monitoring enabled');
+}
 
 
 // Bootstrap every offline dataset (MaxMind, CAIDA) before accepting traffic

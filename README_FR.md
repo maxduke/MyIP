@@ -133,18 +133,22 @@ Téléchargez `GeoLite2-City.mmdb` et `GeoLite2-ASN.mmdb` depuis votre compte Ma
 | `FRONTEND_PORT` | Non | `"18966"` | Le port d'exécution de la partie frontend du programme |
 | `SECURITY_RATE_LIMIT` | Non | `"0"` | Contrôle le nombre de requêtes qu'une adresse IP peut faire au serveur backend toutes les 60 minutes (réglé sur 0 pour aucune limite) |
 | `SECURITY_DELAY_AFTER` | Non | `"0"` | Contrôle les premières X requêtes d'une adresse IP toutes les 20 minutes qui ne sont pas soumises à des limites de vitesse, et après X requêtes, le délai augmentera |
-| `SECURITY_BLACKLIST_LOG_FILE_PATH` | Non | `"logs/blacklist-ip.log"` | Paramètre de chemin. Enregistre la liste des adresses IP qui ont déclenché la limite après que `SECURITY_RATE_LIMIT` soit activé |
+| `SECURITY_BLACKLIST_LOG_FILE_PATH` | Non | `""` | Registre local optionnel des IP limitées (ex. `"logs/blacklist-ip.log"`). Vide = aucun fichier n'est écrit ; l'événement est de toute façon toujours journalisé via le logger partagé |
 | `LOG_LEVEL` | Non | `"info"` | Niveau minimum des journaux (`debug` / `info` / `warn` / `error`). Les messages de niveau inférieur sont supprimés. |
 | `LOG_FORMAT` | Non | pretty | Définir sur `"json"` pour émettre un événement JSON par ligne (agrégateurs de logs / jq). Toute autre valeur (ou non défini) conserve la sortie colorée lisible utilisée en dev et lors du tail des logs pm2. |
 | `LOG_HTTP` | Non | `"false"` | Définir sur `"true"` pour activer la journalisation par requête HTTP sur `/api/*` (méthode, URL, statut, temps de réponse). Désactivé par défaut pour garder les logs pm2 légers. Les erreurs 4xx/5xx côté handler sont toujours loguées, que ce drapeau soit activé ou non. |
+| `VITE_SENTRY_DSN_FRONTEND` | Non | `""` | DSN Sentry du frontend (au moment du build). Si vide, aucun code Sentry n'est inclus dans le bundle. Également lu par le backend à l'exécution comme liste blanche pour `/api/monitoring`, le tunnel first-party qui fait passer les enveloppes Sentry malgré les bloqueurs de publicité. Si vous l'intégrez dans une image Docker auto-construite au moment du build, passez aussi la même valeur au conteneur à l'exécution — sinon la route du tunnel reste désactivée |
+| `SENTRY_DSN_BACKEND` | Non | `""` | DSN Sentry du backend (à l'exécution). Si vide, le SDK Sentry n'est jamais chargé |
+| `SENTRY_ENVIRONMENT` | Non | `"production"` | Étiquette d'environnement des événements Sentry du backend. Définir sur `"development"` sur les machines de développement ; le frontend s'étiquette automatiquement |
+| `SENTRY_ORG` | Non | `""` | Slug de l'organisation Sentry, utilisé avec `SENTRY_PROJECT_FRONTEND` et `SENTRY_AUTH_TOKEN` pour téléverser les source maps au moment du build |
+| `SENTRY_PROJECT_FRONTEND` | Non | `""` | Slug du projet Sentry du frontend, pour le téléversement des source maps au moment du build |
+| `SENTRY_AUTH_TOKEN` | Non | `""` | Jeton Sentry activant le téléversement des source maps au moment du build. Secret de build uniquement — jamais exposé au navigateur |
 | `ALLOWED_DOMAINS` | Non | `""` | Domaines autorisés pour l'accès, séparés par des virgules, utilisés pour empêcher une utilisation abusive de l'API backend |
 | `GOOGLE_MAP_API_KEY` | Non | `""` | Clé API pour Google Maps, utilisée pour afficher l'emplacement de l'adresse IP sur une carte |
-| `IPCHECKING_API_ENDPOINT` | Non | `""` | endpoint de l'API pour IPCheck.ing database, utilisée pour obtenir des informations de géolocalisation précises sur l'adresse IP |
-| `IPCHECKING_API_KEY` | Non | `""` | Clé API pour IPCheck.ing, utilisée pour obtenir des informations de géolocalisation précises sur l'adresse IP |
-| `IPINFO_API_TOKEN` | Non | `""` | Jeton API pour IPInfo.io, utilisé pour obtenir des informations de géolocalisation sur l'adresse IP via IPInfo.io |
+| `IPINFO_API_KEY` | Non | `""` | Jeton API pour IPInfo.io, utilisé pour obtenir des informations de géolocalisation sur l'adresse IP via IPInfo.io |
 | `IPAPIIS_API_KEY` | Non | `""` | Clé API pour IPAPI.is, utilisée pour obtenir des informations de géolocalisation sur l'adresse IP via IPAPI.is |
 | `IP2LOCATION_API_KEY` | Non | `""` | Clé API pour IP2Location.io, utilisée pour obtenir des informations de géolocalisation sur l'adresse IP via IP2Location.io |
-| `CLOUDFLARE_API` | Non | `""` | Clé API pour Cloudflare, utilisée pour obtenir des informations sur le système AS via Cloudflare |
+| `CLOUDFLARE_API_KEY` | Non | `""` | Clé API pour Cloudflare, utilisée pour obtenir des informations sur le système AS via Cloudflare |
 | `RIPESTAT_SOURCE_APP` | Non | `""` | Nom de l'application source pour RIPE.net, utilisé pour obtenir des informations sur l'historique ASN via RIPE.net |
 | `MAC_LOOKUP_API_KEY` | Non | `""` | Clé API pour MAC Lookup, utilisée pour obtenir des informations sur l'adresse MAC via MAC Lookup |
 | `VITE_CURL_IPV4_DOMAIN` | Non | `""` | Fournit aux utilisateurs le domaine IPv4 pour l'API CURL |
@@ -170,7 +174,7 @@ MAXMIND_ACCOUNT_ID="YOUR_ACCOUNT_ID"
 MAXMIND_LICENSE_KEY="YOUR_LICENSE_KEY"
 MAXMIND_AUTO_UPDATE="true"
 GOOGLE_MAP_API_KEY="YOUR_KEY_HERE"
-ALLOWED_DOMAINS="example.com"
+ALLOWED_DOMAINS="example.com,example.org"
 ```
 
 Ensuite, redémarrez le service backend.
@@ -185,7 +189,7 @@ docker run -d -p 18966:18966 \
   -e MAXMIND_LICENSE_KEY="YOUR_LICENSE_KEY" \
   -e MAXMIND_AUTO_UPDATE="true" \
   -e GOOGLE_MAP_API_KEY="YOUR_KEY_HERE" \
-  -e ALLOWED_DOMAINS="example.com" \
+  -e ALLOWED_DOMAINS="example.com,example.org" \
   --name myip \
   jason5ng32/myip:latest
 
@@ -212,24 +216,16 @@ DOMAIN,ptest-7.ipcheck.ing,Proxy7
 DOMAIN,ptest-8.ipcheck.ing,Proxy8
 ```
 
-## 😶‍🌫️ Explications supplémentaires
-
-Lors de la sortie de la version 2.0, j'avais dit que 70% du code de ce programme n'était pas de moi, mais écrit par AI. Après environ 90 interactions, plus quelques ajustements manuels mineurs, tout le code a été complété.
-
-Bien sûr, l'architecture et l'UI nécessitaient toujours ma propre conception.
-
-Avec la sortie de la version 3.0 et des versions ultérieures, la proportion de code écrit avec l'aide de AI a progressivement diminué, maintenant estimée entre 40% et 50%. Au contraire, dans ce processus, je suis passé de ne rien savoir sur JavaScript et Vue à pouvoir comprendre la plupart des codes JS, et maintenant je peux même en écrire moi-même.
-
-Merci à l'IA, qui m'a donné, à moi, un chef de produit au chômage, une opportunité rapide d'apprendre la programmation.
-
-## 🌟 Historique des étoiles
-
-[![Star History Chart](https://api.star-history.com/svg?repos=jason5ng32/MyIP&type=Date)](https://star-history.com/#jason5ng32/MyIP&Date)
-
 ## 💖 Sponsors
 
 En tant que projet open source, je suis très reconnaissant aux sponsors suivants pour leur soutien :
 
-<a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://opensource.nyc3.cdn.digitaloceanspaces.com/attribution/assets/SVG/DO_Logo_horizontal_blue.svg" height="40px" title="DigitalOcean" /></a>
+<a href="https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge"><img src="https://res.ipcheck.ing/img/digitalocean_logo.png" width="240px"  title="DigitalOcean" /></a>
 
-<a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://cf-assets.www.cloudflare.com/zkvhlag99gkb/69RwBidpiEHCDZ9rFVVk7T/092507edbed698420b89658e5a6d5105/CF_logo_stacked_blktype.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" height="60px" /></a>
+<a href="https://www.1password.com"><img src="https://res.ipcheck.ing/img/1password_logo.png" alt="1Password" title="1Password" width="240px"  /></a>
+
+<a href="https://www.greptile.com/"><img src="https://res.ipcheck.ing/img/greptile_logo.png" alt="Greptile" title="Greptile" width="240px"  /></a>
+
+<a href="https://www.sentry.io"><img src="https://res.ipcheck.ing/img/sentry_logo.png" alt="Sentry" title="Sentry" width="240px" /></a>
+
+<a href="https://www.cloudflare.com/lp/project-alexandria/"><img src="https://res.ipcheck.ing/img/cloudflare_logo.png" alt="Cloudflare Project Alexandria" title="Cloudflare Project Alexandria" width="240px" /></a>

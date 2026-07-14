@@ -69,6 +69,7 @@ import { ref, computed, h } from 'vue';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
+import { emitAppEvent } from '@/utils/app-events.js';
 import { useGlobalpingMeasurement } from '@/composables/use-globalping-measurement';
 import { isValidDomain } from '@/utils/valid-ip.js';
 import getCountryName from '@/data/country-name.js';
@@ -84,7 +85,6 @@ const { t } = useI18n();
 
 const store = useMainStore();
 const lang = computed(() => store.lang);
-const isSignedIn = computed(() => store.isSignedIn);
 
 const highRiskCountries = ['CN', 'RU', 'TR', 'SA'];
 const censorshipResults = ref([]);
@@ -269,13 +269,8 @@ const calResult = (testResults) => {
         blockedCountries.value = blockedHighRiskCountries;
         isBlocked.value = blockedHighRiskCountries.length > 0;
     }
-    if (isSignedIn.value) checkAchievements();
-};
-
-const checkAchievements = () => {
-    if (isBlocked.value && !store.userAchievements.ItIsOpen.achieved) {
-        store.setTriggerUpdateAchievements('ItIsOpen');
-    }
+    // Achievement rule (ItIsOpen) lives in data/achievement-rules.js.
+    emitAppEvent('censorship:tested', { blocked: isBlocked.value });
 };
 </script>
 
