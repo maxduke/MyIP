@@ -258,6 +258,7 @@ import { ref, reactive, computed } from 'vue';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
+import { emitAppEvent } from '@/utils/app-events';
 import { authenticatedFetch } from '@/utils/authenticated-fetch';
 import getCountryName from '@/data/country-name.js';
 import { Button } from '@/components/ui/button';
@@ -563,6 +564,9 @@ const runTest = async () => {
             queries: Array.isArray(data.queries) ? data.queries : [],
         };
         status.value = 'done';
+        // Domain event: raw query rows for the report collector (the builder
+        // maps geo sub-objects and derives the DNSSEC posture).
+        emitAppEvent('enhanceddnsleak:finished', { ...result.value });
     } catch (error) {
         console.error('Enhanced DNS leak test failed:', error);
         if (error.message.includes('Invalid token')) {

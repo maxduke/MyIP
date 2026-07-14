@@ -147,6 +147,7 @@ import { ref, computed } from 'vue';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
+import { emitAppEvent } from '@/utils/app-events';
 import { useGlobalpingMeasurement, GLOBALPING_DEFAULT_LOCATIONS, selectableIPs } from '@/composables/use-globalping-measurement';
 import { isValidIP } from '@/utils/valid-ip.js';
 import { parseMtrOutput } from '@/utils/mtr-parse.js';
@@ -204,6 +205,21 @@ const startmtrCheck = () => {
         onResults: (data) => {
             processmtrResults(data);
             return mtrResults.value.length > 0;
+        },
+        onFinish: () => {
+            // Domain event: final probes with parsed hops for the report
+            // collector (rawOutput stays local — only the structured hops
+            // belong in a shareable report).
+            emitAppEvent('mtrtest:finished', {
+                target: targetIP.value,
+                probes: mtrResults.value.map((result) => ({
+                    country: result.country,
+                    city: result.city,
+                    network: result.network,
+                    asn: result.asn,
+                    hops: result.hops,
+                })),
+            });
         },
     });
 };

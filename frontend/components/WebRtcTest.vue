@@ -120,6 +120,7 @@ import { ref, computed, onMounted, onBeforeUnmount, reactive, watch } from 'vue'
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
+import { emitAppEvent } from '@/utils/app-events';
 import { JnTooltip } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -231,6 +232,8 @@ const checkSTUNServer = (stun) => {
       const label = t(`webrtc.${statusKey}`);
       stun.ip = label;
       stun.natType = label;
+      // Locale-free twin of the label, consumed by the report builder.
+      stun.natTypeCode = statusKey === 'StatusUnavailable' ? 'unavailable' : 'error';
       stun.country = label;
       stun.country_code = '';
       stun.org = label;
@@ -249,6 +252,7 @@ const checkSTUNServer = (stun) => {
       }
       stun.ip = ip;
       stun.natType = determineNATType(candidate);
+      stun.natTypeCode = natTypeCodeOf(candidate);
       log(`resolved IP: ${ip}`);
       IPArray.value = [...IPArray.value, { ip, country: '' }];
       // useMaxmind swallows its own errors and returns null on miss, so
@@ -358,6 +362,27 @@ const determineNATType = (candidate) => {
   return t('webrtc.NATType.unknown');
 };
 
+// Locale-free twin of determineNATType for the report builder.
+const natTypeCodeOf = (candidate) => {
+  const type = candidate.split(' ')[7];
+  return ['host', 'srflx', 'prflx', 'relay'].includes(type) ? type : 'unknown';
+};
+
+// Domain event: snapshot of all STUN cards for the report collector (servers
+// still waiting carry no natTypeCode and are dropped by the builder).
+const emitWebrtcFinished = () => {
+  emitAppEvent('webrtc:finished', {
+    servers: stunServers.map((server) => ({
+      id: server.id,
+      url: server.url,
+      ip: server.ip,
+      natTypeCode: server.natTypeCode,
+      country_code: server.country_code,
+      org: server.org,
+    })),
+  });
+};
+
 // Test all STUN servers
 const checkAllWebRTC = async (isRefresh) => {
   if (isRefresh) trackEvent('Section', 'RefreshClick', 'WebRTC');
@@ -371,17 +396,20 @@ const checkAllWebRTC = async (isRefresh) => {
     stunServers.forEach((server) => {
       server.ip = label;
       server.natType = label;
+      server.natTypeCode = 'unavailable';
       server.country = label;
       server.country_code = '';
       server.org = label;
     });
     store.setLoadingStatus('WebRTC', true);
+    emitWebrtcFinished();
     return;
   }
 
   const promises = stunServers.map((server) => {
     server.ip = t('webrtc.StatusWait');
     server.natType = t('webrtc.StatusWait');
+    server.natTypeCode = undefined;
     server.country = t('webrtc.StatusWait');
     server.country_code = '';
     server.org = t('webrtc.StatusWait');
@@ -392,6 +420,7 @@ const checkAllWebRTC = async (isRefresh) => {
   const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 6000));
   return Promise.race([allSettledPromise, timeoutPromise]).then(() => {
     store.setLoadingStatus('WebRTC', true);
+    emitWebrtcFinished();
   });
 };
 

@@ -146,6 +146,7 @@ import { useRouter } from 'vue-router';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
+import { emitAppEvent } from '@/utils/app-events';
 import { JnTooltip } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -326,6 +327,10 @@ const checkConnectivityHandler = async (test, onTestComplete = () => { }, isManu
     clearTimeout(timeoutId);
     const testTime = Math.round(performance.now() - beginTime);
     test.status = t('connectivity.StatusAvailable');
+    // Locale-free twin of the localized status label, consumed by the report
+    // builder (utils/report-builders.js) — the label itself can't be mapped
+    // back to an enum without string comparison against t() output.
+    test.statusCode = 'ok';
     test.mintime = test.mintime === 0 ? testTime : Math.min(test.mintime, testTime);
     test.time = (multipleTests.value && !isManualRun) ? test.mintime : testTime;
     if (recordRound) test.roundResults.push({ tone: testTime < 200 ? 'ok-fast' : 'ok-slow', time: testTime });
@@ -337,10 +342,12 @@ const checkConnectivityHandler = async (test, onTestComplete = () => { }, isManu
     // real 'fail' — it's per-round history, separate from the face/text.
     if (multipleTests.value && !isManualRun && test.mintime > 0) {
       test.status = t('connectivity.StatusAvailable');
+      test.statusCode = 'ok';
       test.time = test.mintime;
     } else {
       test.time = 0;
       test.status = t('connectivity.StatusUnavailable');
+      test.statusCode = 'unreachable';
     }
     if (recordRound) test.roundResults.push({ tone: 'fail', time: 0 });
     onTestComplete(false);
@@ -354,6 +361,7 @@ const checkAllConnectivity = (isAlertToShow, isRefresh, isManualRun) => {
     if (isRefresh) {
       connectivityTests.forEach((test) => {
         test.status = t('connectivity.StatusWait');
+        test.statusCode = undefined;
         test.time = 0;
       });
       trackEvent('Section', 'RefreshClick', 'Connectivity');
@@ -381,6 +389,18 @@ const checkAllConnectivity = (isAlertToShow, isRefresh, isManualRun) => {
       updateConnectivityAlert(successCount === totalTests ? 'success' : 'error');
       // Sticky flag for the Service Status banner — set once the first pass lands.
       hasEverSettled.value = true;
+      // Domain event: snapshot after every pass (multi-round included) —
+      // latest wins downstream in the report collector.
+      emitAppEvent('connectivity:finished', {
+        targets: connectivityTests.map((test) => ({
+          id: test.id,
+          name: test.name,
+          custom: test.custom === true,
+          statusCode: test.statusCode,
+          time: test.time,
+          mintime: test.mintime,
+        })),
+      });
       resolve();
     });
 

@@ -130,6 +130,7 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
+import { emitAppEvent } from '@/utils/app-events';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Spinner } from '@/components/ui/spinner';
@@ -351,6 +352,12 @@ const getAll = async () => {
         checkingStatus.value = 'running';
         await Promise.all([getUA(), getFingerPrint(), getGPU(), getOtherBrowserInfo()]);
         checkingStatus.value = 'finished';
+        // Domain event for the report collector. Deliberately excludes the
+        // fingerprint hash and components blob — they never enter a report.
+        emitAppEvent('browserinfo:finished', {
+            userAgent: userAgent.value,
+            otherInfos: otherInfos.value,
+        });
     } catch (error) {
         console.error('Error during checks:', error);
         checkingStatus.value = 'error';
