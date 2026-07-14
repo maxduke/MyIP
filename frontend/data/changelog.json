@@ -1326,6 +1326,15 @@
       {
         "type": "add",
         "change": {
+          "en": "Share test results as a diagnostic report — read-only link with auto-expiry, AI-ready Markdown, or JSON",
+          "zh": "测试结果可生成诊断报告并分享——自动过期的只读链接、AI 可读的 Markdown 或 JSON",
+          "fr": "Partagez vos résultats de test sous forme de rapport de diagnostic — lien en lecture seule à expiration automatique, Markdown prêt pour l'IA ou JSON",
+          "tr": "Test sonuçlarını tanı raporu olarak paylaşın — otomatik süresi dolan salt okunur bağlantı, yapay zekâya hazır Markdown veya JSON"
+        }
+      },
+      {
+        "type": "add",
+        "change": {
           "en": "Added IP History panel with type and country filters",
           "zh": "新增 IP 历史记录面板，并支持按类型和国家筛选",
           "fr": "Ajout du panneau Historique IP avec filtres par type et par pays",

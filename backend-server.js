@@ -7,7 +7,7 @@ import { slowDown } from 'express-slow-down'
 import rateLimit from 'express-rate-limit';
 import pinoHttp from 'pino-http';
 import logger from './common/logger.js';
-import { requireReferer, requireValidIP, requireValidPrefix, requireValidASN, requireValidProviderId } from './common/guards.js';
+import { requireReferer, requireValidIP, requireValidPrefix, requireValidASN, requireValidProviderId, requireValidReportId } from './common/guards.js';
 
 // Backend APIs
 import mapHandler from './api/google-map.js';
@@ -30,6 +30,7 @@ import serviceStatusHandler, {
 import { getSessionResult as dnsLeakGetResult } from './api/dns-leak-test.js';
 import getWhois from './api/get-whois.js';
 import sentryTunnelHandler from './api/sentry-tunnel.js';
+import createReportHandler, { getReport as getReportHandler } from './api/share-report.js';
 import invisibilitytestHandler from './api/invisibility-test.js';
 import macChecker from './api/mac-checker.js';
 import githubStarsHandler from './api/github-stars.js';
@@ -189,7 +190,12 @@ if (speedLimitSet !== 0) {
     logger.info(`🐢 Speed limiter enabled — slow down after ${speedLimitSet} requests`);
 }
 
-app.use(express.json());
+// 500kb instead of the 100kb default: shared diagnostic reports (POST
+// /api/report) legitimately reach ~100KB; the report handler enforces its
+// own tighter cap (REPORT_MAX_BYTES) after schema validation.
+// Must stay above REPORT_MAX_BYTES (common/report-schema.js) or report
+// uploads die here with a raw 413 before the handler's own size check.
+app.use(express.json({ limit: '500kb' }));
 
 // Default every /api/* response to no-store. Routes that want edge caching
 // declare it explicitly via the `cacheable(maxAge)` middleware below.
@@ -253,6 +259,10 @@ app.get('/api/invisibility', invisibilitytestHandler);
 app.get('/api/getuserinfo', getUserinfo);
 app.put('/api/updateuserachievement', updateUserAchievement);
 app.get('/api/configs', validateConfigs);
+// Shared reports stay no-store: an edge cache could serve a report past its
+// KV expiry, and private diagnostic data doesn't belong in a public cache.
+app.get('/api/report/:id', requireValidReportId(), getReportHandler);
+app.post('/api/report', createReportHandler);
 
 // Sentry tunnel — first-party relay for the frontend SDK's envelopes
 // Mounted only when this deployment actually built the frontend with a DSN.

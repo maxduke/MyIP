@@ -1,21 +1,25 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Home from '@/components/Home.vue';
 
-// Two real, crawlable pages:
+// Real pages:
 //   /              → the homepage. Advanced tools open as an in-page drawer,
 //                    driven by the `?tool=<slug>` query (handled in Advanced.vue).
 //   /tools/:slug   → a standalone full page for one tool (shareable + SEO).
-// Both render the SAME tool components; only the wrapper differs.
+//   /r/:id         → read-only shared diagnostic report (KV-backed, noindex).
+// The tool pages render the SAME tool components as the drawer; only the
+// wrapper differs.
 //
-// Home is imported eagerly (it's the default landing); the standalone layout is
+// Home is imported eagerly (it's the default landing); everything else is
 // lazy so it stays out of the homepage bundle.
 const StandaloneTool = () => import('@/components/StandaloneTool.vue');
 const PrivacyPolicy = () => import('@/components/PrivacyPolicy.vue');
+const ReportPage = () => import('@/components/report/ReportPage.vue');
 
 const routes = [
   { path: '/', name: 'home', component: Home },
   { path: '/tools/:slug', name: 'tool', component: StandaloneTool },
   { path: '/privacy', name: 'privacy', component: PrivacyPolicy },
+  { path: '/r/:id', name: 'report', component: ReportPage },
   // Unknown paths fall back to the homepage.
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ];

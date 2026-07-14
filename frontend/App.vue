@@ -17,13 +17,14 @@ import Alert from './components/widgets/Toast.vue';
 import PWA from './components/widgets/PWA.vue';
 import { useTheme } from '@/composables/use-theme.js';
 import { useAchievementEngine } from '@/composables/use-achievement-engine.js';
+import { useReportCollector } from '@/composables/use-report-collector.js';
 
 // The standalone pages (/tools/:slug, /privacy) carry their own header, so they
 // drop the homepage's fixed-Nav body padding (see the `body.jn-standalone-page`
 // rule in index.html) — otherwise a blank strip shows above their header. Toggle
 // the marker class as the route changes. NB: "standalone" here is unrelated to
 // PWA display mode — that's `isRunningAsPwa()` in utils/pwa.js.
-const STANDALONE_ROUTES = new Set(['tool', 'privacy']);
+const STANDALONE_ROUTES = new Set(['tool', 'privacy', 'report']);
 const route = useRoute();
 watch(
     () => STANDALONE_ROUTES.has(route.name),
@@ -65,6 +66,10 @@ useTheme();
 // Achievement engine: listens for domain events emitted across the app and
 // evaluates the rules in data/achievement-rules.js.
 useAchievementEngine();
+
+// Report collector: keeps the latest schema-shaped snapshot of every finished
+// test for the shareable diagnostic report.
+useReportCollector();
 </script>
 
 <style scoped></style>

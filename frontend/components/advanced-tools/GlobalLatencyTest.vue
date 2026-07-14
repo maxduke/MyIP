@@ -127,6 +127,7 @@ import { ref, computed } from 'vue';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
+import { emitAppEvent } from '@/utils/app-events';
 import { useGlobalpingMeasurement, GLOBALPING_DEFAULT_LOCATIONS, selectableIPs } from '@/composables/use-globalping-measurement';
 import { isValidIP } from '@/utils/valid-ip.js';
 import getCountryName from '@/data/country-name.js';
@@ -205,7 +206,17 @@ const startPingCheck = () => {
             processpingResults(data);
             return pingResults.value.length > 0;
         },
-        onFinish: () => drawMap(),
+        onFinish: () => {
+            drawMap();
+            // Domain event: final probe results for the report collector.
+            emitAppEvent('pingtest:finished', {
+                target: targetIP.value,
+                probes: pingResults.value.map((result) => ({
+                    country: result.country,
+                    stats: result.stats,
+                })),
+            });
+        },
     });
 };
 

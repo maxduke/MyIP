@@ -19,6 +19,7 @@ frontend/
 ├── firebase-init.js ← env-gated Firebase Auth
 ├── sentry-init.js   ← env-gated Sentry (see "Error monitoring" below)
 ├── router/          ← `/` Home · `/tools/:slug` StandaloneTool · `/privacy`
+│                      · `/r/:id` shared report (noindex)
 │                      (advanced tools also open in-page via `?tool=<slug>`)
 ├── locales/         ← en / zh / fr / tr + on-demand sub-packs
 ├── style/style.css  ← Tailwind v4 entry + design tokens
@@ -30,7 +31,8 @@ frontend/
 │                      (app-events bus / getips/ / valid-ip / analytics / …)
 ├── composables/     ← Vue-aware `useXxx` logic
 └── components/      ← Home / StandaloneTool / top-level sections, plus
-                       ip-infos/ · advanced-tools/ · widgets/ · svgicons/ · ui/
+                       ip-infos/ · advanced-tools/ · report/ · widgets/ ·
+                       svgicons/ · ui/
 ```
 
 Directory-level only — every file opens with a header comment stating its
@@ -59,6 +61,18 @@ once in App.vue) owns the signed-in / already-achieved / rate guards.
 New achievement = entry in `data/achievements.js` + rule + (only if no
 suitable event exists) a new domain event. Tests:
 `tests/achievement-rules.test.js`, `tests/composable-achievement-engine.test.js`.
+
+The shareable diagnostic report rides the same bus: every "my network" test
+emits `<domain>:finished` with its full structured result;
+`composables/use-report-collector.js` (init'd once in App.vue) normalizes
+payloads through `utils/report-builders.js` into sections whitelisted by
+`common/report-schema.js`, and `components/report/` consumes the snapshots
+(share dialog + read-only /r/:id page). New reportable test = emit event +
+builder + schema entry, in the same change. Changing a test's result
+semantics or an upstream field means updating that test's builder whitelist
++ schema enum too — builders fail soft (unknown values silently drop the
+field) and test fixtures are frozen, so drift shows up as quietly missing
+report fields, not as errors.
 
 ### Error monitoring (Sentry) is env-gated and invisible to app code
 

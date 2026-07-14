@@ -140,14 +140,14 @@
               </p>
               <p class="mb-2">
                 {{ t('speedtest.score') }}
-                {{ t('speedtest.videoStreaming') }}
+                {{ t('speedtest.videoStreaming') }} : 
                 <span :class="qualityBadgeClass(state.speedTest.streamingQuality)">{{ t('speedtest.quality.' +
-                  state.speedTest.streamingQuality) }}</span>
-                {{ t('speedtest.gaming') }}
+                  state.speedTest.streamingQuality) }}</span> ; 
+                {{ t('speedtest.gaming') }}: 
                 <span :class="qualityBadgeClass(state.speedTest.gamingQuality)">
                   {{ t('speedtest.quality.' + state.speedTest.gamingQuality) }}
-                </span>
-                {{ t('speedtest.rtc') }}
+                </span> ; 
+                {{ t('speedtest.rtc') }}: 
                 <span :class="qualityBadgeClass(state.speedTest.rtcQuality)">
                   {{ t('speedtest.quality.' + state.speedTest.rtcQuality) }}
                 </span>
@@ -452,10 +452,31 @@ const setupTestEngine = async () => {
     }
 
     testEngine = null;
-    // Achievement rules for speed thresholds live in data/achievement-rules.js.
+    // Achievement rules for speed thresholds live in data/achievement-rules.js;
+    // the report collector consumes the full result (unmeasured fields keep
+    // their '-' placeholder — the builder drops non-numbers).
     emitAppEvent('speedtest:finished', {
       downloadSpeed: state.speedTest.downloadSpeed,
       uploadSpeed: state.speedTest.uploadSpeed,
+      latency: state.speedTest.latency,
+      jitter: state.speedTest.jitter,
+      downLoadedLatency: state.speedTest.downLoadedLatency,
+      upLoadedLatency: state.speedTest.upLoadedLatency,
+      scores: state.speedTest.hasScores
+        ? {
+          streaming: state.speedTest.streamingScore,
+          gaming: state.speedTest.gamingScore,
+          rtc: state.speedTest.rtcScore,
+        }
+        : null,
+      qualities: state.speedTest.hasScores
+        ? {
+          streaming: state.speedTest.streamingQuality,
+          gaming: state.speedTest.gamingQuality,
+          rtc: state.speedTest.rtcQuality,
+        }
+        : null,
+      connection: { ...state.connection },
     });
   };
   testEngine.onError = (e) => {

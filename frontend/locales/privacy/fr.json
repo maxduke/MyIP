@@ -7,8 +7,16 @@
       "tools": {
         "title": "Comment fonctionnent les outils",
         "paragraphs": [
-          "La plupart de ce que les outils vous affichent — détails de votre IP, empreinte du navigateur, DNS, connectivité et résultats de test de débit — est calculé dans votre navigateur ou interrogé en direct et affiché à vous seul. Nous ne conservons pas ces résultats sur nos serveurs.",
+          "La plupart de ce que les outils vous affichent — détails de votre IP, empreinte du navigateur, DNS, connectivité et résultats de test de débit — est calculé dans votre navigateur ou interrogé en direct et affiché à vous seul. Nous ne conservons pas ces résultats sur nos serveurs, sauf si vous créez explicitement un lien de rapport partageable (voir la section suivante).",
           "Pour rechercher la géolocalisation d'une IP, l'IP interrogée est envoyée à des fournisseurs tiers (tels qu'ipinfo.io, ip-api.com et similaires). Ces recherches sont régies par la politique de confidentialité propre à chaque fournisseur."
+        ]
+      },
+      "sharedReports": {
+        "title": "Rapports de diagnostic partagés",
+        "paragraphs": [
+          "Vous pouvez regrouper vos résultats de test dans un rapport de diagnostic et le partager. La création d'un lien de partage est toujours une action explicite — rien n'est envoyé automatiquement. Vous choisissez les tests à inclure et pouvez masquer la fin des adresses IP avant la création du lien.",
+          "Lorsque vous créez un lien, les résultats sélectionnés sont stockés sur notre infrastructure serveur (Cloudflare Workers KV) afin que les personnes avec qui vous partagez le lien puissent l'ouvrir. Le rapport est supprimé automatiquement à la fin de la période de conservation choisie (1, 3 ou 7 jours). Les liens utilisent des identifiants aléatoires impossibles à deviner, nous ne tenons aucun répertoire des rapports existants, et toute personne disposant du lien peut consulter le rapport jusqu'à son expiration.",
+          "Copier un rapport pour un assistant IA ou le télécharger en JSON se fait entièrement dans votre navigateur et ne stocke rien sur nos serveurs."
         ]
       },
       "analytics": {

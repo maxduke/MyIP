@@ -200,9 +200,17 @@ const checkAllRuleTest = async (refresh = false) => {
                 processTest(index + 1);
                 if (index === testCount.value - 1) {
                     finishAll.value = true;
-                    // Achievement rule (CrossingTheWall) lives in data/achievement-rules.js.
+                    // Achievement rule (CrossingTheWall) lives in data/achievement-rules.js;
+                    // the report collector consumes the per-worker details (the
+                    // builder recomputes its own unique count from valid IPs).
                     emitAppEvent('ruletest:finished', {
                         uniqueIPCount: new Set(ruleTests.value.map((test) => test.ip)).size,
+                        workers: ruleTests.value.map((test) => ({
+                            id: test.id,
+                            ip: test.ip,
+                            country_code: test.country_code,
+                            org: test.org,
+                        })),
                     });
                 }
             }
