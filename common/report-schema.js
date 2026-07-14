@@ -21,6 +21,15 @@ export const REPORT_TTL_DAYS = [1, 3, 7];
 // bounding what one KV key can cost. KV's own value limit (25MB) is far away.
 export const REPORT_MAX_BYTES = 256 * 1024;
 
+// Connectivity status codes — single source shared by the recording component
+// (ConnectivityTest.vue), the builder whitelist (utils/report-builders.js)
+// and the schema enum below, so a rename can't drift them apart.
+export const CONNECTIVITY_STATUS = {
+    OK: 'ok',
+    UNREACHABLE: 'unreachable',
+    TIMEOUT: 'timeout',
+};
+
 // ---------------------------------------------------------------------------
 // IP masking (data-level, applied at export time — distinct from the CSS-only
 // use-info-mask blur). Masked forms are valid schema values so a masked
@@ -145,7 +154,7 @@ const SECTION_SPECS = {
         targets: arr(24, obj({
             id: str(48),
             name: str(64),
-            status: oneOf('ok', 'unreachable', 'timeout'),
+            status: oneOf(...Object.values(CONNECTIVITY_STATUS)),
             timeMs: opt(int(0, 600000)),
             minTimeMs: opt(int(0, 600000)),
             custom: opt(bool()),

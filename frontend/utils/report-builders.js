@@ -7,6 +7,7 @@
 // holds nothing worth reporting.
 
 import { isValidIP } from './valid-ip.js';
+import { CONNECTIVITY_STATUS } from './report-schema.js';
 
 // --- small shared normalizers ----------------------------------------------
 
@@ -74,7 +75,7 @@ const buildIpinfo = (payload) => {
 // connectivity:finished — { targets: [{ id, name, custom, statusCode, time, mintime }] }
 // statusCode is the locale-free enum the component records next to its
 // localized status label; targets still waiting carry none and are dropped.
-const CONNECTIVITY_STATUSES = new Set(['ok', 'unreachable', 'timeout']);
+const CONNECTIVITY_STATUSES = new Set(Object.values(CONNECTIVITY_STATUS));
 const buildConnectivity = (payload) => {
     const targets = (payload?.targets ?? [])
         .filter((target) => CONNECTIVITY_STATUSES.has(target?.statusCode))

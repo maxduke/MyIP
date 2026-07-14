@@ -140,14 +140,14 @@
               </p>
               <p class="mb-2">
                 {{ t('speedtest.score') }}
-                {{ t('speedtest.videoStreaming') }}
+                {{ t('speedtest.videoStreaming') }} : 
                 <span :class="qualityBadgeClass(state.speedTest.streamingQuality)">{{ t('speedtest.quality.' +
-                  state.speedTest.streamingQuality) }}</span>
-                {{ t('speedtest.gaming') }}
+                  state.speedTest.streamingQuality) }}</span> ; 
+                {{ t('speedtest.gaming') }}: 
                 <span :class="qualityBadgeClass(state.speedTest.gamingQuality)">
                   {{ t('speedtest.quality.' + state.speedTest.gamingQuality) }}
-                </span>
-                {{ t('speedtest.rtc') }}
+                </span> ; 
+                {{ t('speedtest.rtc') }}: 
                 <span :class="qualityBadgeClass(state.speedTest.rtcQuality)">
                   {{ t('speedtest.quality.' + state.speedTest.rtcQuality) }}
                 </span>

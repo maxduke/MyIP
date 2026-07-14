@@ -147,6 +147,7 @@ import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
 import { emitAppEvent } from '@/utils/app-events';
+import { CONNECTIVITY_STATUS } from '@/utils/report-schema.js';
 import { JnTooltip } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -330,7 +331,7 @@ const checkConnectivityHandler = async (test, onTestComplete = () => { }, isManu
     // Locale-free twin of the localized status label, consumed by the report
     // builder (utils/report-builders.js) — the label itself can't be mapped
     // back to an enum without string comparison against t() output.
-    test.statusCode = 'ok';
+    test.statusCode = CONNECTIVITY_STATUS.OK;
     test.mintime = test.mintime === 0 ? testTime : Math.min(test.mintime, testTime);
     test.time = (multipleTests.value && !isManualRun) ? test.mintime : testTime;
     if (recordRound) test.roundResults.push({ tone: testTime < 200 ? 'ok-fast' : 'ok-slow', time: testTime });
@@ -342,12 +343,12 @@ const checkConnectivityHandler = async (test, onTestComplete = () => { }, isManu
     // real 'fail' — it's per-round history, separate from the face/text.
     if (multipleTests.value && !isManualRun && test.mintime > 0) {
       test.status = t('connectivity.StatusAvailable');
-      test.statusCode = 'ok';
+      test.statusCode = CONNECTIVITY_STATUS.OK;
       test.time = test.mintime;
     } else {
       test.time = 0;
       test.status = t('connectivity.StatusUnavailable');
-      test.statusCode = 'unreachable';
+      test.statusCode = CONNECTIVITY_STATUS.UNREACHABLE;
     }
     if (recordRound) test.roundResults.push({ tone: 'fail', time: 0 });
     onTestComplete(false);

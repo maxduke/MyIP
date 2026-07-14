@@ -193,6 +193,8 @@ if (speedLimitSet !== 0) {
 // 500kb instead of the 100kb default: shared diagnostic reports (POST
 // /api/report) legitimately reach ~100KB; the report handler enforces its
 // own tighter cap (REPORT_MAX_BYTES) after schema validation.
+// Must stay above REPORT_MAX_BYTES (common/report-schema.js) or report
+// uploads die here with a raw 413 before the handler's own size check.
 app.use(express.json({ limit: '500kb' }));
 
 // Default every /api/* response to no-store. Routes that want edge caching

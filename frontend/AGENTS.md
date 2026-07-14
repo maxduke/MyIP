@@ -68,7 +68,11 @@ emits `<domain>:finished` with its full structured result;
 payloads through `utils/report-builders.js` into sections whitelisted by
 `common/report-schema.js`, and `components/report/` consumes the snapshots
 (share dialog + read-only /r/:id page). New reportable test = emit event +
-builder + schema entry, in the same change.
+builder + schema entry, in the same change. Changing a test's result
+semantics or an upstream field means updating that test's builder whitelist
++ schema enum too — builders fail soft (unknown values silently drop the
+field) and test fixtures are frozen, so drift shows up as quietly missing
+report fields, not as errors.
 
 ### Error monitoring (Sentry) is env-gated and invisible to app code
 

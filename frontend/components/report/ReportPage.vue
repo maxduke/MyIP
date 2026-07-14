@@ -1,9 +1,7 @@
 <template>
-    <!-- Same page shell as PrivacyPolicy.vue: full-height flex column so the
-         sticky header sits flush and the footer stays at the bottom. -->
     <div class="flex min-h-screen flex-col">
         <StandalonePageHeader :title="t('report.Title')" />
-        <main class="flex-1 mx-auto w-full max-w-[1200px] px-4 py-6 space-y-4">
+        <main class="flex-1 mx-auto w-full max-w-300 px-4 py-6 space-y-4">
         <!-- Loading -->
         <div v-if="state === 'loading'"
             class="flex items-center justify-center gap-2 py-24 text-sm text-muted-foreground">
