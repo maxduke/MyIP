@@ -33,7 +33,7 @@
       "account": {
         "title": "What we collect when you sign in",
         "paragraphs": [
-          "Signing in is optional — you can use every tool on the site without an account. We use Google Firebase Authentication to manage your login and to sync your achievements and preferences. When you are signed in, the following is collected:"
+          "Signing in is optional — you can use every tool on the site without an account. We use Google Firebase Authentication to manage your login and to sync your achievements. When you are signed in, the following is collected:"
         ],
         "bullets": [
           "Your sign-in email, used to identify your account so we can provide the features that require logging in.",

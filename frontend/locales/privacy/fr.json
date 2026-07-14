@@ -33,7 +33,7 @@
       "account": {
         "title": "Ce que nous collectons lorsque vous vous connectez",
         "paragraphs": [
-          "La connexion est facultative — vous pouvez utiliser tous les outils du site sans compte. Nous utilisons Google Firebase Authentication pour gérer votre connexion et synchroniser vos succès et préférences. Lorsque vous êtes connecté, les éléments suivants sont collectés :"
+          "La connexion est facultative — vous pouvez utiliser tous les outils du site sans compte. Nous utilisons Google Firebase Authentication pour gérer votre connexion et synchroniser vos succès. Lorsque vous êtes connecté, les éléments suivants sont collectés :"
         ],
         "bullets": [
           "Votre adresse e-mail de connexion, utilisée pour identifier votre compte afin de fournir les fonctionnalités nécessitant une connexion.",

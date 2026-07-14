@@ -33,7 +33,7 @@
       "account": {
         "title": "Oturum açtığınızda ne topluyoruz",
         "paragraphs": [
-          "Oturum açmak isteğe bağlıdır — sitedeki tüm araçları hesap olmadan kullanabilirsiniz. Girişinizi yönetmek ve başarımlarınızı ve tercihlerinizi senkronize etmek için Google Firebase Authentication kullanırız. Oturum açtığınızda aşağıdakiler toplanır:"
+          "Oturum açmak isteğe bağlıdır — sitedeki tüm araçları hesap olmadan kullanabilirsiniz. Girişinizi yönetmek ve başarımlarınızı senkronize etmek için Google Firebase Authentication kullanırız. Oturum açtığınızda aşağıdakiler toplanır:"
         ],
         "bullets": [
           "Oturum açma e-postanız; hesabınızı tanımlamak ve oturum açma gerektiren özellikleri sunmak için kullanılır.",
