@@ -148,7 +148,9 @@ MyIP 依赖 MaxMind 提供的免费 **GeoLite2** 数据库（City + ASN）来进
 | `IPINFO_API_KEY` | 否 | `""` | IPInfo.io 的 API Token，用于通过 IPInfo.io 获取 IP 归属地信息 |
 | `IPAPIIS_API_KEY` | 否 | `""` | IPAPI.is 的 API Key，用于通过 IPAPI.is 获取 IP 归属地信息 |
 | `IP2LOCATION_API_KEY` | 否 | `""` | IP2Location.io 的 API Key，用于通过 IP2Location.io 获取 IP 归属地信息 |
-| `CLOUDFLARE_API_KEY` | 否 | `""` | Cloudflare 的 API Key，用于通过 Cloudflare 获取 AS 系统的信息 |
+| `CLOUDFLARE_API_KEY` | 否 | `""` | Cloudflare 的 API Key，用于获取 AS 系统信息；配合下方两个 KV 变量（token 需追加 "Workers KV Storage: Edit" 权限）还用于诊断报告分享 |
+| `CLOUDFLARE_ACCOUNT_ID` | 否 | `""` | Cloudflare 账号 ID，诊断报告分享（Workers KV 存储）所需 |
+| `CLOUDFLARE_KV_NAMESPACE_ID` | 否 | `""` | 存储诊断分享报告的 Workers KV namespace 的十六进制 ID（不是名字） |
 | `RIPESTAT_SOURCE_APP` | 否 | `""` | RIPE.net 的源应用名称，用于通过 RIPE.net 获取 ASN 的历史信息 |
 | `MAC_LOOKUP_API_KEY` | 否 | `""` | MAC 查询的 API Key，用于通过 MAC Lookup 获取 MAC 地址的归属信息 |
 | `VITE_CURL_IPV4_DOMAIN` | 否 | `""` | 为用户提供 CURL API 的 IPv4 域名 |

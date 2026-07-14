@@ -64,6 +64,17 @@ export const requireValidASN = (paramName = 'asn') => (req, res, next) => {
     next();
 };
 
+// Reject requests whose report id doesn't look like one we issued: 16 random
+// bytes as base64url, always exactly 22 chars. Reads the ROUTE param (not the
+// query) — the share-report read endpoint is /api/report/:id.
+export const requireValidReportId = (paramName = 'id') => (req, res, next) => {
+    const id = req.params?.[paramName];
+    if (!id || !/^[A-Za-z0-9_-]{22}$/.test(id)) {
+        return res.status(400).json({ error: 'Invalid report id' });
+    }
+    next();
+};
+
 // Reject requests whose `id` isn't a known service-status provider slug.
 // Used by the per-provider components / incidents endpoints, which select a
 // row from the in-memory snapshot by id.

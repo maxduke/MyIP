@@ -26,6 +26,8 @@ import { getSessionResult as dnsLeakGetResult } from '../api/dns-leak-test.js';
 import serviceStatusHandler, {
     detailHandler as serviceStatusDetailHandler,
 } from '../api/service-status.js';
+import createReportHandler, { getReport as getReportHandler } from '../api/share-report.js';
+import { REPORT_VERSION } from '../common/report-schema.js';
 
 // -- shared test utilities ------------------------------------------------
 
@@ -55,6 +57,7 @@ const ENV_KEYS = [
     'MAC_LOOKUP_API_KEY', 'IPAPIIS_API_KEY',
     'IPINFO_API_KEY', 'IP2LOCATION_API_KEY',
     'CLOUDFLARE_API_KEY',
+    'CLOUDFLARE_ACCOUNT_ID', 'CLOUDFLARE_KV_NAMESPACE_ID',
     // Pre-rename spellings, still honored as fallbacks.
     'IPINFO_API_TOKEN', 'CLOUDFLARE_API',
 ];
@@ -86,7 +89,7 @@ describe('configs handler', () => {
         const res = createResponse();
         configsHandler(createRequest(), res);
         assert.equal(res.statusCode, 200);
-        for (const key of ['map', 'ipInfo', 'ipChecking', 'ip2location', 'originalSite', 'cloudFlare', 'ipapiis']) {
+        for (const key of ['map', 'ipInfo', 'ipChecking', 'ip2location', 'originalSite', 'cloudFlare', 'ipapiis', 'reportSharing']) {
             assert.equal(typeof res.body[key], 'boolean');
         }
         assert.equal(res.body.originalSite, false);
@@ -361,5 +364,108 @@ describe('service-status detail handler', () => {
         assert.equal(res.body.id, 'claude');
         assert.ok(Array.isArray(res.body.components));
         assert.ok(Array.isArray(res.body.incidents));
+    });
+});
+
+// -- share-report (POST /api/report + GET /api/report/:id) -----------------
+// Everything asserted here returns before the first fetchUpstream (KV is
+// never hit).
+
+describe('share-report handlers', () => {
+    const kvEnv = () => {
+        process.env.CLOUDFLARE_API_KEY = 'test-key';
+        process.env.CLOUDFLARE_ACCOUNT_ID = 'test-account';
+        process.env.CLOUDFLARE_KV_NAMESPACE_ID = 'test-namespace';
+    };
+    const noKvEnv = () => {
+        delete process.env.CLOUDFLARE_API_KEY;
+        delete process.env.CLOUDFLARE_API;
+        delete process.env.CLOUDFLARE_ACCOUNT_ID;
+        delete process.env.CLOUDFLARE_KV_NAMESPACE_ID;
+    };
+
+    const createReq = (body, method = 'POST') => createRequest({ method, body });
+
+    const validReport = () => ({
+        v: REPORT_VERSION,
+        generatedAt: '2026-07-14T08:00:00.000Z',
+        origin: 'ipcheck.ing',
+        locale: 'zh',
+        sections: {
+            ruletest: {
+                testedAt: '2026-07-14T08:00:00.000Z',
+                uniqueIPCount: 1,
+                workers: [{ id: 1, ip: '1.2.3.4', countryCode: 'US', org: 'CF' }],
+            },
+        },
+    });
+
+    it('POST rejects non-POST with 405', async () => {
+        const res = createResponse();
+        await createReportHandler(createReq(undefined, 'GET'), res);
+        assert.equal(res.statusCode, 405);
+    });
+
+    it('POST returns 503 when KV env is not configured', async () => {
+        noKvEnv();
+        const res = createResponse();
+        await createReportHandler(createReq({ report: validReport(), ttlDays: 7 }), res);
+        assert.equal(res.statusCode, 503);
+    });
+
+    it('POST rejects a ttlDays outside the whitelist', async () => {
+        kvEnv();
+        for (const ttlDays of [0, 2, 365, '7', null]) {
+            const res = createResponse();
+            await createReportHandler(createReq({ report: validReport(), ttlDays }), res);
+            assert.equal(res.statusCode, 400, `ttlDays=${ttlDays} should 400`);
+            assert.equal(res.body.error, 'Invalid ttlDays');
+        }
+    });
+
+    it('POST rejects an invalid report with the validator details', async () => {
+        kvEnv();
+        const res = createResponse();
+        await createReportHandler(createReq({ report: { v: REPORT_VERSION, smuggled: 'x' }, ttlDays: 7 }), res);
+        assert.equal(res.statusCode, 400);
+        assert.equal(res.body.error, 'Invalid report');
+        assert.ok(Array.isArray(res.body.details));
+    });
+
+    it('POST rejects a schema-valid but oversized report with 413', async () => {
+        kvEnv();
+        const report = validReport();
+        // Inflate within schema caps: 32 mtr probes × 64 hops ≫ 32KB.
+        report.sections.mtrtest = {
+            testedAt: '2026-07-14T08:00:00.000Z',
+            target: '8.8.8.8',
+            probes: Array.from({ length: 32 }, () => ({
+                countryCode: 'US',
+                network: 'n'.repeat(120),
+                hops: Array.from({ length: 64 }, (_, i) => ({
+                    n: i + 1, host: 'h'.repeat(120), lossPct: 0, avgMs: 1.5,
+                })),
+            })),
+        };
+        const res = createResponse();
+        await createReportHandler(createReq({ report, ttlDays: 7 }), res);
+        assert.equal(res.statusCode, 413);
+    });
+
+    it('GET rejects non-GET with 405', async () => {
+        const res = createResponse();
+        const req = createReq(undefined, 'POST');
+        req.params = { id: 'a'.repeat(22) };
+        await getReportHandler(req, res);
+        assert.equal(res.statusCode, 405);
+    });
+
+    it('GET returns 503 when KV env is not configured', async () => {
+        noKvEnv();
+        const res = createResponse();
+        const req = createReq(undefined, 'GET');
+        req.params = { id: 'a'.repeat(22) };
+        await getReportHandler(req, res);
+        assert.equal(res.statusCode, 503);
     });
 });

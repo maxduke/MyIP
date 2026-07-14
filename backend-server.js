@@ -7,7 +7,7 @@ import { slowDown } from 'express-slow-down'
 import rateLimit from 'express-rate-limit';
 import pinoHttp from 'pino-http';
 import logger from './common/logger.js';
-import { requireReferer, requireValidIP, requireValidPrefix, requireValidASN, requireValidProviderId } from './common/guards.js';
+import { requireReferer, requireValidIP, requireValidPrefix, requireValidASN, requireValidProviderId, requireValidReportId } from './common/guards.js';
 
 // Backend APIs
 import mapHandler from './api/google-map.js';
@@ -30,6 +30,7 @@ import serviceStatusHandler, {
 import { getSessionResult as dnsLeakGetResult } from './api/dns-leak-test.js';
 import getWhois from './api/get-whois.js';
 import sentryTunnelHandler from './api/sentry-tunnel.js';
+import createReportHandler, { getReport as getReportHandler } from './api/share-report.js';
 import invisibilitytestHandler from './api/invisibility-test.js';
 import macChecker from './api/mac-checker.js';
 import githubStarsHandler from './api/github-stars.js';
@@ -227,6 +228,9 @@ const ONE_YEAR_CACHE = 365 * 24 * 60 * 60;
 // Short Cache
 app.get('/api/service-status', cacheable(FIVE_MIN_CACHE), serviceStatusHandler);
 app.get('/api/service-status/detail', requireValidProviderId(), cacheable(FIVE_MIN_CACHE), serviceStatusDetailHandler);
+// Shared reports are immutable and expire via KV TTL; a short edge cache
+// absorbs the read fan-out when one link is opened by many people.
+app.get('/api/report/:id', requireValidReportId(), cacheable(FIVE_MIN_CACHE), getReportHandler);
 // Cache for 1 day
 app.get('/api/ipinfo', requireValidIP(), cacheable(ONE_DAY_CACHE), ipinfoHandler);
 app.get('/api/ipapicom', requireValidIP(), cacheable(ONE_DAY_CACHE), ipapicomHandler);
@@ -253,6 +257,7 @@ app.get('/api/invisibility', invisibilitytestHandler);
 app.get('/api/getuserinfo', getUserinfo);
 app.put('/api/updateuserachievement', updateUserAchievement);
 app.get('/api/configs', validateConfigs);
+app.post('/api/report', createReportHandler);
 
 // Sentry tunnel — first-party relay for the frontend SDK's envelopes
 // Mounted only when this deployment actually built the frontend with a DSN.

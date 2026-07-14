@@ -148,7 +148,9 @@ MaxMind hesabınızdan `GeoLite2-City.mmdb` ve `GeoLite2-ASN.mmdb` dosyalarını
 | `IPINFO_API_KEY` | Hayır | `""` | IPInfo.io API token'ı, IP konum bilgisi almak için |
 | `IPAPIIS_API_KEY` | Hayır | `""` | IPAPI.is API anahtarı, IP konum bilgisi almak için |
 | `IP2LOCATION_API_KEY` | Hayır | `""` | IP2Location.io API anahtarı, IP konum bilgisi almak için |
-| `CLOUDFLARE_API_KEY` | Hayır | `""` | Cloudflare API anahtarı, AS sistemi bilgisi almak için |
+| `CLOUDFLARE_API_KEY` | Hayır | `""` | Cloudflare API anahtarı, AS sistemi bilgisi almak için; aşağıdaki iki KV değişkeniyle ("Workers KV Storage: Edit" izni gerekir) tanı raporu paylaşımını da sağlar |
+| `CLOUDFLARE_ACCOUNT_ID` | Hayır | `""` | Cloudflare hesap kimliği, paylaşılabilir tanı raporlarını Workers KV'de saklamak için gerekli |
+| `CLOUDFLARE_KV_NAMESPACE_ID` | Hayır | `""` | Paylaşılabilir tanı raporlarını saklayan Workers KV ad alanının onaltılık kimliği (adı değil) |
 | `RIPESTAT_SOURCE_APP` | Hayır | `""` | RIPE.net kaynak uygulama adı, RIPE.net üzerinden ASN geçmiş bilgisi almak için |
 | `MAC_LOOKUP_API_KEY` | Hayır | `""` | MAC Lookup API anahtarı, MAC adresi bilgisi almak için |
 | `VITE_CURL_IPV4_DOMAIN` | Hayır | `""` | Kullanıcılara CURL API için IPv4 domain sağlar |

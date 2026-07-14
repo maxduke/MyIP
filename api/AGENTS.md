@@ -17,8 +17,8 @@ Roughly one handler file per route: IP-geolocation sources (`ipinfo-io` /
 `cf-radar` / `asn-history` / `asn-connectivity` / `service-status` /
 `google-map` / `github-stars` / `invisibility-test` / `dns-leak-test`), user
 proxies (`get-user-info` / `update-user-achievement`), platform
-(`configs` / `sentry-tunnel`). Each file's header comment states its route
-and purpose — read those for specifics.
+(`configs` / `sentry-tunnel` / `share-report`). Each file's header comment
+states its route and purpose — read those for specifics.
 
 ## Conventions
 
@@ -64,6 +64,7 @@ these checks:
 - `requireValidASN()` — `?asn=`, strips `AS`, rewrites to numeric
   (`cf-radar` predates it and still validates inline).
 - `requireValidProviderId()` — whitelists `?id=` against service-status slugs.
+- `requireValidReportId()` — `/api/report/:id` route param (22-char base64url).
 
 New param shape → new guard in `common/guards.js`, attached in
 `backend-server.js`; never open-coded in the handler.
