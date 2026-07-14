@@ -98,7 +98,8 @@
                 <!-- The created link — shown once, with its expiry -->
 
                 <div v-if="shareLink" class="rounded-lg border border-action/30 bg-action/10 p-3 space-y-2">
-                    <div class="flex items-center gap-2 min-w-0 bg-action/40 text-secondary-foreground p-2 rounded-md">
+                    <div
+                        class="flex items-center gap-2 min-w-0 border bg-primary-foreground text-primary p-2 rounded-md">
                         <span class="font-mono text-sm break-all flex-1">{{ shareLink }}</span>
                         <CopyButton :value="shareLink" :tooltip="t('report.CopyLink')" />
                     </div>
