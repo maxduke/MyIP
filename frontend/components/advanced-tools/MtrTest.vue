@@ -79,7 +79,62 @@
                     </div>
                 </AccordionTrigger>
                 <AccordionContent>
-                    <pre
+                    <!-- Structured hop table parsed from the mtr raw output;
+                         falls back to the raw text when nothing was parseable. -->
+                    <div v-if="result.hops.length" class="mt-2 rounded-md border overflow-x-auto">
+                        <table class="w-full text-xs">
+                            <thead>
+                                <tr class="border-b">
+                                    <th scope="col"
+                                        class="px-3 py-2.5 text-xs font-medium text-muted-foreground text-left w-8">
+                                        #
+                                    </th>
+                                    <th v-if="result.hasHost" scope="col"
+                                        class="px-3 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide text-left">
+                                        {{ t('mtrtest.ColHost') }}
+                                    </th>
+                                    <th v-if="result.hasIp" scope="col"
+                                        class="px-3 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide text-left">
+                                        {{ t('mtrtest.ColIP') }}
+                                    </th>
+                                    <th v-if="result.hasAsn" scope="col"
+                                        class="px-3 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide text-left">
+                                        {{ t('mtrtest.ColASN') }}
+                                    </th>
+                                    <th v-for="col in result.columns" :key="col.key" scope="col"
+                                        class="px-3 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wide text-right text-nowrap">
+                                        {{ t('mtrtest.' + col.labelKey) }}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y">
+                                <tr v-for="hop in result.hops" :key="hop.n" class="hover:bg-muted/50 transition-colors">
+                                    <td class="px-3 py-2 font-mono tabular-nums text-muted-foreground">{{ hop.n }}</td>
+                                    <td v-if="result.hasHost" class="px-3 py-2 font-mono max-w-56">
+                                        <span v-if="hop.host" class="block truncate" :title="hop.host">{{ hop.host }}</span>
+                                        <span v-else-if="!hop.ip" class="text-muted-foreground italic font-sans">{{ t('mtrtest.NoReply') }}</span>
+                                        <span v-else class="text-muted-foreground">—</span>
+                                    </td>
+                                    <td v-if="result.hasIp" class="px-3 py-2 font-mono whitespace-nowrap">
+                                        <template v-if="hop.ip">{{ hop.ip }}</template>
+                                        <span v-else-if="!result.hasHost && !hop.host"
+                                            class="text-muted-foreground italic font-sans">{{ t('mtrtest.NoReply') }}</span>
+                                        <span v-else class="text-muted-foreground">—</span>
+                                    </td>
+                                    <td v-if="result.hasAsn"
+                                        class="px-3 py-2 font-mono tabular-nums text-muted-foreground whitespace-nowrap">
+                                        {{ hop.asn ? 'AS' + hop.asn : '—' }}
+                                    </td>
+                                    <td v-for="col in result.columns" :key="col.key"
+                                        class="px-3 py-2 text-right font-mono tabular-nums"
+                                        :class="hopCellClass(col, hop)">
+                                        {{ formatHopCell(col, hop) }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <pre v-else
                         class="mt-2 p-4 rounded-md bg-muted font-mono text-xs leading-relaxed overflow-x-auto whitespace-pre-wrap wrap-break-word">{{ result.rawOutput }}</pre>
                 </AccordionContent>
             </AccordionItem>
@@ -94,6 +149,7 @@ import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
 import { useGlobalpingMeasurement, GLOBALPING_DEFAULT_LOCATIONS, selectableIPs } from '@/composables/use-globalping-measurement';
 import { isValidIP } from '@/utils/valid-ip.js';
+import { parseMtrOutput } from '@/utils/mtr-parse.js';
 import getCountryName from '@/data/country-name.js';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
@@ -152,18 +208,64 @@ const startmtrCheck = () => {
     });
 };
 
+// Column catalog for the hop table. mtr builds differ in their numeric
+// columns, so each probe's table only shows the columns its parsed hops
+// actually carry. `kind` drives formatting and tone.
+const HOP_COLUMNS = [
+    { key: 'lossPct', labelKey: 'ColLoss', kind: 'loss' },
+    { key: 'sntCount', labelKey: 'ColSent', kind: 'count' },
+    { key: 'drop', labelKey: 'ColDrop', kind: 'count' },
+    { key: 'rcv', labelKey: 'ColRecv', kind: 'count' },
+    { key: 'lastMs', labelKey: 'ColLast', kind: 'ms' },
+    { key: 'avgMs', labelKey: 'ColAvg', kind: 'ms' },
+    { key: 'bestMs', labelKey: 'ColBest', kind: 'ms' },
+    { key: 'worstMs', labelKey: 'ColWorst', kind: 'ms' },
+    { key: 'stdevMs', labelKey: 'ColStDev', kind: 'ms' },
+    { key: 'javgMs', labelKey: 'ColJitter', kind: 'ms' },
+];
+
+const hopColumnsFor = (hops) =>
+    HOP_COLUMNS.filter((col) => hops.some((hop) => hop[col.key] !== undefined));
+
+const formatHopCell = (col, hop) => {
+    const value = hop[col.key];
+    if (value === undefined) return '—';
+    if (col.kind === 'loss') return `${value.toFixed(1)}%`;
+    if (col.kind === 'ms') return value.toFixed(1);
+    return String(value);
+};
+
+// Loss draws attention, counts stay quiet, latencies keep the default
+// foreground (per-hop latency grows along the path — absolute thresholds
+// like the ping table's would mislead here).
+const hopCellClass = (col, hop) => {
+    if (col.kind === 'loss') return hop[col.key] > 0 ? 'text-warning' : 'text-muted-foreground';
+    if (col.kind === 'count') return 'text-muted-foreground';
+    return '';
+};
+
 const processmtrResults = (data) => {
     const cleanedData = data.results
         .filter(item => item.result.status === 'finished')
         .filter(item => item.result.rawOutput !== null)
-        .map(item => ({
-            country: item.probe.country,
-            country_name: getCountryName(item.probe.country, lang.value),
-            city: item.probe.city,
-            network: item.probe.network,
-            asn: item.probe.asn,
-            rawOutput: item.result.rawOutput,
-        }));
+        .map(item => {
+            const hops = parseMtrOutput(item.result.rawOutput);
+            return {
+                country: item.probe.country,
+                country_name: getCountryName(item.probe.country, lang.value),
+                city: item.probe.city,
+                network: item.probe.network,
+                asn: item.probe.asn,
+                rawOutput: item.result.rawOutput,
+                hops,
+                columns: hopColumnsFor(hops),
+                // Identity columns are adaptive too: a probe whose hops carry
+                // no hostname (or no per-hop ASN) drops that column entirely.
+                hasHost: hops.some((hop) => hop.host !== undefined),
+                hasIp: hops.some((hop) => hop.ip !== undefined),
+                hasAsn: hops.some((hop) => hop.asn != null),
+            };
+        });
 
     mtrResults.value = cleanedData;
 };

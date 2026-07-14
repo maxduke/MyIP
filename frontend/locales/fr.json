@@ -778,7 +778,21 @@
     "Note3": "Veuillez sélectionner votre adresse IP pour le test.",
     "SelectIP": "Choisissez un IP",
     "Region": "Région",
-    "Error": "Échec du test, il semble que votre IP ne soit pas autorisée à effectuer le test MTR."
+    "Error": "Échec du test, il semble que votre IP ne soit pas autorisée à effectuer le test MTR.",
+    "ColHost": "Hôte",
+    "ColIP": "IP",
+    "ColASN": "ASN",
+    "ColLoss": "Perte",
+    "ColSent": "Envoyés",
+    "ColDrop": "Perdus",
+    "ColRecv": "Reçus",
+    "ColLast": "Dernier",
+    "ColAvg": "Moy.",
+    "ColBest": "Meilleur",
+    "ColWorst": "Pire",
+    "ColStDev": "É. type",
+    "ColJitter": "Gigue",
+    "NoReply": "Aucune réponse"
   },
   "ipcheck": {
     "Title": "Vérification IP",

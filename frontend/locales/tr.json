@@ -778,7 +778,21 @@
     "Note3": "Lütfen test için IP adresinizi seçin.",
     "SelectIP": "Bir IP Adresi Seçin",
     "Region": "Bölge",
-    "Error": "Test başarısız oldu, görünüşe göre IP'nizin MTR testi yapmasına izin verilmiyor."
+    "Error": "Test başarısız oldu, görünüşe göre IP'nizin MTR testi yapmasına izin verilmiyor.",
+    "ColHost": "Host",
+    "ColIP": "IP",
+    "ColASN": "ASN",
+    "ColLoss": "Kayıp",
+    "ColSent": "Gönderilen",
+    "ColDrop": "Düşen",
+    "ColRecv": "Alınan",
+    "ColLast": "Son",
+    "ColAvg": "Ort.",
+    "ColBest": "En iyi",
+    "ColWorst": "En kötü",
+    "ColStDev": "Std sapma",
+    "ColJitter": "Titreşim",
+    "NoReply": "Yanıt yok"
   },
   "ipcheck": {
     "Title": "IP Kontrolü",

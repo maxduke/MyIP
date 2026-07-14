@@ -778,7 +778,21 @@
     "Note3": "请选取你的 IP 地址进行测试：",
     "SelectIP": "选择一个 IP 地址",
     "Region": "地区",
-    "Error": "测试失败，看起来你的 IP 不允许进行 MTR 测试。"
+    "Error": "测试失败，看起来你的 IP 不允许进行 MTR 测试。",
+    "ColHost": "主机",
+    "ColIP": "IP",
+    "ColASN": "ASN",
+    "ColLoss": "丢包",
+    "ColSent": "发送",
+    "ColDrop": "丢弃",
+    "ColRecv": "接收",
+    "ColLast": "最近",
+    "ColAvg": "平均",
+    "ColBest": "最佳",
+    "ColWorst": "最差",
+    "ColStDev": "标准差",
+    "ColJitter": "抖动",
+    "NoReply": "无响应"
   },
   "ipcheck": {
     "Title": "IP 查询",

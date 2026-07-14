@@ -778,7 +778,21 @@
     "Note3": "Please select your IP address for testing.",
     "SelectIP": "Select an IP Address",
     "Region": "Region",
-    "Error": "Test failed, it looks like your IP is not allowed to perform MTR test."
+    "Error": "Test failed, it looks like your IP is not allowed to perform MTR test.",
+    "ColHost": "Host",
+    "ColIP": "IP",
+    "ColASN": "ASN",
+    "ColLoss": "Loss",
+    "ColSent": "Sent",
+    "ColDrop": "Dropped",
+    "ColRecv": "Received",
+    "ColLast": "Last",
+    "ColAvg": "Avg",
+    "ColBest": "Best",
+    "ColWorst": "Worst",
+    "ColStDev": "StDev",
+    "ColJitter": "Jitter",
+    "NoReply": "No response"
   },
   "ipcheck": {
     "Title": "IP Check",
