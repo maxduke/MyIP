@@ -19,72 +19,35 @@ async function fetchFromCloudflare(endpoint) {
     return response.json();
 }
 
-// ASN information
-async function getASNInfo(asn) {
-    try {
-        return await fetchFromCloudflare(`/radar/entities/asns/${asn}`);
-    } catch (error) {
-        logger.error({ err: error }, 'Failed to fetch ASN info');
-        throw new Error('Failed to fetch ASN info');
-    }
+// The five Radar segments backing one /api/cfradar response, keyed by the
+// field name cleanUpResponseData expects.
+const SEGMENTS = {
+    asnInfo: (asn) => `/radar/entities/asns/${asn}`,
+    ipVersion: (asn) => `/radar/http/summary/ip_version?asn=${asn}&dateRange=7d`,
+    httpProtocol: (asn) => `/radar/http/summary/http_protocol?asn=${asn}&dateRange=7d`,
+    deviceType: (asn) => `/radar/http/summary/device_type?asn=${asn}&dateRange=7d`,
+    botType: (asn) => `/radar/http/summary/bot_class?asn=${asn}&dateRange=7d`,
 };
 
-// IP version distribution
-async function getASNIPVersion(asn) {
-    try {
-        return await fetchFromCloudflare(`/radar/http/summary/ip_version?asn=${asn}&dateRange=7d`);
-    } catch (error) {
-        logger.error({ err: error }, 'Failed to fetch ASN IP version');
-        throw new Error('Failed to fetch ASN IP version');
-    }
+// Fetch all segments in parallel. A failed segment is dropped rather than
+// failing the whole response — cleanUpResponseData / filterData already
+// tolerate sparse data (small ASNs), so partial results degrade to missing
+// fields. Logging is the handler's job: it warns on partial failure and
+// errors only when every segment failed.
+const getAllASNData = async (asn) => {
+    const names = Object.keys(SEGMENTS);
+    const settled = await Promise.allSettled(names.map((name) => fetchFromCloudflare(SEGMENTS[name](asn))));
+    const data = {};
+    const failed = [];
+    settled.forEach((result, i) => {
+        if (result.status === 'fulfilled') {
+            data[names[i]] = result.value;
+        } else {
+            failed.push({ name: names[i], reason: result.reason });
+        }
+    });
+    return { data, failed };
 };
-
-// HTTP protocol distribution
-async function getASNHTTPProtocol(asn) {
-    try {
-        return await fetchFromCloudflare(`/radar/http/summary/http_protocol?asn=${asn}&dateRange=7d`);
-    } catch (error) {
-        logger.error({ err: error }, 'Failed to fetch ASN HTTP protocol');
-        throw new Error('Failed to fetch ASN HTTP protocol');
-    }
-};
-
-// Device distribution
-async function getASNDeviceType(asn) {
-    try {
-        return await fetchFromCloudflare(`/radar/http/summary/device_type?asn=${asn}&dateRange=7d`);
-    } catch (error) {
-        logger.error({ err: error }, 'Failed to fetch ASN device type');
-        throw new Error('Failed to fetch ASN device type');
-    }
-};
-
-// Bot distribution
-async function getASNBotType(asn) {
-    try {
-        return await fetchFromCloudflare(`/radar/http/summary/bot_class?asn=${asn}&dateRange=7d`);
-    } catch (error) {
-        logger.error({ err: error }, 'Failed to fetch ASN bot type');
-        throw new Error('Failed to fetch ASN bot type');
-    }
-};
-
-// Use Promise.all to make parallel requests
-async function getAllASNData(asn) {
-    try {
-        const [asnInfo, ipVersion, httpProtocol, deviceType, botType] = await Promise.all([
-            getASNInfo(asn),
-            getASNIPVersion(asn),
-            getASNHTTPProtocol(asn),
-            getASNDeviceType(asn),
-            getASNBotType(asn)
-        ]);
-        return { asnInfo, ipVersion, httpProtocol, deviceType, botType };
-    } catch (error) {
-        logger.error({ err: error }, 'Failed to fetch all ASN data');
-        throw new Error('Failed to fetch all ASN data');
-    }
-}
 
 // Validate asn is valid
 function isValidASN(asn) {
@@ -158,9 +121,18 @@ export default async (req, res) => {
     }
 
     try {
-        const { asnInfo, ipVersion, httpProtocol, deviceType, botType } = await getAllASNData(asn);
+        const { data, failed } = await getAllASNData(asn);
 
-        const cleanedResponse = cleanUpResponseData({ asnInfo, ipVersion, httpProtocol, deviceType, botType });
+        // One log line per request: a full wipe-out is a real failure
+        if (failed.length === Object.keys(SEGMENTS).length) {
+            logger.error({ err: failed[0].reason, asn }, 'cf-radar: all Radar segments failed');
+            return res.status(500).json({ error: 'Internal server error' });
+        }
+        if (failed.length > 0) {
+            logger.warn({ err: failed[0].reason, asn, segments: failed.map((f) => f.name) }, 'cf-radar: partial Radar segment failure');
+        }
+
+        const cleanedResponse = cleanUpResponseData(data);
         const finalResponse = formatData(cleanedResponse);
         filterData(finalResponse);
 
