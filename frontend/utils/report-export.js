@@ -51,7 +51,7 @@ const cell = (value) => {
     if (value === undefined || value === null || value === '') return '—';
     if (value === true) return 'yes';
     if (value === false) return 'no';
-    return String(value).replace(/\|/g, '\\|').replace(/\n/g, ' ');
+    return String(value).replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\n/g, ' ');
 };
 
 const mdTable = (headers, rows) => [

@@ -118,8 +118,8 @@ export const getReport = async (req, res) => {
             return res.status(404).json({ error: 'Report not found or expired' });
         }
         if (!response.ok) throw new Error(`KV read responded ${response.status}: ${await kvErrorDetail(response)}`);
-        // Stored values are validated { expiresAt, report } JSON; parse so
-        // cacheable()'s res.json hook applies the edge-cache header on this 2xx.
+        // Stored values are validated { expiresAt, report } JSON; parse and
+        // re-serialize so a corrupt KV value fails here, not in the client.
         return res.status(200).json(JSON.parse(await response.text()));
     } catch (error) {
         logger.error({ err: error, reportId: req.params.id }, 'Report share read failed');

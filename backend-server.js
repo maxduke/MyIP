@@ -233,9 +233,6 @@ const ONE_YEAR_CACHE = 365 * 24 * 60 * 60;
 // Short Cache
 app.get('/api/service-status', cacheable(FIVE_MIN_CACHE), serviceStatusHandler);
 app.get('/api/service-status/detail', requireValidProviderId(), cacheable(FIVE_MIN_CACHE), serviceStatusDetailHandler);
-// Shared reports are immutable and expire via KV TTL; a short edge cache
-// absorbs the read fan-out when one link is opened by many people.
-app.get('/api/report/:id', requireValidReportId(), cacheable(FIVE_MIN_CACHE), getReportHandler);
 // Cache for 1 day
 app.get('/api/ipinfo', requireValidIP(), cacheable(ONE_DAY_CACHE), ipinfoHandler);
 app.get('/api/ipapicom', requireValidIP(), cacheable(ONE_DAY_CACHE), ipapicomHandler);
@@ -262,6 +259,9 @@ app.get('/api/invisibility', invisibilitytestHandler);
 app.get('/api/getuserinfo', getUserinfo);
 app.put('/api/updateuserachievement', updateUserAchievement);
 app.get('/api/configs', validateConfigs);
+// Shared reports stay no-store: an edge cache could serve a report past its
+// KV expiry, and private diagnostic data doesn't belong in a public cache.
+app.get('/api/report/:id', requireValidReportId(), getReportHandler);
 app.post('/api/report', createReportHandler);
 
 // Sentry tunnel — first-party relay for the frontend SDK's envelopes

@@ -153,6 +153,13 @@ describe('reportToMarkdown', () => {
         const md = reportToMarkdown(report, t);
         assert.ok(md.includes('Evil\\|Corp'));
     });
+
+    it('escapes backslashes so they cannot neutralize pipe escaping', () => {
+        const report = makeReport();
+        report.sections.ipinfo.cards[0].isp = 'Evil\\|Corp';
+        const md = reportToMarkdown(report, t);
+        assert.ok(md.includes('Evil\\\\\\|Corp'));
+    });
 });
 
 describe('reportFileName', () => {
