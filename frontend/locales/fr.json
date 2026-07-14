@@ -580,6 +580,34 @@
       }
     }
   },
+  "reportPage": {
+    "Loading": "Chargement du rapport…",
+    "NotFound": "Rapport introuvable ou expiré",
+    "NotFoundNote": "Les rapports partagés sont automatiquement supprimés à expiration.",
+    "LoadFailed": "Échec du chargement du rapport, veuillez réessayer plus tard.",
+    "Unsupported": "Ce rapport a été créé avec une version plus récente et ne peut pas être affiché.",
+    "GeneratedBy": "Rapport de diagnostic généré sur {origin} le {time}",
+    "Stale": "Ce rapport date de plus de 3 jours — le réseau peut avoir changé depuis.",
+    "TestMine": "Tester mon propre réseau",
+    "Col": {
+      "Source": "Source",
+      "Name": "Nom",
+      "IP": "IP",
+      "Location": "Localisation",
+      "ISP": "FAI",
+      "Status": "Statut",
+      "Server": "Serveur",
+      "Provider": "Fournisseur",
+      "Target": "Cible",
+      "UniqueIPs": "IP de sortie distinctes",
+      "Resolvers": "Résolveurs"
+    },
+    "Dnssec": {
+      "ok": "DNSSEC activé",
+      "partial": "DNSSEC partiellement activé",
+      "none": "DNSSEC non activé"
+    }
+  },
   "ipHistory": {
     "Title": "Historique des IP",
     "Notes": "Les IP détectées lors de votre utilisation du site sont enregistrées ici. Les données sont stockées uniquement dans ce navigateur — elles ne sont jamais synchronisées avec votre compte et ne quittent pas votre appareil. Vous pouvez ajuster le délai de conservation des enregistrements dans les \"Préférences\".",
@@ -774,9 +802,9 @@
     "Latency": "Latence",
     "Jitter": "Gigue",
     "loadedLatency": "Latence en charge : ",
-    "videoStreaming": "Streaming vidéo : ",
-    "gaming": ", Jeu : ",
-    "rtc": ", Chat vidéo : ",
+    "videoStreaming": "Streaming vidéo",
+    "gaming": "Jeu",
+    "rtc": "Chat vidéo",
     "score": "Sur la base du test de vitesse, voici les scores de qualité suivants :",
     "connectionFrom": "Test de vitesse terminé depuis votre machine, IP: ",
     "connectionTo": " vers le serveur de test:",

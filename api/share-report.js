@@ -8,7 +8,8 @@
 // `reportSharing: false`, so the share-link UI never shows.
 //
 // Abuse layering (write side): schema whitelist (no free-form text can be
-// stored), 32KB size cap, 128-bit unguessable ids, KV TTL. Rate limiting is
+// stored), a size cap (REPORT_MAX_BYTES), 128-bit unguessable ids, KV TTL.
+// Rate limiting is
 // deliberately NOT done here — it's a deployment concern: edge rules cover
 // the hosted site, and the env-gated global /api limiter in
 // backend-server.js (SECURITY_RATE_LIMIT) covers self-hosts.
@@ -71,11 +72,16 @@ const createReport = async (req, res) => {
     try {
         const id = crypto.randomBytes(16).toString('base64url');
         const ttlSeconds = normalizeTtlDays(ttlDays) * 24 * 60 * 60;
+        const expiresAt = new Date(Date.now() + ttlSeconds * 1000).toISOString();
+        // Stored value is a { expiresAt, report } wrapper so readers (the
+        // report page, AI agents fetching the link) can show when the report
+        // will disappear — KV's own TTL isn't readable via the values GET.
+        //
         // The KV write endpoint requires multipart/form-data with `value` +
         // `metadata` fields (a raw body is a 400); fetch derives the
         // multipart boundary from the FormData, so no manual Content-Type.
         const form = new FormData();
-        form.append('value', serialized);
+        form.append('value', JSON.stringify({ expiresAt, report }));
         form.append('metadata', '{}');
         const response = await fetchUpstream(
             kvValueUrl(config, id, `?expiration_ttl=${ttlSeconds}`),
@@ -87,10 +93,7 @@ const createReport = async (req, res) => {
         );
         if (!response.ok) throw new Error(`KV write responded ${response.status}: ${await kvErrorDetail(response)}`);
 
-        return res.status(201).json({
-            id,
-            expiresAt: new Date(Date.now() + ttlSeconds * 1000).toISOString(),
-        });
+        return res.status(201).json({ id, expiresAt });
     } catch (error) {
         logger.error({ err: error }, 'Report share create failed');
         return res.status(500).json({ error: error.message });
@@ -116,8 +119,10 @@ export const getReport = async (req, res) => {
         }
         if (!response.ok) throw new Error(`KV read responded ${response.status}: ${await kvErrorDetail(response)}`);
         // Stored values are validated JSON; parse so cacheable()'s res.json
-        // hook applies the edge-cache header on this 2xx.
-        return res.status(200).json(JSON.parse(await response.text()));
+        // hook applies the edge-cache header on this 2xx. Early test entries
+        // were stored as a bare report — normalize them to the wrapper shape.
+        const parsed = JSON.parse(await response.text());
+        return res.status(200).json(parsed?.report ? parsed : { report: parsed });
     } catch (error) {
         logger.error({ err: error, reportId: req.params.id }, 'Report share read failed');
         return res.status(500).json({ error: error.message });

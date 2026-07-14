@@ -24,7 +24,7 @@ import { useReportCollector } from '@/composables/use-report-collector.js';
 // rule in index.html) — otherwise a blank strip shows above their header. Toggle
 // the marker class as the route changes. NB: "standalone" here is unrelated to
 // PWA display mode — that's `isRunningAsPwa()` in utils/pwa.js.
-const STANDALONE_ROUTES = new Set(['tool', 'privacy']);
+const STANDALONE_ROUTES = new Set(['tool', 'privacy', 'report']);
 const route = useRoute();
 watch(
     () => STANDALONE_ROUTES.has(route.name),

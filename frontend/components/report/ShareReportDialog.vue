@@ -48,7 +48,9 @@
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem v-for="days in REPORT_TTL_DAYS" :key="days" :value="days">
+                                <!-- reka-ui SelectItem values are strings; ttlDays converts back
+                                     to a number at POST time. -->
+                                <SelectItem v-for="days in REPORT_TTL_DAYS" :key="days" :value="String(days)">
                                     {{ t(`report.Ttl${days}`) }}
                                 </SelectItem>
                             </SelectContent>
@@ -60,7 +62,8 @@
                 <Collapsible v-model:open="previewOpen">
                     <CollapsibleTrigger
                         class="flex flex-row items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
-                        <span>{{ t('report.Preview') }}<ChevronRight class="size-4 transition-transform" :class="previewOpen ? 'rotate-90' : ''" />
+                        <span>{{ t('report.Preview') }}
+                            <ChevronRight class="size-4 transition-transform" :class="previewOpen ? 'rotate-90' : ''" />
                         </span>
                     </CollapsibleTrigger>
                     <CollapsibleContent>
@@ -93,16 +96,17 @@
                 <p v-if="shareError" class="text-sm text-destructive">{{ t('report.CreateFailed') }}</p>
 
                 <!-- The created link — shown once, with its expiry -->
-                <div v-if="shareLink" class="rounded-lg border bg-card p-3 space-y-2">
-                    <div class="flex items-center gap-2 min-w-0">
+
+                <div v-if="shareLink" class="rounded-lg border border-action/30 bg-action/10 p-3 space-y-2">
+                    <div class="flex items-center gap-2 min-w-0 bg-action/40 text-secondary-foreground p-2 rounded-md">
                         <span class="font-mono text-sm break-all flex-1">{{ shareLink }}</span>
                         <CopyButton :value="shareLink" :tooltip="t('report.CopyLink')" />
                     </div>
-                    <p class="text-xs text-warning">{{ t('report.LinkOnce') }}</p>
-                    <p class="text-xs text-muted-foreground">
-                        {{ t('report.ExpiresAt', { time: expiresAtDisplay }) }}
-                    </p>
+                    <p class="text-xs text-action">{{ t('report.LinkOnce') }}</p>
+                    <p class="text-xs text-muted-foreground mb-0">{{ t('report.ExpiresAt', { time: expiresAtDisplay })
+                        }} </p>
                 </div>
+
             </div>
         </DialogContent>
     </Dialog>
@@ -143,7 +147,7 @@ const sharingEnabled = computed(() => store.configs?.reportSharing === true);
 const isOpen = ref(false);
 const selectedIds = ref([]);
 const maskTail = ref(false);
-const ttlDays = ref(REPORT_TTL_DAYS[0]);
+const ttlDays = ref(String(REPORT_TTL_DAYS[0]));
 const previewOpen = ref(false);
 
 // The two original-site-only tools (sign-in + private API) don't exist for
@@ -184,7 +188,7 @@ const previewMarkdown = computed(() => {
 
 const onCreateLink = async () => {
     trackEvent('Section', 'StartClick', 'ShareReportLink');
-    await createShareLink(assembleReport(), ttlDays.value);
+    await createShareLink(assembleReport(), Number(ttlDays.value));
 };
 
 const onCopyForAI = async () => {

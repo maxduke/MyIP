@@ -580,6 +580,34 @@
       }
     }
   },
+  "reportPage": {
+    "Loading": "Rapor yükleniyor…",
+    "NotFound": "Rapor bulunamadı veya süresi doldu",
+    "NotFoundNote": "Paylaşılan raporlar süresi dolduğunda otomatik olarak silinir.",
+    "LoadFailed": "Rapor yüklenemedi, lütfen daha sonra tekrar deneyin.",
+    "Unsupported": "Bu rapor daha yeni bir sürümle oluşturuldu ve görüntülenemiyor.",
+    "GeneratedBy": "{origin} üzerinde {time} tarihinde oluşturulan tanı raporu",
+    "Stale": "Bu rapor 3 günden eski — ağ durumu o zamandan beri değişmiş olabilir.",
+    "TestMine": "Kendi ağımı test et",
+    "Col": {
+      "Source": "Kaynak",
+      "Name": "Ad",
+      "IP": "IP",
+      "Location": "Konum",
+      "ISP": "ISS",
+      "Status": "Durum",
+      "Server": "Sunucu",
+      "Provider": "Sağlayıcı",
+      "Target": "Hedef",
+      "UniqueIPs": "Farklı çıkış IP sayısı",
+      "Resolvers": "Çözümleyiciler"
+    },
+    "Dnssec": {
+      "ok": "DNSSEC etkin",
+      "partial": "DNSSEC kısmen etkin",
+      "none": "DNSSEC etkin değil"
+    }
+  },
   "ipHistory": {
     "Title": "IP Geçmişi",
     "Notes": "Siteyi kullanırken tespit edilen IP'ler burada kaydedilir. Veriler yalnızca bu tarayıcıda saklanır — hesabınızla asla eşitlenmez ve cihazınızdan ayrılmaz. Kayıtların saklanma süresini \"Tercihler\" bölümünde ayarlayabilirsiniz.",
@@ -774,9 +802,9 @@
     "Latency": "Gecikme",
     "Jitter": "Jitter",
     "loadedLatency": "Yüklü gecikme: ",
-    "videoStreaming": "Video Akışı: ",
-    "gaming": ", Oyun: ",
-    "rtc": ", Görüntülü Sohbet: ",
+    "videoStreaming": "Video Akışı",
+    "gaming": "Oyun",
+    "rtc": "Görüntülü Sohbet",
     "score": "Hız testine dayanarak, aşağıdaki kalite puanları alındı:",
     "connectionFrom": "Makinenizden hız testi tamamlandı, IP: ",
     "connectionTo": " test sunucusuna:",

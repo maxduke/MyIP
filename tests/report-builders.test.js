@@ -146,6 +146,43 @@ describe('cleaning rules', () => {
         assert.equal(section.cards[0].countryCode, 'US'); // normalized to upper
     });
 
+    it('ipinfo keeps IPCheck.ing enrichments and drops gated/unknown values', () => {
+        const { build } = REPORT_EVENT_BUILDERS['ipinfo:finished'];
+        const section = build({
+            cards: [{
+                source: 'IPCheck.ing IPv4', ip: '1.2.3.4', country_code: 'US',
+                proxyCode: 'no', ipTypeCode: 'residential', isNativeIP: true,
+                qualityScore: '85', proxyProtocol: 'unknown', proxyProvider: '',
+            }, {
+                // Signed-out run: locale-free codes stay undefined and raw
+                // 'sign_in_required' strings must never survive the builder.
+                source: 'IPCheck.ing IPv6', ip: '2001:db8::1', country_code: 'US',
+                proxyCode: undefined, ipTypeCode: undefined,
+                isNativeIP: 'sign_in_required', qualityScore: 'sign_in_required',
+            }, {
+                // 'unknown' values carry no signal — dropped like absent.
+                source: 'IPCheck.ing IPv6/4', ip: '9.9.9.9', country_code: 'US',
+                proxyCode: 'unknown', ipTypeCode: 'unknown',
+                proxyProvider: 'unknown', proxyProtocol: 'unknown',
+            }],
+        });
+        const [enriched, gated, unknowns] = section.cards;
+        assert.equal('isProxy' in unknowns, false);
+        assert.equal('ipType' in unknowns, false);
+        assert.equal('proxyProvider' in unknowns, false);
+        assert.equal('proxyProtocol' in unknowns, false);
+        assert.equal(enriched.isProxy, 'no');
+        assert.equal(enriched.ipType, 'residential');
+        assert.equal(enriched.nativeIP, true);
+        assert.equal(enriched.qualityScore, 85);
+        // 'unknown' protocol and empty provider stay out of the report.
+        assert.equal('proxyProtocol' in enriched, false);
+        assert.equal('proxyProvider' in enriched, false);
+        for (const key of ['isProxy', 'ipType', 'nativeIP', 'qualityScore']) {
+            assert.equal(key in gated, false, `${key} should be absent on the gated card`);
+        }
+    });
+
     it('connectivity keeps only settled targets and maps the enum', () => {
         const { build } = REPORT_EVENT_BUILDERS['connectivity:finished'];
         const section = build(PAYLOADS['connectivity:finished']);

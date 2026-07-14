@@ -580,6 +580,34 @@
       }
     }
   },
+  "reportPage": {
+    "Loading": "Loading report…",
+    "NotFound": "Report not found or expired",
+    "NotFoundNote": "Shared reports auto-delete when they expire.",
+    "LoadFailed": "Failed to load the report, please retry later.",
+    "Unsupported": "This report was created with a newer version and cannot be displayed.",
+    "GeneratedBy": "Diagnostic report generated at {origin} on {time}",
+    "Stale": "This report is more than 3 days old — the network may have changed since.",
+    "TestMine": "Test my own network",
+    "Col": {
+      "Source": "Source",
+      "Name": "Name",
+      "IP": "IP",
+      "Location": "Location",
+      "ISP": "ISP",
+      "Status": "Status",
+      "Server": "Server",
+      "Provider": "Provider",
+      "Target": "Target",
+      "UniqueIPs": "Unique egress IPs",
+      "Resolvers": "Resolvers"
+    },
+    "Dnssec": {
+      "ok": "DNSSEC enabled",
+      "partial": "DNSSEC partially enabled",
+      "none": "DNSSEC not enabled"
+    }
+  },
   "ipHistory": {
     "Title": "IP History",
     "Notes": "IPs detected while you use this site are recorded here. The data is stored only in this browser — it never syncs to your account or leaves your device. You can adjust the record retention time in the \"Preferences\".",
@@ -774,9 +802,9 @@
     "Latency": "Latency",
     "Jitter": "Jitter",
     "loadedLatency": "Loaded latency: ",
-    "videoStreaming": "Video Streaming: ",
-    "gaming": ", Gaming: ",
-    "rtc": ", Video Chatting: ",
+    "videoStreaming": "Video Streaming",
+    "gaming": "Gaming",
+    "rtc": "Video Chatting",
     "score": "Based on the speed test, got the following quality scores:",
     "connectionFrom": "Finished speed test from your machine, IP: ",
     "connectionTo": " to test server:",

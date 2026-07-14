@@ -580,6 +580,34 @@
       }
     }
   },
+  "reportPage": {
+    "Loading": "报告加载中…",
+    "NotFound": "报告不存在或已过期",
+    "NotFoundNote": "分享报告到期后会自动删除。",
+    "LoadFailed": "报告加载失败，请稍后重试。",
+    "Unsupported": "此报告由更新版本生成，无法显示。",
+    "GeneratedBy": "由 {origin} 于 {time} 生成的诊断报告",
+    "Stale": "此报告已超过 3 天，网络状况可能已发生变化。",
+    "TestMine": "测一测我自己的网络",
+    "Col": {
+      "Source": "来源",
+      "Name": "名称",
+      "IP": "IP",
+      "Location": "位置",
+      "ISP": "运营商",
+      "Status": "状态",
+      "Server": "服务器",
+      "Provider": "提供商",
+      "Target": "目标",
+      "UniqueIPs": "不同出口 IP 数",
+      "Resolvers": "解析器数量"
+    },
+    "Dnssec": {
+      "ok": "DNSSEC 已启用",
+      "partial": "DNSSEC 部分启用",
+      "none": "DNSSEC 未启用"
+    }
+  },
   "ipHistory": {
     "Title": "IP 历史记录",
     "Notes": "这里记录你使用本站时被侦测到的 IP。数据仅保存在当前浏览器本地，不会同步到账号，也不会离开你的设备。你可以在「偏好设置」中调整记录保留时间。",
@@ -774,9 +802,9 @@
     "Latency": "延迟",
     "Jitter": "抖动",
     "loadedLatency": "满载延迟：",
-    "videoStreaming": "在线视频：",
-    "gaming": " ，在线游戏：",
-    "rtc": " ，视频会议：",
+    "videoStreaming": "在线视频",
+    "gaming": " 在线游戏",
+    "rtc": " 视频会议",
     "score": "根据网速测试，得出以下质量分数：",
     "connectionFrom": "已完成从你的机器，IP：",
     "connectionTo": "与测速服务器：",

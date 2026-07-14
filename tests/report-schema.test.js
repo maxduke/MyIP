@@ -29,7 +29,7 @@ const makeValidReport = () => ({
         ipinfo: {
             testedAt: '2026-07-14T08:00:00.000Z',
             cards: [
-                { source: 'IPCheck.ing IPv4', ip: '1.2.3.4', countryCode: 'US', region: 'California', city: 'Mountain View', asn: 'AS15169', isp: 'Google LLC' },
+                { source: 'IPCheck.ing IPv4', ip: '1.2.3.4', countryCode: 'US', region: 'California', city: 'Mountain View', asn: 'AS15169', isp: 'Google LLC', isProxy: 'no', ipType: 'residential', nativeIP: true, qualityScore: 85, proxyProtocol: 'SOCKS5', proxyProvider: 'ACME' },
                 { source: 'Cloudflare IPv6', ip: '2001:db8::1', countryCode: '', city: '' },
             ],
         },
@@ -177,6 +177,10 @@ describe('validateReport', () => {
         const badEnum = makeValidReport();
         badEnum.sections.connectivity.targets[0].status = 'flaky';
         assert.equal(validateReport(badEnum).ok, false);
+
+        const badProxyEnum = makeValidReport();
+        badProxyEnum.sections.ipinfo.cards[0].isProxy = 'sign_in_required';
+        assert.equal(validateReport(badProxyEnum).ok, false);
 
         const badRange = makeValidReport();
         badRange.sections.invisibility.scores.proxy = 101;

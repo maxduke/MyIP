@@ -434,7 +434,8 @@ describe('share-report handlers', () => {
     it('POST rejects a schema-valid but oversized report with 413', async () => {
         kvEnv();
         const report = validReport();
-        // Inflate within schema caps: 32 mtr probes × 64 hops ≫ 32KB.
+        // Inflate within schema caps: 32 mtr probes × 64 hops with long
+        // hostnames ≈ 300KB+ serialized ≫ REPORT_MAX_BYTES (256KB).
         report.sections.mtrtest = {
             testedAt: '2026-07-14T08:00:00.000Z',
             target: '8.8.8.8',

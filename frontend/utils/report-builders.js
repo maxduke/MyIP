@@ -38,8 +38,15 @@ const compact = (obj) => {
 
 // --- per-section builders ---------------------------------------------------
 
-// ipinfo:finished — { cards: [{ source, ip, country_code, region, city, asn, isp }] }
-// Cards whose ip never resolved (placeholder text in the slot) are dropped.
+// ipinfo:finished — { cards: [{ source, ip, country_code, region, city, asn,
+// isp, proxyCode?, ipTypeCode?, isNativeIP?, qualityScore?, proxyProtocol?,
+// proxyProvider? }] }. Cards whose ip never resolved (placeholder text in the
+// slot) are dropped. The optional enrichments only exist on the IPCheck.ing
+// source and stay absent when sign-in-gated ('sign_in_required' upstream
+// values never turn into codes — see transform-ip-data.js). 'unknown' codes
+// are noise in a report ("Unknown type" says nothing) — dropped like absent.
+const PROXY_CODES = new Set(['yes', 'maybe', 'no']);
+const IP_TYPE_CODES = new Set(['business', 'residential', 'wireless', 'hosting']);
 const buildIpinfo = (payload) => {
     const cards = (payload?.cards ?? [])
         .filter((card) => isValidIP(card?.ip))
@@ -52,6 +59,14 @@ const buildIpinfo = (payload) => {
             city: clip(card.city, 64),
             asn: clip(card.asn, 16),
             isp: clip(card.isp, 128),
+            isProxy: PROXY_CODES.has(card.proxyCode) ? card.proxyCode : undefined,
+            ipType: IP_TYPE_CODES.has(card.ipTypeCode) ? card.ipTypeCode : undefined,
+            nativeIP: typeof card.isNativeIP === 'boolean' ? card.isNativeIP : undefined,
+            qualityScore: finiteNum(Number(card.qualityScore), 0, 100),
+            proxyProtocol: card.proxyProtocol && card.proxyProtocol !== 'unknown'
+                ? clip(card.proxyProtocol, 32) : undefined,
+            proxyProvider: card.proxyProvider && card.proxyProvider !== 'unknown'
+                ? clip(card.proxyProvider, 64) : undefined,
         }));
     return cards.length ? { cards } : null;
 };

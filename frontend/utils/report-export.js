@@ -69,11 +69,21 @@ const kvLines = (pairs) => pairs
 // actually carries, in a stable order.
 const MTR_HOP_STATS = ['lossPct', 'sntCount', 'drop', 'rcv', 'lastMs', 'avgMs', 'bestMs', 'worstMs', 'stdevMs', 'javgMs'];
 
+// ipinfo's IPCheck.ing enrichment columns only render when some card
+// carries them (other sources / signed-out runs never do).
+const IPINFO_EXTRA_COLS = ['isProxy', 'ipType', 'nativeIP', 'qualityScore', 'proxyProtocol', 'proxyProvider'];
+
 const SECTION_RENDERERS = {
-    ipinfo: (section) => mdTable(
-        ['source', 'ip', 'countryCode', 'region', 'city', 'asn', 'isp'],
-        section.cards.map((c) => [c.source, c.ip, c.countryCode, c.region, c.city, c.asn, c.isp]),
-    ),
+    ipinfo: (section) => {
+        const extras = IPINFO_EXTRA_COLS.filter((key) => section.cards.some((c) => c[key] !== undefined));
+        return mdTable(
+            ['source', 'ip', 'countryCode', 'region', 'city', 'asn', 'isp', ...extras],
+            section.cards.map((c) => [
+                c.source, c.ip, c.countryCode, c.region, c.city, c.asn, c.isp,
+                ...extras.map((key) => c[key]),
+            ]),
+        );
+    },
     connectivity: (section) => mdTable(
         ['id', 'name', 'status', 'timeMs', 'minTimeMs', 'custom'],
         section.targets.map((t) => [t.id, t.name, t.status, t.timeMs, t.minTimeMs, t.custom]),

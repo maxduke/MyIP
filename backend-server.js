@@ -190,7 +190,10 @@ if (speedLimitSet !== 0) {
     logger.info(`🐢 Speed limiter enabled — slow down after ${speedLimitSet} requests`);
 }
 
-app.use(express.json());
+// 500kb instead of the 100kb default: shared diagnostic reports (POST
+// /api/report) legitimately reach ~100KB; the report handler enforces its
+// own tighter cap (REPORT_MAX_BYTES) after schema validation.
+app.use(express.json({ limit: '500kb' }));
 
 // Default every /api/* response to no-store. Routes that want edge caching
 // declare it explicitly via the `cacheable(maxAge)` middleware below.

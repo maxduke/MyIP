@@ -15,8 +15,11 @@ export const REPORT_VERSION = 1;
 // backend forces when a client sends anything outside this list.
 export const REPORT_TTL_DAYS = [1, 3, 7];
 
-// Serialized size ceiling enforced by the backend before storing.
-export const REPORT_MAX_BYTES = 32 * 1024;
+// Serialized size ceiling enforced by the backend before storing. A real
+// full run (16 MTR probes with all hop stats + a busy enhanced-DNS capture)
+// lands under ~100KB compact JSON; 256KB is ~3× that worst case while still
+// bounding what one KV key can cost. KV's own value limit (25MB) is far away.
+export const REPORT_MAX_BYTES = 256 * 1024;
 
 // ---------------------------------------------------------------------------
 // IP masking (data-level, applied at export time — distinct from the CSS-only
@@ -126,6 +129,15 @@ const SECTION_SPECS = {
             city: opt(str(64)),
             asn: opt(str(16)),
             isp: opt(str(128)),
+            // IPCheck.ing-source enrichments — absent on other sources, when
+            // the upstream sign-in-gates them, or when the value is 'unknown'
+            // (an unknown verdict carries no diagnostic signal).
+            isProxy: opt(oneOf('yes', 'maybe', 'no')),
+            ipType: opt(oneOf('business', 'residential', 'wireless', 'hosting')),
+            nativeIP: opt(bool()),
+            qualityScore: opt(num(0, 100)),
+            proxyProtocol: opt(str(32)),
+            proxyProvider: opt(str(64)),
         })),
     }),
     connectivity: obj({
