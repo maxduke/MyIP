@@ -16,6 +16,7 @@
   <FloatingDock :ready="showMaskButton" :mask-active="infoMaskLevel > 0">
     <InfoMask :showMaskButton.value="showMaskButton" :infoMaskLevel.value="infoMaskLevel"
       :toggleInfoMask="toggleInfoMask" />
+    <ShareReport />
     <IPHistory />
     <QueryIP ref="queryIPRef" />
   </FloatingDock>
@@ -49,6 +50,7 @@ import QueryIP from './widgets/QueryIP.vue';
 import HelpModal from './widgets/Help.vue';
 import InfoMask from './widgets/InfoMask.vue';
 import IPHistory from './widgets/IPHistory.vue';
+import ShareReport from './report/ShareReportDialog.vue';
 import FloatingDock from './widgets/FloatingDock.vue';
 
 // Vue + Store

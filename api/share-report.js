@@ -32,6 +32,11 @@ const kvConfig = () => {
 // Exposed for /api/configs (booleanized there).
 export const isReportSharingConfigured = () => kvConfig() !== null;
 
+// A tampered ttlDays is not worth a 400 — anything outside the whitelist is
+// forced down to the shortest retention (1 day). Exported for tests.
+export const normalizeTtlDays = (ttlDays) =>
+    (REPORT_TTL_DAYS.includes(ttlDays) ? ttlDays : REPORT_TTL_DAYS[0]);
+
 const kvValueUrl = ({ accountId, namespaceId }, key, queryString = '') =>
     `https://api.cloudflare.com/client/v4/accounts/${accountId}/storage/kv/namespaces/${namespaceId}/values/${key}${queryString}`;
 
@@ -53,10 +58,7 @@ const createReport = async (req, res) => {
         return res.status(503).json({ error: 'Report sharing is not configured' });
     }
 
-    const { report, ttlDays = 7 } = req.body ?? {};
-    if (!REPORT_TTL_DAYS.includes(ttlDays)) {
-        return res.status(400).json({ error: 'Invalid ttlDays' });
-    }
+    const { report, ttlDays } = req.body ?? {};
     const { ok, errors } = validateReport(report);
     if (!ok) {
         return res.status(400).json({ error: 'Invalid report', details: errors });
@@ -68,7 +70,7 @@ const createReport = async (req, res) => {
 
     try {
         const id = crypto.randomBytes(16).toString('base64url');
-        const ttlSeconds = ttlDays * 24 * 60 * 60;
+        const ttlSeconds = normalizeTtlDays(ttlDays) * 24 * 60 * 60;
         // The KV write endpoint requires multipart/form-data with `value` +
         // `metadata` fields (a raw body is a 400); fetch derives the
         // multipart boundary from the FormData, so no manual Content-Type.

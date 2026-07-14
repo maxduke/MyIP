@@ -241,7 +241,7 @@ describe('validateReport', () => {
 
 describe('constants', () => {
     it('exposes ttl choices and section ids', () => {
-        assert.deepEqual(REPORT_TTL_DAYS, [1, 7, 30]);
+        assert.deepEqual(REPORT_TTL_DAYS, [1, 3, 7]);
         assert.ok(REPORT_SECTION_IDS.includes('ipinfo'));
         assert.ok(REPORT_SECTION_IDS.includes('enhanceddnsleak'));
         assert.equal(REPORT_SECTION_IDS.length, 11);

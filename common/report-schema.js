@@ -11,9 +11,9 @@ import { isValidIP, isIPv6, isValidDomain } from './valid-ip.js';
 export const REPORT_VERSION = 1;
 
 // TTL choices offered at creation time (days) — shared by the share dialog
-// and the backend's ttlDays whitelist. First entry is NOT the default; the
-// product default lives with the dialog (7).
-export const REPORT_TTL_DAYS = [1, 7, 30];
+// and the backend. The first entry (1 day) is the default AND the value the
+// backend forces when a client sends anything outside this list.
+export const REPORT_TTL_DAYS = [1, 3, 7];
 
 // Serialized size ceiling enforced by the backend before storing.
 export const REPORT_MAX_BYTES = 32 * 1024;

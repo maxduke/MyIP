@@ -30,7 +30,8 @@ frontend/
 │                      (app-events bus / getips/ / valid-ip / analytics / …)
 ├── composables/     ← Vue-aware `useXxx` logic
 └── components/      ← Home / StandaloneTool / top-level sections, plus
-                       ip-infos/ · advanced-tools/ · widgets/ · svgicons/ · ui/
+                       ip-infos/ · advanced-tools/ · report/ · widgets/ ·
+                       svgicons/ · ui/
 ```
 
 Directory-level only — every file opens with a header comment stating its
@@ -59,6 +60,14 @@ once in App.vue) owns the signed-in / already-achieved / rate guards.
 New achievement = entry in `data/achievements.js` + rule + (only if no
 suitable event exists) a new domain event. Tests:
 `tests/achievement-rules.test.js`, `tests/composable-achievement-engine.test.js`.
+
+The shareable diagnostic report rides the same bus: every "my network" test
+emits `<domain>:finished` with its full structured result;
+`composables/use-report-collector.js` (init'd once in App.vue) normalizes
+payloads through `utils/report-builders.js` into sections whitelisted by
+`common/report-schema.js`, and `components/report/` consumes the snapshots
+(share dialog + read-only /r/:id page). New reportable test = emit event +
+builder + schema entry, in the same change.
 
 ### Error monitoring (Sentry) is env-gated and invisible to app code
 

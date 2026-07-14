@@ -26,7 +26,7 @@ import { getSessionResult as dnsLeakGetResult } from '../api/dns-leak-test.js';
 import serviceStatusHandler, {
     detailHandler as serviceStatusDetailHandler,
 } from '../api/service-status.js';
-import createReportHandler, { getReport as getReportHandler } from '../api/share-report.js';
+import createReportHandler, { getReport as getReportHandler, normalizeTtlDays } from '../api/share-report.js';
 import { REPORT_VERSION } from '../common/report-schema.js';
 
 // -- shared test utilities ------------------------------------------------
@@ -413,13 +413,12 @@ describe('share-report handlers', () => {
         assert.equal(res.statusCode, 503);
     });
 
-    it('POST rejects a ttlDays outside the whitelist', async () => {
-        kvEnv();
-        for (const ttlDays of [0, 2, 365, '7', null]) {
-            const res = createResponse();
-            await createReportHandler(createReq({ report: validReport(), ttlDays }), res);
-            assert.equal(res.statusCode, 400, `ttlDays=${ttlDays} should 400`);
-            assert.equal(res.body.error, 'Invalid ttlDays');
+    it('forces a tampered ttlDays down to 1 day, keeps whitelisted values', () => {
+        for (const ttlDays of [0, 2, 30, 365, -1, '7', null, undefined]) {
+            assert.equal(normalizeTtlDays(ttlDays), 1, `ttlDays=${ttlDays} should coerce to 1`);
+        }
+        for (const ttlDays of [1, 3, 7]) {
+            assert.equal(normalizeTtlDays(ttlDays), ttlDays);
         }
     });
 
