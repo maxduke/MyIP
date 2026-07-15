@@ -7,9 +7,12 @@ import { sentryVitePlugin } from '@sentry/vite-plugin';
 
 dotenv.config();
 
-// Sentry source-map upload — build-time only, gated on SENTRY_AUTH_TOKEN
-// uploaded to Sentry, then deleted from dist/ — users never download them.
-const sentryUploadEnabled = !!process.env.SENTRY_AUTH_TOKEN;
+// Sentry source-map upload — build-time only. Needs SENTRY_AUTH_TOKEN and a
+// production SENTRY_ENVIRONMENT (unset means production, matching the
+// backend convention) — dev/test builds neither generate nor upload maps.
+// Maps go to Sentry, then get deleted from dist/ — users never download them.
+const sentryUploadEnabled = !!process.env.SENTRY_AUTH_TOKEN
+  && (process.env.SENTRY_ENVIRONMENT || 'production') === 'production';
 
 const backEndPort = parseInt(process.env.BACKEND_PORT || 11966, 10);
 const frontEndPort = parseInt(process.env.FRONTEND_PORT || 18966, 10);

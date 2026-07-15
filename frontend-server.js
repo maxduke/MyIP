@@ -28,8 +28,8 @@ frontendApp.use('/api', createProxyMiddleware({
 //   - dist/assets/**       Vite-hashed JS/CSS/images — content-addressed → 1y immutable
 //   - dist/fonts/**        non-hashed but essentially never change → 1y immutable
 //   - top-level images     favicon / logos / achievements / … → 24h
-//   - index.html + manifest never cache — otherwise stale HTML keeps pointing
-//                          at a hashed chunk that no longer exists post-deploy
+//   - index.html           1h at the edge (s-maxage), zero in browsers 
+//   - manifest             never cache
 //   - everything else      (robots.txt, …) → 1h
 const distDir = path.join(__dirname, './dist');
 
@@ -40,7 +40,9 @@ function setStaticHeaders(res, filePath) {
     res.setHeader('Cache-Control', `public, max-age=${24 * 60 * 60 * 365}, immutable`);
   } else if (/\.(png|jpg|jpeg|webp|svg|ico)$/i.test(rel)) {
     res.setHeader('Cache-Control', `public, max-age=${24 * 60 * 60}`);
-  } else if (rel.endsWith('.html') || rel === 'manifest.webmanifest') {
+  } else if (rel.endsWith('.html')) {
+    res.setHeader('Cache-Control', `public, max-age=0, s-maxage=${60 * 60}, must-revalidate`);
+  } else if (rel === 'manifest.webmanifest') {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
   } else {
     res.setHeader('Cache-Control', `public, max-age=${60 * 60}`);
@@ -61,8 +63,9 @@ frontendApp.use(express.static(distDir, { setHeaders: setStaticHeaders }));
 //     asset request, not a client route — let it 404 rather than return an HTML
 //     body, which would break a missing JS/CSS chunk's importer after a deploy
 //     (`*/*` requests otherwise match `accepts('html')`).
-//   - index.html is never cached (same as the static layer), so a deploy can't
-//     leave a stale shell pointing at hashed chunks that no longer exist.
+//   - Client-route loads stay uncached (unlike / and /index.html on the
+//     static layer): only those two URLs live at the edge, so a deploy-time
+//     purge stays a two-URL operation.
 frontendApp.use((req, res, next) => {
   if (req.method !== 'GET' || !req.accepts('html')) return next();
   if (req.path.split('/').pop().includes('.')) return next();
