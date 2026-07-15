@@ -1,8 +1,9 @@
 // Minimal app-wide event bus for domain events — components emit what
 // happened ("speed test finished", "whois lookup ran") and decoupled modules
 // react to it. Framework-agnostic on purpose: no Vue imports, usable from any
-// util / composable / component. Currently consumed by the achievement engine
-// (composables/use-achievement-engine.js).
+// util / composable / component. Consumed by the achievement engine
+// (composables/use-achievement-engine.js) and the report collector
+// (composables/use-report-collector.js).
 
 const listeners = new Map(); // event name → Set<handler>
 

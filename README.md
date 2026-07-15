@@ -148,7 +148,9 @@ Download `GeoLite2-City.mmdb` and `GeoLite2-ASN.mmdb` from your MaxMind account 
 | `IPINFO_API_KEY` | No | `""` | API Token for IPInfo.io, used to obtain IP geolocation information through IPInfo.io |
 | `IPAPIIS_API_KEY` | No | `""` | API Key for IPAPI.is, used to obtain IP geolocation information through IPAPI.is |
 | `IP2LOCATION_API_KEY` | No | `""` | API Key for IP2Location.io, used to obtain IP geolocation information through IP2Location.io |
-| `CLOUDFLARE_API_KEY` | No | `""` | API Key for Cloudflare, used to obtain AS system information through Cloudflare |
+| `CLOUDFLARE_API_KEY` | No | `""` | API Key for Cloudflare, used to obtain AS system information; with the two KV variables below (and the "Workers KV Storage: Edit" token permission) it also powers shareable diagnostic reports |
+| `CLOUDFLARE_ACCOUNT_ID` | No | `""` | Cloudflare account ID, required for storing shareable diagnostic reports in Workers KV |
+| `CLOUDFLARE_KV_NAMESPACE_ID` | No | `""` | Hex ID (not the name) of the Workers KV namespace that stores shareable diagnostic reports |
 | `RIPESTAT_SOURCE_APP` | No | `""` | Source app name for RIPE.net, used to obtain ASN history information through RIPE.net |
 | `MAC_LOOKUP_API_KEY` | No | `""` | API Key for MAC Lookup, used to obtain MAC address information |
 | `VITE_CURL_IPV4_DOMAIN` | No | `""` | Provides the IPv4 domain for the CURL API to users |

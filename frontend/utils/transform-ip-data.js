@@ -58,7 +58,13 @@ function extractAdvancedData(advancedData = {}, t) {
     const proxyProvider = advancedData.proxyProvider || "";
     const isNativeIP = advancedData.tags === 'sign_in_required' ? 'sign_in_required' : advancedData.tags.isNative;
 
-    return { isProxy, type, qualityScore, proxyProtocol, proxyProvider, isNativeIP };
+    // Locale-free twins of isProxy / type for the diagnostic report payload
+    // (the display fields above are t()-localized at capture time; the report
+    // schema only stores enums and renders in the VIEWER's language).
+    const proxyCode = determineProxyCode(advancedData);
+    const ipTypeCode = determineTypeCode(advancedData);
+
+    return { isProxy, type, qualityScore, proxyProtocol, proxyProvider, isNativeIP, proxyCode, ipTypeCode };
 }
 
 // Determine if it is a proxy
@@ -75,6 +81,23 @@ function determineIsProxy(advancedData, t) {
     } else {
         return t('ipInfos.advancedData.proxyUnknown');
     }
+}
+
+// Locale-free code for determineIsProxy — same branch order, enum output.
+// undefined when the data is sign-in-gated (the report then omits the field).
+function determineProxyCode(advancedData) {
+    if (advancedData.tags === 'sign_in_required') return undefined;
+    if (advancedData.tags.isProxyOrVPN && advancedData.proxyProtocol !== 'unknown') return 'yes';
+    if (advancedData.tags.isProxyOrVPN) return 'maybe';
+    if (!advancedData.tags.isProxyOrVPN) return 'no';
+    return 'unknown';
+}
+
+// Locale-free code for determineType.
+function determineTypeCode(advancedData) {
+    if (advancedData.operatorType === 'sign_in_required') return undefined;
+    const codes = { Business: 'business', Residential: 'residential', Wireless: 'wireless', Hosting: 'hosting' };
+    return codes[advancedData.operatorType] ?? 'unknown';
 }
 
 // Determine proxy type

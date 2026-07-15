@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { requireReferer, requireValidIP, requireValidPrefix, requireValidProviderId } from '../common/guards.js';
+import { requireReferer, requireValidIP, requireValidPrefix, requireValidProviderId, requireValidReportId } from '../common/guards.js';
 
 // Minimal (req, res, next) stubs — just enough to observe what the
 // middleware does.
@@ -155,5 +155,39 @@ describe('requireValidProviderId', () => {
         assert.equal(res.statusCode, 400);
         assert.equal(res.body.error, 'Invalid provider id');
         assert.equal(nextCalled, false);
+    });
+});
+
+describe('requireValidReportId', () => {
+    const guard = requireValidReportId();
+    // A report id is 16 random bytes as base64url — always exactly 22 chars.
+    const validId = 'AbC123-_xyz987654321ab';
+
+    // This guard reads req.params (route param), not req.query.
+    const makeParamsReq = (params) => ({ headers: {}, params });
+
+    it('calls next() for a well-formed 22-char base64url id', () => {
+        let nextCalled = false;
+        guard(makeParamsReq({ id: validId }), makeRes(), () => { nextCalled = true; });
+        assert.equal(nextCalled, true);
+    });
+
+    it('returns 400 when the id is missing', () => {
+        const res = makeRes();
+        let nextCalled = false;
+        guard(makeParamsReq({}), res, () => { nextCalled = true; });
+        assert.equal(res.statusCode, 400);
+        assert.equal(res.body.error, 'Invalid report id');
+        assert.equal(nextCalled, false);
+    });
+
+    it('returns 400 for wrong length or non-base64url characters', () => {
+        for (const bad of ['short', 'a'.repeat(23), 'a'.repeat(21), `${'a'.repeat(21)}+`, `${'a'.repeat(21)}/`]) {
+            const res = makeRes();
+            let nextCalled = false;
+            guard(makeParamsReq({ id: bad }), res, () => { nextCalled = true; });
+            assert.equal(res.statusCode, 400, `should reject "${bad}"`);
+            assert.equal(nextCalled, false);
+        }
     });
 });

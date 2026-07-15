@@ -7,8 +7,16 @@
       "tools": {
         "title": "Araçlar nasıl çalışır",
         "paragraphs": [
-          "Araçların size gösterdiği çoğu şey — IP ayrıntılarınız, tarayıcı parmak iziniz, DNS, bağlantı ve hız testi sonuçları — tarayıcınızda hesaplanır veya canlı olarak sorgulanıp yalnızca size gösterilir. Bu sonuçları sunucularımızda saklamayız.",
+          "Araçların size gösterdiği çoğu şey — IP ayrıntılarınız, tarayıcı parmak iziniz, DNS, bağlantı ve hız testi sonuçları — tarayıcınızda hesaplanır veya canlı olarak sorgulanıp yalnızca size gösterilir. Bu sonuçları sunucularımızda saklamayız — açıkça paylaşılabilir bir rapor bağlantısı oluşturmanız durumu hariç (bir sonraki bölüme bakın).",
           "IP coğrafi konumunu sorgulamak için, sorgulanan IP üçüncü taraf sağlayıcılara (ipinfo.io, ip-api.com ve benzerleri gibi) gönderilir. Bu sorgular her sağlayıcının kendi gizlilik politikasına tabidir."
+        ]
+      },
+      "sharedReports": {
+        "title": "Paylaşılan tanı raporları",
+        "paragraphs": [
+          "Test sonuçlarınızı bir tanı raporunda toplayıp paylaşabilirsiniz. Paylaşım bağlantısı oluşturmak her zaman sizin açık bir eyleminizdir — hiçbir şey otomatik olarak yüklenmez. Hangi testlerin dahil edileceğini siz seçersiniz ve bağlantı oluşturulmadan önce IP adreslerinin sonlarını maskeleyebilirsiniz.",
+          "Bir bağlantı oluşturduğunuzda, seçilen sonuçlar bağlantıyı paylaştığınız kişilerin açabilmesi için sunucu altyapımızda (Cloudflare Workers KV) saklanır. Rapor, seçtiğiniz saklama süresi (1, 3 veya 7 gün) sona erdiğinde otomatik olarak silinir. Bağlantılar tahmin edilemez rastgele kimlikler kullanır, mevcut raporların bir dizinini tutmayız ve bağlantıya sahip olan herkes süresi dolana kadar raporu görüntüleyebilir.",
+          "Bir raporu yapay zekâ asistanı için kopyalamak veya JSON olarak indirmek tamamen tarayıcınızda gerçekleşir ve sunucularımızda hiçbir şey saklamaz."
         ]
       },
       "analytics": {

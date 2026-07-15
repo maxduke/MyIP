@@ -118,6 +118,7 @@ import { useRouter } from 'vue-router';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
+import { emitAppEvent } from '@/utils/app-events';
 import { JnTooltip } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -255,6 +256,17 @@ const checkAllDNSLeakTest = async (isRefresh) => {
     store.setLoadingStatus('DNSLeakTest', true);
     // Local sticky flag for the Enhanced DNS Leak Test banner
     hasEverSettled.value = true;
+    // Domain event: snapshot for the report collector (cards whose ip slot
+    // still holds a wait/error label are dropped by the builder).
+    emitAppEvent('dnsleak:finished', {
+      providers: leakTest.map((card) => ({
+        id: card.id,
+        name: card.providerName,
+        ip: card.ip,
+        country_code: card.country_code,
+        org: card.org,
+      })),
+    });
   });
 };
 

@@ -302,10 +302,13 @@ const getResult = async () => {
             errorMsg.value = t('invisibilitytest.fetchError');
         } else {
             testResults.value = data;
-            // Achievement rules (HiddenWell / SlipUp) live in data/achievement-rules.js.
+            // Achievement rules (HiddenWell / SlipUp) live in data/achievement-rules.js;
+            // the report collector consumes ip + the 14 detection flags.
             emitAppEvent('invisibility:result', {
                 proxyScore: Math.floor(data.score.proxy),
                 vpnScore: Math.floor(data.score.vpn),
+                ip: data.ip,
+                flags: detectionItems.value.map(({ key, flagged }) => ({ key, flagged })),
             });
         }
     } catch (error) {

@@ -223,6 +223,28 @@ const trackFetchStatus = (status) => {
   }
   if (allHasFetched) {
     store.setLoadingStatus('IPInfo', true);
+    // Domain event: full snapshot of the visible cards, re-emitted whenever a
+    // card settles after this point (single-card refresh included). The report
+    // collector normalizes it (drops cards whose ip slot holds an error label).
+    emitAppEvent('ipinfo:finished', {
+      cards: ipDataCards.slice(0, ipCardsToShow.value).map((card) => ({
+        source: card.source,
+        ip: card.ip,
+        country_code: card.country_code,
+        region: card.region,
+        city: card.city,
+        asn: card.asn,
+        isp: card.isp,
+        // IPCheck.ing-source enrichments (locale-free codes; absent on other
+        // sources or when the field is sign-in-gated).
+        proxyCode: card.proxyCode,
+        ipTypeCode: card.ipTypeCode,
+        isNativeIP: card.isNativeIP,
+        qualityScore: card.qualityScore,
+        proxyProtocol: card.proxyProtocol,
+        proxyProvider: card.proxyProvider,
+      })),
+    });
   }
 };
 
