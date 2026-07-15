@@ -54,9 +54,9 @@ window.addEventListener('vite:preloadError', (event) => {
 // the first-paint bundle. `@iconify/vue` itself is statically imported (above)
 // because a dozen components already pull it in synchronously, so wrapping
 // addCollection in another dynamic() would just be a no-op Promise tick.
-import('@iconify-json/circle-flags/icons.json').then(({ default: flags }) => {
-    addCollection(flags);
-});
+import('@iconify-json/circle-flags/icons.json')
+    .then((mod) => { if (mod?.default) addCollection(mod.default); })
+    .catch(() => { /* non-fatal: flag icons degrade gracefully */ });
 
 const app = createApp(App);
 const pinia = createPinia();
