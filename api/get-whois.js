@@ -1,6 +1,6 @@
 import whoiser from 'whoiser';
 import { isValidIP } from '../common/valid-ip.js';
-import { rdapDomain } from '../common/rdap.js';
+import { rdapDomain, rdapIp } from '../common/rdap.js';
 import logger from '../common/logger.js';
 
 function isValidDomain(domain) {
@@ -29,9 +29,18 @@ export default async (req, res) => {
         return res.status(400).json({ error: 'Invalid IP or address' });
     }
 
+    // IP path: RDAP first — authoritative-RIR HTTPS + JSON, immune to the
+    // port-43 referral mess (rwhois://host:port referrals point at a
+    // protocol WHOIS clients can't speak). whoiser stays as fallback,
+    // pinned to one hop (`follow: 1`) so it never chases a referral.
     if (isValidIP(query)) {
         try {
-            const ipinfo = await whoiser.ip(query, { timeout: 5000, raw: true });
+            return res.json(await rdapIp(query));
+        } catch (e) {
+            logger.warn({ err: e, query }, 'whois: RDAP IP lookup failed, trying WHOIS');
+        }
+        try {
+            const ipinfo = await whoiser.ip(query, { timeout: 5000, follow: 1, raw: true });
             return res.json(ipinfo);
         } catch (e) {
             logger.error({ err: e, query }, 'Failed to get IP info');
