@@ -51,8 +51,13 @@ const initSentry = (app, router) => {
             // console.error() → grouped Issues (tagged logger:console).
             Sentry.captureConsoleIntegration({ levels: ['error'] }),
         ],
-        // 100% trace sampling — Should change based on plan quota
-        tracesSampleRate: 1.0,
+        // 10% trace sampling: pageload / navigation transactions and Web
+        // Vitals are statistical, so a sample keeps Insights meaningful
+        tracesSampleRate: 0.1,
+        // Discard-outcome client reports are quota bookkeeping we never
+        // reconcile — don't spend tunnel POSTs on them. (Release Health
+        // sessions stay on: browserSessionIntegration is a default.)
+        sendClientReports: false,
         // Replay: never record plain sessions, always keep the buffer that
         // gets flushed when an error occurs
         replaysSessionSampleRate: 0,
@@ -72,7 +77,6 @@ const initSentry = (app, router) => {
         // dismissing / re-triggering the sign-in popup, and a known
         // firebase-js-sdk popup race (its internal assertion, not our state).
         ignoreErrors: [
-            'no IP in response',
             'auth/network-request-failed',
             'auth/popup-closed-by-user',
             'auth/popup-blocked',
