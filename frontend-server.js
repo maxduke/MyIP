@@ -28,8 +28,9 @@ frontendApp.use('/api', createProxyMiddleware({
 //   - dist/assets/**       Vite-hashed JS/CSS/images — content-addressed → 1y immutable
 //   - dist/fonts/**        non-hashed but essentially never change → 1y immutable
 //   - top-level images     favicon / logos / achievements / … → 24h
-//   - index.html + manifest 1h at the edge (s-maxage), zero in browsers —
-//                          a deploy-time purge takes effect on the next load;
+//   - index.html + manifest 24h at the edge (s-maxage), zero in browsers —
+//                          the build's postbuild purge evicts them on deploy,
+//                          so the TTL only caps drift between deploys;
 //                          manifest references only stable /logos/* paths, so
 //                          a stale copy never points at dead assets
 //   - everything else      (robots.txt, …) → 1h
@@ -43,7 +44,7 @@ function setStaticHeaders(res, filePath) {
   } else if (/\.(png|jpg|jpeg|webp|svg|ico)$/i.test(rel)) {
     res.setHeader('Cache-Control', `public, max-age=${24 * 60 * 60}`);
   } else if (rel.endsWith('.html') || rel === 'manifest.webmanifest') {
-    res.setHeader('Cache-Control', `public, max-age=0, s-maxage=${60 * 60}, must-revalidate`);
+    res.setHeader('Cache-Control', `public, max-age=0, s-maxage=${24 * 60 * 60}, must-revalidate`);
   } else {
     res.setHeader('Cache-Control', `public, max-age=${60 * 60}`);
   }
