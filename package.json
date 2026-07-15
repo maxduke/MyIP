@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "start-backend": "node --import ./sentry-instrument.js backend-server.js",
     "start-frontend": "node frontend-server.js",
-    "start": "concurrently \"node frontend-server.js\" \"node --import ./sentry-instrument.js backend-server.js\""
+    "start": "concurrently \"node frontend-server.js\" \"node --import ./sentry-instrument.js backend-server.js\"",
+    "purge-index": "node scripts/purge-index-cache.js"
   },
   "dependencies": {
     "@cloudflare/speedtest": "^1.11.0",
