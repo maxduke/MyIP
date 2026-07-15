@@ -28,8 +28,10 @@ frontendApp.use('/api', createProxyMiddleware({
 //   - dist/assets/**       Vite-hashed JS/CSS/images — content-addressed → 1y immutable
 //   - dist/fonts/**        non-hashed but essentially never change → 1y immutable
 //   - top-level images     favicon / logos / achievements / … → 24h
-//   - index.html           1h at the edge (s-maxage), zero in browsers 
-//   - manifest             never cache
+//   - index.html + manifest 1h at the edge (s-maxage), zero in browsers —
+//                          a deploy-time purge takes effect on the next load;
+//                          manifest references only stable /logos/* paths, so
+//                          a stale copy never points at dead assets
 //   - everything else      (robots.txt, …) → 1h
 const distDir = path.join(__dirname, './dist');
 
@@ -40,10 +42,8 @@ function setStaticHeaders(res, filePath) {
     res.setHeader('Cache-Control', `public, max-age=${24 * 60 * 60 * 365}, immutable`);
   } else if (/\.(png|jpg|jpeg|webp|svg|ico)$/i.test(rel)) {
     res.setHeader('Cache-Control', `public, max-age=${24 * 60 * 60}`);
-  } else if (rel.endsWith('.html')) {
+  } else if (rel.endsWith('.html') || rel === 'manifest.webmanifest') {
     res.setHeader('Cache-Control', `public, max-age=0, s-maxage=${60 * 60}, must-revalidate`);
-  } else if (rel === 'manifest.webmanifest') {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
   } else {
     res.setHeader('Cache-Control', `public, max-age=${60 * 60}`);
   }
