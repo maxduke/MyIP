@@ -1423,5 +1423,38 @@
         }
       }
     ]
+  },
+  {
+    "version": "v7.0.1",
+    "date": "Beta",
+    "content": [
+      {
+        "type": "improve",
+        "change": {
+          "en": "Optimized frontend page cache strategy",
+          "zh": "优化前端页面的缓存策略",
+          "fr": "Optimisation de la stratégie de cache des pages frontend",
+          "tr": "Frontend sayfalarının önbellekleme stratejisi iyileştirildi"
+        }
+      },
+      {
+        "type": "improve",
+        "change": {
+          "en": "Improved local Maxmind concurrent query capability",
+          "zh": "提升本地 Maxmind 并发查询能力",
+          "fr": "Amélioration de la capacité de requête concurrente Maxmind locale",
+          "tr": "Yerel Maxmind eşzamanlı sorgu kapasitesi iyileştirildi"
+        }
+      },
+      {
+        "type": "fix",
+        "change": {
+          "en": "Fixed Whois Search not being able to query some IPs",
+          "zh": "修复 Whois 查询工具无法查询部分 IP 的错误",
+          "fr": "Correction d'un bug qui empêchait la recherche de certains IP avec l'outil Whois",
+          "tr": "Whois aracı ile bazı IP'leri sorgulayamadığı bir hata düzeltildi"
+        }
+      }
+    ]
   }
 ]
