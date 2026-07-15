@@ -82,6 +82,14 @@ const initSentry = (app, router) => {
             'auth/popup-blocked',
             'auth/cancelled-popup-request',
             'INTERNAL ASSERTION FAILED',
+            // Stale-deploy chunk loads: a client from before the latest
+            // deploy lazy-loads a hashed asset that no longer exists.
+            // Self-heals on reload, not a defect. One entry per browser
+            // wording (Chrome / Firefox / Safari), plus Vite's CSS preload.
+            'Failed to fetch dynamically imported module',
+            'error loading dynamically imported module',
+            'Importing a module script failed',
+            'Unable to preload CSS',
         ],
         // Console-captured events group by the console message instead of
         // the exception stack. The fallback chains all surface the same
