@@ -36,7 +36,7 @@ function readStoredLang() {
   return null;
 }
 
-// 设置语言
+// Set language.
 function setLanguage() {
   const storedLang = readStoredLang();
   if (storedLang) return storedLang;
@@ -60,7 +60,7 @@ function setLanguage() {
 
 const activeLocale = setLanguage();
 
-// 创建 i18n 实例（messages 启动时为空，由 loadActiveLocaleMessages 注入）
+// Create i18n instance (messages are empty at startup, injected by loadActiveLocaleMessages).
 const i18n = createI18n({
   legacy: false,
   locale: activeLocale,
@@ -88,8 +88,18 @@ export async function loadActiveLocaleMessages() {
   updateMeta();
 }
 
-// 更新 meta 标签（依赖 messages，故在 loadActiveLocaleMessages 之后调用）
+// Update meta tags (depends on messages, so call after loadActiveLocaleMessages).
 function updateMeta() {
+  // Keep the declared page language in step with the rendered one.
+  // index.html ships lang="en"; leaving that stale on a zh/fr/tr UI makes
+  // browser auto-translate mis-detect the page and offer to re-translate
+  // already-translated content (Chrome-iOS translate churn crashes on the
+  // home page's high-frequency DOM updates). Also what screen readers key on.
+  // Our zh locale is Simplified-only: declare zh-CN so Han glyph fallback
+  // stays Simplified on ja / zh-TW systems and translate prompts treat the
+  // content unambiguously. The other locale codes are precise as-is.
+  document.documentElement.lang = activeLocale === 'zh' ? 'zh-CN' : activeLocale;
+
   document.title = i18n.global.t('page.title');
 
   const metaKeywords = document.querySelector('meta[name="keywords"]');
