@@ -43,7 +43,7 @@ if (import.meta.env.DEV) {
 // event just propagates as before. Registered at module eval so it's in
 // place before any lazy import can fail.
 window.addEventListener('vite:preloadError', (event) => {
-    const LATCH_KEY = 'jn-preload-reload-at';
+    const LATCH_KEY = 'preloadReloadAt';
     const lastReload = Number(sessionStorage.getItem(LATCH_KEY) || 0);
     if (Date.now() - lastReload < 60 * 1000) return;
     sessionStorage.setItem(LATCH_KEY, String(Date.now()));

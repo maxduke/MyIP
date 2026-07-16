@@ -37,7 +37,7 @@ describe('auth-hint', () => {
     });
 
     it('treats unexpected stored values as unknown', () => {
-        globalThis.localStorage.setItem('jn-auth-hint', 'yes');
+        globalThis.localStorage.setItem('authHint', 'yes');
         assert.equal(readAuthHint(), null);
     });
 

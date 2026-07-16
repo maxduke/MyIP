@@ -27,7 +27,9 @@ frontendApp.use('/api', createProxyMiddleware({
 // Browser TTL on top of these, so the longer values are upper bounds):
 //   - dist/assets/**       Vite-hashed JS/CSS/images — content-addressed → 1y immutable
 //   - dist/fonts/**        non-hashed but essentially never change → 1y immutable
-//   - top-level images     favicon / logos / achievements / … → 24h
+//   - top-level images     favicon / logos / achievements / … → 7d
+//                          (not content-hashed, so changing one of these
+//                          images requires renaming the file)
 //   - index.html + manifest 24h at the edge (s-maxage), zero in browsers —
 //                          the build's postbuild purge evicts them on deploy,
 //                          so the TTL only caps drift between deploys;
@@ -42,7 +44,7 @@ function setStaticHeaders(res, filePath) {
   if (rel.startsWith('assets/') || rel.startsWith('fonts/')) {
     res.setHeader('Cache-Control', `public, max-age=${24 * 60 * 60 * 365}, immutable`);
   } else if (/\.(png|jpg|jpeg|webp|svg|ico)$/i.test(rel)) {
-    res.setHeader('Cache-Control', `public, max-age=${24 * 60 * 60}`);
+    res.setHeader('Cache-Control', `public, max-age=${7 * 24 * 60 * 60}`);
   } else if (rel.endsWith('.html') || rel === 'manifest.webmanifest') {
     res.setHeader('Cache-Control', `public, max-age=0, s-maxage=${24 * 60 * 60}, must-revalidate`);
   } else {

@@ -2,7 +2,7 @@
 // decide whether Firebase Auth is worth loading before first render.
 // '1' = signed in last we knew · '0' = known signed-out · null = unknown
 // (first visit since the flag shipped, or storage cleared/disabled).
-const AUTH_HINT_KEY = 'jn-auth-hint';
+const AUTH_HINT_KEY = 'authHint';
 
 export const readAuthHint = () => {
     try {
