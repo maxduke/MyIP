@@ -128,7 +128,7 @@ const localePreloadPlugin = () => {
         if (Object.keys(chunks).length === 0) return html;
         return {
           html,
-          tags: [{ tag: 'script', children: preloadScript(chunks), injectTo: 'head-prepend' }],
+          tags: [{ tag: 'script', children: preloadScript(chunks), injectTo: 'head' }],
         };
       },
     },
