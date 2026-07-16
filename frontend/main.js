@@ -67,13 +67,31 @@ app.use(i18n);
 app.use(router);
 
 // Sentry — build-time env gate: without the DSN the chunk neither ships nor
-// loads. Deliberately not awaited before mount: perf data survives a late
-// init (buffered observers, backdated pageload span); only errors thrown
-// before init are lost.
+// loads. The SDK chunk stays OFF the boot critical path: it loads after
+// mount (see the mount chain's finally below) so it never competes with the
+// locale pack the first render waits on. Until init, a tiny buffer catches
+// uncaught errors / rejections — and any of them triggers an immediate
+// load, so a boot that never reaches mount still reports. Perf data
+// survives the late init (buffered observers, backdated pageload span).
+const earlyErrors = [];
+let loadSentry = () => {};
 if (import.meta.env.VITE_SENTRY_DSN_FRONTEND) {
-    import('./sentry-init')
-        .then(({ initSentry }) => initSentry(app, router))
-        .catch(() => {});
+    const onEarlyError = (event) => {
+        earlyErrors.push(event);
+        loadSentry();
+    };
+    window.addEventListener('error', onEarlyError);
+    window.addEventListener('unhandledrejection', onEarlyError);
+    let loading = null;
+    loadSentry = () => {
+        loading ??= import('./sentry-init')
+            .then(({ initSentry }) => {
+                initSentry(app, router, earlyErrors);
+                window.removeEventListener('error', onEarlyError);
+                window.removeEventListener('unhandledrejection', onEarlyError);
+            })
+            .catch(() => {});
+    };
 }
 
 //
@@ -126,10 +144,12 @@ Promise.all([
 ]).then(() => {
     app.mount('#app');
 }).catch(error => {
+    earlyErrors.push(error); // reaches Sentry once it initializes below
     console.error("Failed to initialize the app properly:", error);
     app.mount('#app'); // Mount even if initialization partially failed
 }).finally(() => {
     loadFlagIcons(); // deferred boot-bandwidth work, app is on screen now
+    loadSentry();
     // Unknown hint (first visit since the flag shipped, or storage cleared):
     // probe auth once in the background so an already-signed-in user is
     // recognized and the next boot takes the exact path.

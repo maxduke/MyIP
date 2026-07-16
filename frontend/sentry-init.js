@@ -12,7 +12,11 @@ import { isValidIP } from '@/utils/valid-ip.js';
 
 const env = import.meta.env ?? {};
 
-const initSentry = (app, router) => {
+// `earlyErrors` is main.js's pre-init buffer: ErrorEvent /
+// PromiseRejectionEvent entries from its temporary window listeners, plus
+// the raw Error from the mount chain's catch. Flushed right after init;
+// main.js removes those listeners as soon as this function returns.
+const initSentry = (app, router, earlyErrors = []) => {
     Sentry.init({
         app,
         dsn: env.VITE_SENTRY_DSN_FRONTEND,
@@ -126,6 +130,15 @@ const initSentry = (app, router) => {
             return event;
         },
     });
+
+    // Replay the errors that fired before the SDK was ready. Unwrap the
+    // event shapes first so real Error objects keep their stacks.
+    for (const entry of earlyErrors) {
+        const err = entry instanceof Error
+            ? entry
+            : entry?.error ?? entry?.reason ?? entry?.message ?? entry;
+        Sentry.captureException(err);
+    }
 
     // Explicit product signals arrive via the app-events bus — business code
     // stays Sentry-free and just emits domain events (see frontend/AGENTS.md).
