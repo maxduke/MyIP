@@ -69,7 +69,10 @@ export function useMaxmind() {
                 const asn = ipData.asn && ipData.asn !== 'N/A' ? ipData.asn : '';
                 return { country_code, country, org: ipData.isp || '', asn };
             } catch (error) {
-                console.error('useMaxmind lookup failed', error);
+                // warn, not error: a single-source lookup failure is routine
+                // visitor-side noise (Sentry only captures console.error);
+                // a real /api/maxmind outage reports from the backend itself.
+                console.warn('useMaxmind lookup failed', error);
                 return null;
             }
         });
