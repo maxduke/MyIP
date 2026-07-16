@@ -1431,10 +1431,10 @@
       {
         "type": "improve",
         "change": {
-          "en": "Optimized frontend page cache strategy",
-          "zh": "优化前端页面的缓存策略",
-          "fr": "Optimisation de la stratégie de cache des pages frontend",
-          "tr": "Frontend sayfalarının önbellekleme stratejisi iyileştirildi"
+          "en": "Optimized loading speed by 50%+",
+          "zh": "使用多种方式优化加载速度，提升 50%+",
+          "fr": "Optimisation de la vitesse de chargement de 50%+",
+          "tr": "Yükleme hızı %50+ artırıldı"
         }
       },
       {
