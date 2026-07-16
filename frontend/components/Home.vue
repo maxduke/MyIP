@@ -31,7 +31,12 @@
 // thin shell, and this component is what /'s <router-view> renders. The truly
 // global widgets (tooltip provider, toast, PWA, theme) stay in App.
 //
-// Components
+// Components — the test sections and the always-visible chrome load
+// synchronously; everything the first paint can't show (dialogs, drawers,
+// the below-fold Additional/Footer) is an async component so its code stays
+// out of the route chunk and out of the mount's critical path. Their
+// template refs are null until the chunk lands — consumers (use-shortcuts)
+// must optional-chain.
 import NavBar from './Nav.vue';
 import IPCheck from './IpInfos.vue';
 import Connectivity from './ConnectivityTest.vue';
@@ -39,22 +44,22 @@ import WebRTC from './WebRtcTest.vue';
 import DNSLeaks from './DnsLeaksTest.vue';
 import SpeedTest from './SpeedTest.vue';
 import AdvancedTools from './Advanced.vue';
-import Additional from './Additional.vue';
-import Footer from './Footer.vue';
-import User from './User.vue';
-import Achievements from './Achievements.vue';
-
-// Widgets
-import Preferences from './widgets/Preferences.vue';
-import QueryIP from './widgets/QueryIP.vue';
-import HelpModal from './widgets/Help.vue';
 import InfoMask from './widgets/InfoMask.vue';
-import IPHistory from './widgets/IPHistory.vue';
-import ShareReport from './report/ShareReportDialog.vue';
 import FloatingDock from './widgets/FloatingDock.vue';
 
 // Vue + Store
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, defineAsyncComponent } from 'vue';
+
+// Async (off-critical-path) components
+const Additional = defineAsyncComponent(() => import('./Additional.vue'));
+const Footer = defineAsyncComponent(() => import('./Footer.vue'));
+const User = defineAsyncComponent(() => import('./User.vue'));
+const Achievements = defineAsyncComponent(() => import('./Achievements.vue'));
+const Preferences = defineAsyncComponent(() => import('./widgets/Preferences.vue'));
+const QueryIP = defineAsyncComponent(() => import('./widgets/QueryIP.vue'));
+const HelpModal = defineAsyncComponent(() => import('./widgets/Help.vue'));
+const IPHistory = defineAsyncComponent(() => import('./widgets/IPHistory.vue'));
+const ShareReport = defineAsyncComponent(() => import('./report/ShareReportDialog.vue'));
 import { useRoute } from 'vue-router';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
