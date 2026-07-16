@@ -257,9 +257,8 @@
       white-space: nowrap;
     }
 
-    /* `#app` starts hidden + shrunk; App.vue flips `.jn-app-enter` to
-       hand off from the collapsing logo. Gated on `html[data-booting]` so
-       a missing inline script doesn't strand the user on a blank screen. */
+    /* `#app` starts hidden; App.vue reveals it immediately at mount and it
+       fades in UNDER the opaque boot overlay */
     html[data-booting] #app {
       opacity: 0;
     }

@@ -35,7 +35,9 @@ watch(
 );
 
 // Pre-Vue boot overlay → real app hand-off. CSS lives in index.html.
-// Stages: text fade → logo shrink → remove overlay + reveal #app.
+// #app is revealed IMMEDIATELY at mount: it fades in underneath the opaque
+// overlay while the overlay plays its exit (text fade → logo shrink →
+// removal). 
 // Runs once at root mount, so it covers both the homepage and a fresh load of
 // a standalone tool page.
 const loadingElement = document.getElementById('jn-loading');
@@ -48,16 +50,11 @@ const revealApp = () => {
     }
 };
 
+revealApp();
 if (loadingElement) {
     requestAnimationFrame(() => loadingElement.classList.add('jn-loading-stage-1'));
     loadingElement.classList.add('jn-loading-stage-2');
-    setTimeout(() => {
-        loadingElement.remove();
-        revealApp();
-    }, 200);
-} else {
-    // Overlay already gone (e.g. HMR remount) — still reveal the app.
-    revealApp();
+    setTimeout(() => loadingElement.remove(), 200);
 }
 
 // Theme orchestration: initial apply, OS flip listener, preference watcher.
