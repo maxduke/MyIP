@@ -71,7 +71,7 @@ const privacyLoaders = {
   en: () => import('@/locales/privacy/en.json'),
   zh: () => import('@/locales/privacy/zh.json'),
   fr: () => import('@/locales/privacy/fr.json'),
-  tr: () => import('@/locales/privacy/tr.json'),
+  ru: () => import('@/locales/privacy/ru.json'),
 };
 
 const loaded = new Set();

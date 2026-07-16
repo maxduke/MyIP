@@ -315,7 +315,7 @@ const securityDataLoaders = {
     en: () => import('@/locales/security-checklist/en.json'),
     zh: () => import('@/locales/security-checklist/zh.json'),
     fr: () => import('@/locales/security-checklist/fr.json'),
-    tr: () => import('@/locales/security-checklist/tr.json'),
+    ru: () => import('@/locales/security-checklist/ru.json'),
 };
 
 const securityChecklist = ref(null);

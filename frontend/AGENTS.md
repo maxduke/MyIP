@@ -23,7 +23,7 @@ frontend/
 ├── router/          ← `/` Home · `/tools/:slug` StandaloneTool · `/privacy`
 │                      · `/r/:id` shared report (noindex)
 │                      (advanced tools also open in-page via `?tool=<slug>`)
-├── locales/         ← en / zh / fr / tr + on-demand sub-packs
+├── locales/         ← en / zh / fr / ru + on-demand sub-packs
 ├── style/style.css  ← Tailwind v4 entry + design tokens
 ├── lib/             ← cn() only (shadcn support layer)
 ├── data/            ← static config: achievements + achievement-rules /

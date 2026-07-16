@@ -14,7 +14,7 @@ const localeLoaders = {
   en: () => import('./en.json'),
   zh: () => import('./zh.json'),
   fr: () => import('./fr.json'),
-  tr: () => import('./tr.json'),
+  ru: () => import('./ru.json'),
 };
 
 const supportedLanguages = Object.keys(localeLoaders);
@@ -91,7 +91,7 @@ export async function loadActiveLocaleMessages() {
 // Update meta tags (depends on messages, so call after loadActiveLocaleMessages).
 function updateMeta() {
   // Keep the declared page language in step with the rendered one.
-  // index.html ships lang="en"; leaving that stale on a zh/fr/tr UI makes
+  // index.html ships lang="en"; leaving that stale on a zh/fr/ru UI makes
   // browser auto-translate mis-detect the page and offer to re-translate
   // already-translated content (Chrome-iOS translate churn crashes on the
   // home page's high-frequency DOM updates). Also what screen readers key on.

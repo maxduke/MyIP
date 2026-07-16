@@ -212,8 +212,8 @@ const langOptions = [
     { value: 'auto', label: t('nav.preferences.systemAuto'), flag: '' },
     { value: 'zh', label: '中文', flag: 'cn' },
     { value: 'en', label: 'English', flag: 'us' },
+    { value: 'ru', label: 'Русский', flag: 'ru' },
     { value: 'fr', label: 'Français', flag: 'fr' },
-    { value: 'tr', label: 'Türkçe', flag: 'tr' },
 ];
 const currentLang = computed(() =>
     langOptions.find(l => l.value === userPreferences.value.lang) || langOptions[0]
