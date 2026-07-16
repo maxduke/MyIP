@@ -1,7 +1,7 @@
 // store.js
 import { defineStore } from 'pinia';
-import { GoogleAuthProvider, GithubAuthProvider, signInWithPopup, signOut as firebaseSignOut, onAuthStateChanged } from "firebase/auth";
-import { auth } from './firebase-init.js';
+import { loadFirebaseAuth } from './firebase-init.js';
+import { writeAuthHint } from './utils/auth-hint.js';
 import i18n from './locales/i18n.js';
 import { createInitialAchievementsState } from './data/achievements.js';
 import { createInitialIpDBs, buildDbUrl } from './data/ip-databases.js';
@@ -204,11 +204,13 @@ export const useMainStore = defineStore('main', {
     },
     // sign in with Google
     async signInWithGoogle() {
-      const provider = new GoogleAuthProvider();
-      provider.addScope('email');
       try {
+        const { auth, GoogleAuthProvider, signInWithPopup } = await loadFirebaseAuth();
+        const provider = new GoogleAuthProvider();
+        provider.addScope('email');
         const result = await signInWithPopup(auth, provider);
         this.user = result.user;
+        writeAuthHint(true);
         // refresh browser after successful login
         window.location.reload();
       } catch (error) {
@@ -218,11 +220,13 @@ export const useMainStore = defineStore('main', {
     },
     // sign in with GitHub
     async signInWithGithub() {
-      const provider = new GithubAuthProvider();
-      provider.addScope('user:email');
       try {
+        const { auth, GithubAuthProvider, signInWithPopup } = await loadFirebaseAuth();
+        const provider = new GithubAuthProvider();
+        provider.addScope('user:email');
         const result = await signInWithPopup(auth, provider);
         this.user = result.user;
+        writeAuthHint(true);
         // refresh browser after successful login
         window.location.reload();
       } catch (error) {
@@ -233,21 +237,27 @@ export const useMainStore = defineStore('main', {
     // sign out
     async signOut() {
       try {
+        const { auth, signOut: firebaseSignOut } = await loadFirebaseAuth();
         await firebaseSignOut(auth);
         this.user = null;
         this.isSignedIn = false;
+        writeAuthHint(false);
       } catch (error) {
         console.error("Sign out failed:", error);
       }
     },
-    // initialize Auth listener
-    initializeAuthListener() {
-      return new Promise((resolve) => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    // Resolve the persisted auth state once, and keep the sign-in hint in
+    // sync so the next boot picks the right path (see utils/auth-hint.js).
+    async initializeAuthListener() {
+      const fb = await loadFirebaseAuth();
+      if (!fb) return;
+      await new Promise((resolve) => {
+        const unsubscribe = fb.onAuthStateChanged(fb.auth, (currentUser) => {
           this.user = currentUser;
           if (currentUser) {
             this.isSignedIn = true;
           }
+          writeAuthHint(!!currentUser);
           unsubscribe(); // unsubscribe immediately after getting user state
           resolve();
         });

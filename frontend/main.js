@@ -7,6 +7,7 @@ import router from './router';
 import { analytics } from './utils/analytics';
 import { getTimezoneInfo } from './utils/timezone';
 import { isRunningAsPwa } from './utils/pwa';
+import { readAuthHint } from './utils/auth-hint';
 import { unregisterLegacyServiceWorker } from './utils/unregister-service-worker';
 import { addCollection } from '@iconify/vue';
 
@@ -113,10 +114,13 @@ store.checkFirebaseEnv();
 store.fetchConfigs();
 
 // Gate the first render only on what it actually needs; the legs all run in
-// parallel. Auth must resolve first so the first authenticatedFetch round
-// carries the signed-in user's token.
+// parallel. Auth is hint-gated (utils/auth-hint.js): only a previously
+// signed-in visitor loads Firebase and waits for it before first render, so
+// the first authenticatedFetch round carries their token. Everyone else
+// mounts without the SDK.
+const authHint = readAuthHint();
 Promise.all([
-    store.isFireBaseSet ? store.initializeAuthListener() : Promise.resolve(),
+    store.isFireBaseSet && authHint === '1' ? store.initializeAuthListener() : Promise.resolve(),
     store.loadPreferences(),
     loadActiveLocaleMessages(),
 ]).then(() => {
@@ -126,4 +130,10 @@ Promise.all([
     app.mount('#app'); // Mount even if initialization partially failed
 }).finally(() => {
     loadFlagIcons(); // deferred boot-bandwidth work, app is on screen now
+    // Unknown hint (first visit since the flag shipped, or storage cleared):
+    // probe auth once in the background so an already-signed-in user is
+    // recognized and the next boot takes the exact path.
+    if (store.isFireBaseSet && authHint === null) {
+        setTimeout(() => store.initializeAuthListener(), 3000);
+    }
 });

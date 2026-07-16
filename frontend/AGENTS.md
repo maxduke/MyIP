@@ -14,9 +14,11 @@ over shadcn-vue primitives (copied in, not a package). No TypeScript, no
 ```
 frontend/
 ├── App.vue          ← thin shell: global providers + <router-view>
-├── main.js          ← bootstrap + env-gated dynamic init (Sentry)
+├── main.js          ← bootstrap + env-gated dynamic init (Sentry, Firebase)
 ├── store.js         ← Pinia main store
-├── firebase-init.js ← env-gated Firebase Auth
+├── firebase-init.js ← env-gated lazy Firebase Auth; boot path picked by the
+│                      utils/auth-hint.js flag (signed-in → gate mount on
+│                      auth; visitor → SDK never loads until sign-in)
 ├── sentry-init.js   ← env-gated Sentry (see "Error monitoring" below)
 ├── router/          ← `/` Home · `/tools/:slug` StandaloneTool · `/privacy`
 │                      · `/r/:id` shared report (noindex)

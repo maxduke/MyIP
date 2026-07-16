@@ -1,9 +1,6 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-
-let auth;
-// import.meta.env only exists in Vite; Node / test environment may not have it, use optional chaining to fallback
+// Firebase Auth bootstrap — env-gated AND lazy: the SDK chunk only loads on
+// the first loadFirebaseAuth() call (signed-in boot, sign-in click, or the
+// background auth probe), never on the visitor-critical path.
 const env = import.meta.env ?? {};
 const firebaseConfig = {
     apiKey: env.VITE_FIREBASE_API_KEY,
@@ -13,13 +10,20 @@ const firebaseConfig = {
 
 const isFireBaseSet = !!firebaseConfig.apiKey && !!firebaseConfig.authDomain && !!firebaseConfig.projectId;
 
-if (isFireBaseSet) {
+let authModulePromise = null;
 
-const app = initializeApp(firebaseConfig);
-auth = getAuth(app);
+// Resolves to the firebase/auth namespace plus the initialized `auth`
+// instance (memoized), or null when the env isn't configured.
+const loadFirebaseAuth = () => {
+    if (!isFireBaseSet) return Promise.resolve(null);
+    authModulePromise ??= Promise.all([
+        import('firebase/app'),
+        import('firebase/auth'),
+    ]).then(([{ initializeApp }, authModule]) => ({
+        ...authModule,
+        auth: authModule.getAuth(initializeApp(firebaseConfig)),
+    }));
+    return authModulePromise;
+};
 
-} else {
-    auth = null;
-}
-
-export { auth };
+export { loadFirebaseAuth };
