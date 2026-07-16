@@ -66,12 +66,14 @@ app.use(i18n);
 app.use(router);
 
 // Sentry — build-time env gate: without the DSN the chunk neither ships nor
-// loads. Joins the mount gate so instrumentation precedes component code.
-const sentryReady = import.meta.env.VITE_SENTRY_DSN_FRONTEND
-    ? import('./sentry-init')
+// loads. Deliberately not awaited before mount: perf data survives a late
+// init (buffered observers, backdated pageload span); only errors thrown
+// before init are lost.
+if (import.meta.env.VITE_SENTRY_DSN_FRONTEND) {
+    import('./sentry-init')
         .then(({ initSentry }) => initSentry(app, router))
-        .catch(() => {})
-    : Promise.resolve();
+        .catch(() => {});
+}
 
 //
 // Initialize a series of operations
@@ -117,7 +119,6 @@ Promise.all([
     store.isFireBaseSet ? store.initializeAuthListener() : Promise.resolve(),
     store.loadPreferences(),
     loadActiveLocaleMessages(),
-    sentryReady,
 ]).then(() => {
     app.mount('#app');
 }).catch(error => {
