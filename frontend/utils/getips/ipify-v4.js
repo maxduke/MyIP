@@ -18,14 +18,14 @@ const getIPFromIpify_V4 = async () => {
                 source: source
             };
         } else { 
-            console.error("Invalid IP from IPify:", ip);
+            console.warn("Invalid IP from IPify:", ip);
             return {
                 ip: null,
                 source: source
             };
         }
     } catch (error) {
-        console.error("Error fetching IPv4 address from ipify:", error);
+        console.warn("Error fetching IPv4 address from ipify:", error);
         return {
             ip: null,
             source: "IPify IPv4"

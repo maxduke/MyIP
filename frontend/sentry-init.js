@@ -7,6 +7,8 @@
 // the main bundle and bypass the gating). For explicit signals, emit a domain
 // event on utils/app-events.js and subscribe to it here instead.
 import * as Sentry from '@sentry/vue';
+import { onAppEvent } from '@/utils/app-events';
+import { isValidIP } from '@/utils/valid-ip.js';
 
 const env = import.meta.env ?? {};
 
@@ -91,6 +93,9 @@ const initSentry = (app, router) => {
             'Importing a module script failed',
             'Unable to preload CSS',
         ],
+        // Third-party scripts we don't own: Cloudflare's RUM beacon throws
+        // in some browsers — not actionable from this codebase.
+        denyUrls: [/static\.cloudflareinsights\.com/],
         // Console-captured events group by the console message instead of
         // the exception stack. The fallback chains all surface the same
         // "TypeError: Failed to fetch" from fetchWithTimeout, so stack
@@ -113,12 +118,6 @@ const initSentry = (app, router) => {
                 const firstArg = event.extra?.arguments?.[0];
                 if (typeof firstArg === 'string' && firstArg.trim()) {
                     const msg = firstArg.trim();
-                    // Pure-v6 chain failures are the visitor's network stack
-                    // (IPv4-only users are common), not a defect — drop them.
-                    // The dual-stack "IPv6/4" source is exempt from the drop:
-                    // it must succeed even for IPv4-only visitors, so its
-                    // failures are a real signal.
-                    if (/IPv6(?!\/4)/.test(msg)) return null;
                     // Filter out DNS-leak probe chain errors.
                     if (msg.startsWith('Error fetching leak test data:')) return null;
                     event.fingerprint = [msg.slice(0, 200)];
@@ -128,11 +127,42 @@ const initSentry = (app, router) => {
         },
     });
 
-    // Explicit product signals would arrive via the app-events bus — business
-    // code stays Sentry-free and just emits domain events (see
-    // frontend/AGENTS.md). No signal is currently captured: chain exhaustion
-    // (`ip-source:exhausted`) proved to be pure visitor-network noise —
-    // clients that block every third-party request — and was dropped.
+    // Explicit product signals arrive via the app-events bus — business code
+    // stays Sentry-free and just emits domain events (see frontend/AGENTS.md).
+    //
+    // ip-source:exhausted — an IP card's whole source chain (primary + all
+    // fallbacks) produced no IP. Individual source failures are console.warn
+    // (any single provider can be blocked on a given network); full-card
+    // exhaustion is the health signal. v4 cards report directly. v6 cards
+    // are held until the ipinfo:finished snapshot and only report when some
+    // card resolved a valid IPv6 — proof the visitor's network stack has
+    // working v6, so the exhausted chain is OUR problem. Without that proof,
+    // "our v6 chain failed" is indistinguishable from "visitor has no IPv6",
+    // which is routine (roughly half the internet) and pure noise.
+    const reportExhaustion = (source, ipVersion) => {
+        Sentry.captureMessage(`IP source exhausted: ${source}`, {
+            level: 'error',
+            fingerprint: ['ip-source-exhausted', source],
+            tags: { ip_version: ipVersion },
+        });
+    };
+    let pendingV6Exhaustions = [];
+    onAppEvent('ip-source:exhausted', ({ source, ipVersion }) => {
+        if (ipVersion === 'v6') {
+            pendingV6Exhaustions.push(source);
+        } else {
+            reportExhaustion(source, ipVersion);
+        }
+    });
+    onAppEvent('ipinfo:finished', ({ cards }) => {
+        if (pendingV6Exhaustions.length === 0) return;
+        const queued = pendingV6Exhaustions;
+        pendingV6Exhaustions = [];
+        const visitorHasV6 = (cards ?? []).some(
+            (card) => typeof card.ip === 'string' && card.ip.includes(':') && isValidIP(card.ip)
+        );
+        if (visitorHasV6) queued.forEach((source) => reportExhaustion(source, 'v6'));
+    });
 };
 
 export { initSentry };

@@ -18,14 +18,14 @@ const getIPFromMyExternalIP_V4 = async () => {
                 source: source
             };
         } else { 
-            console.error("Invalid IP from MyExternalIP:", ip);
+            console.warn("Invalid IP from MyExternalIP:", ip);
             return {
                 ip: null,
                 source: source
             };
         }
     } catch (error) {
-        console.error("Error fetching IPv4 address from MyExternalIP:", error);
+        console.warn("Error fetching IPv4 address from MyExternalIP:", error);
         return {
             ip: null,
             source: "MyExternalIP IPv4"

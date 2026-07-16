@@ -83,18 +83,20 @@ philosophy as `firebase-init.js`). Two rules:
 - **Never import `@sentry/vue` in app code** — a static import would drag the
   SDK back into the main bundle. All Sentry config lives in `sentry-init.js`.
 - **Explicit signals go through the app-events bus**, like achievements: the
-  component emits, `sentry-init.js` subscribes. No signal is currently
-  captured — `ip-source:exhausted` proved to be visitor-network noise and
-  was dropped (the event itself is still emitted for future subscribers).
+  component emits, `sentry-init.js` subscribes. One signal is captured:
+  `ip-source:exhausted` (an IP card's whole source chain failed). v4 cards
+  report directly; v6 cards report only when the `ipinfo:finished` snapshot
+  shows some card resolved a valid IPv6 — otherwise "our v6 chain failed" is
+  indistinguishable from "visitor has no IPv6", which is routine noise.
 
-Capture surface: uncaught errors; `console.error` (fallback-chain degradation
-is a tracked product signal — fingerprinted per message prefix so each source
-stays a distinct issue; pure-v6 chain failures are dropped in `beforeSend`
-since IPv4-only visitors make them routine — v6 source messages must contain
-"IPv6", and the dual-stack "IPv6/4" source is exempt); route-change traces;
+Capture surface: uncaught errors; `console.error` (fingerprinted per message
+prefix so each source stays a distinct issue; individual `utils/getips/`
+source failures are `console.warn` — invisible to Sentry by design, the
+per-card exhaustion event above is the health signal); route-change traces;
 error-only Replay, page text deliberately unmasked (the visitor's on-screen
 network info IS the debugging context; typed input stays masked; disclosed
-in the privacy policy).
+in the privacy policy). Third-party script errors (Cloudflare's RUM beacon)
+are dropped via `denyUrls`.
 Backend 5xx is deliberately NOT captured frontend-side — the backend SDK
 reports its own failures. Envelopes ship through the first-party tunnel
 `/api/monitoring` (`api/sentry-tunnel.js`) to beat ad blockers; source maps
