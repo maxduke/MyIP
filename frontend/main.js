@@ -50,11 +50,9 @@ window.addEventListener('vite:preloadError', (event) => {
     window.location.reload();
 });
 
-// The flag icon JSON is hundreds of KB — keep it dynamic so it doesn't bloat
-// the first-paint bundle. `@iconify/vue` itself is statically imported (above)
-// because a dozen components already pull it in synchronously, so wrapping
-// addCollection in another dynamic() would just be a no-op Promise tick.
-import('@iconify-json/circle-flags/icons.json')
+// The flag icon JSON is hundreds of KB — loaded after mount (see the mount
+// chain below) so it doesn't compete for boot bandwidth.
+const loadFlagIcons = () => import('@iconify-json/circle-flags/icons.json')
     .then((mod) => { if (mod?.default) addCollection(mod.default); })
     .catch(() => { /* non-fatal: flag icons degrade gracefully */ });
 
@@ -67,13 +65,8 @@ const store = useMainStore(pinia);
 app.use(i18n);
 app.use(router);
 
-// Sentry error monitoring — VITE_SENTRY_DSN_FRONTEND is a build-time
-// constant, so when it's unset Vite folds this branch away and the Sentry
-// chunk neither ships nor loads. The returned promise joins the mount gate
-// below: the chunk loads in parallel with the auth/locale waits the mount
-// already gates on, so console/error instrumentation is guaranteed to be in
-// place before any component code runs (checkAllIPs fires immediately at
-// mount). A failed load must never block the app — hence the catch.
+// Sentry — build-time env gate: without the DSN the chunk neither ships nor
+// loads. Joins the mount gate so instrumentation precedes component code.
 const sentryReady = import.meta.env.VITE_SENTRY_DSN_FRONTEND
     ? import('./sentry-init')
         .then(({ initSentry }) => initSentry(app, router))
@@ -117,17 +110,19 @@ store.checkFirebaseEnv();
 // reactively, so the first render never waits on this round trip.
 store.fetchConfigs();
 
-// Gate the first render only on what it actually needs. loadActiveLocaleMessages()
-// loads just the active locale (+ en fallback) and runs in parallel here, so it
-// adds no serial latency over the auth wait the mount already gates on.
+// Gate the first render only on what it actually needs; the legs all run in
+// parallel. Auth must resolve first so the first authenticatedFetch round
+// carries the signed-in user's token.
 Promise.all([
     store.isFireBaseSet ? store.initializeAuthListener() : Promise.resolve(),
-    store.loadPreferences(), // Load user preferences
-    loadActiveLocaleMessages(), // Load the active language pack before first render
-    sentryReady               // Sentry instrumentation in place before first render
+    store.loadPreferences(),
+    loadActiveLocaleMessages(),
+    sentryReady,
 ]).then(() => {
     app.mount('#app');
 }).catch(error => {
     console.error("Failed to initialize the app properly:", error);
-    app.mount('#app'); // Even if there is an error during initialization, continue to mount the application
+    app.mount('#app'); // Mount even if initialization partially failed
+}).finally(() => {
+    loadFlagIcons(); // deferred boot-bandwidth work, app is on screen now
 });
