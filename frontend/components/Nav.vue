@@ -137,8 +137,7 @@
                   <div class="flex items-baseline justify-between gap-2">
                     <dt class="text-muted-foreground">{{ t('user.Fields.FunctionUses') }}</dt>
                     <dd class="font-medium">
-                      <span v-if="remoteUserInfoFetched">{{ remoteUserInfo.functionUses?.total ?? 0 }} {{
-                        t('user.Fields.Times') }}</span>
+                      <span v-if="remoteUserInfoFetched">{{ remoteUserInfo.functionUses?.total ?? 0 }}</span>
                       <span v-else class="text-muted-foreground">{{ t('user.Fields.Fetching') }}</span>
                     </dd>
                   </div>

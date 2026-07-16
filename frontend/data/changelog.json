@@ -9,7 +9,7 @@
           "en": "Display user's IP information",
           "zh": "显示用户的 IP 信息",
           "fr": "Affichage des informations IP de l'utilisateur",
-          "ru": "Отображение информации об IP-адресе пользователя"
+          "ru": "Добавлено отображение информации об IP-адресе пользователя"
         }
       },
       {
@@ -18,7 +18,7 @@
           "en": "Display IP information before and after proxy",
           "zh": "显示代理前后的 IP 信息",
           "fr": "Affichage des informations IP avant et après le proxy",
-          "ru": "Отображение информации об IP-адресе до и после использования прокси"
+          "ru": "Добавлено отображение информации об IP-адресе до и после использования прокси"
         }
       },
       {
@@ -27,7 +27,7 @@
           "en": "Check website availability",
           "zh": "检查网站可用性",
           "fr": "Vérification de la disponibilité des sites web",
-          "ru": "Проверка доступности сайта"
+          "ru": "Добавлена проверка доступности сайтов"
         }
       }
     ]
@@ -42,7 +42,7 @@
           "en": "Refactored the entire project using Vue2",
           "zh": "使用 Vue2 重构了整个项目",
           "fr": "Refonte complète du projet en utilisant Vue2",
-          "ru": "Полный рефакторинг проекта с использованием Vue2"
+          "ru": "Выполнен полный рефакторинг проекта с использованием Vue2"
         }
       },
       {
@@ -51,7 +51,7 @@
           "en": "Refactored UI using Bootstrap v5",
           "zh": "使用 Bootstrap v5 重构了 UI",
           "fr": "Refonte de l'interface utilisateur en utilisant Bootstrap v5",
-          "ru": "Рефакторинг UI с использованием Bootstrap v5"
+          "ru": "Выполнен рефакторинг UI с использованием Bootstrap v5"
         }
       }
     ]
@@ -231,7 +231,7 @@
           "en": "Refactored the entire project using Vite + Vue3",
           "zh": "使用 Vite + Vue3 重构了整个项目",
           "fr": "Refonte complète du projet en utilisant Vite + Vue3",
-          "ru": "Полный рефакторинг проекта с использованием Vite + Vue3"
+          "ru": "Выполнен полный рефакторинг проекта с использованием Vite + Vue3"
         }
       },
       {
@@ -249,7 +249,7 @@
           "en": "Added MTR test feature",
           "zh": "增加 MTR 测试功能",
           "fr": "Ajout de la fonctionnalité de test MTR",
-          "ru": "Добавлена функция тестирования MTR"
+          "ru": "Добавлен тест MTR"
         }
       },
       {
@@ -333,7 +333,7 @@
           "en": "Optimized PWA application experience",
           "zh": "优化 PWA 应用的体验",
           "fr": "Optimisation de l'expérience de l'application PWA",
-          "ru": "Оптимизировано взаимодействие с PWA-приложением"
+          "ru": "Улучшена работа PWA-приложения"
         }
       },
       {
@@ -375,7 +375,7 @@
           "en": "Optimized UI experience",
           "zh": "优化 UI 体验",
           "fr": "Amélioration de l'expérience utilisateur de l'interface utilisateur",
-          "ru": "Улучшено взаимодействие с UI"
+          "ru": "Улучшен интерфейс"
         }
       }
     ]
@@ -423,7 +423,7 @@
           "en": "Added rule test feature",
           "zh": "添加规则测试",
           "fr": "Ajout du test de règles",
-          "ru": "Добавлена проверка правил"
+          "ru": "Добавлен тест правил"
         }
       },
       {
@@ -588,7 +588,7 @@
           "en": "Refactored the entire project using Vue 3's Composition API",
           "zh": "采用 Vue 3 的 Composition API 重构了整个项目",
           "fr": "Refonte complète du projet en utilisant la Composition API de Vue 3",
-          "ru": "Полный рефакторинг проекта с использованием Composition API из Vue 3"
+          "ru": "Выполнен полный рефакторинг проекта с использованием Composition API из Vue 3"
         }
       },
       {
@@ -729,7 +729,7 @@
           "en": "Language preferences",
           "zh": "语言偏好设置",
           "fr": "Préférences de langue",
-          "ru": "Настройки языка"
+          "ru": "Добавлены настройки языка"
         }
       },
       {
@@ -927,7 +927,7 @@
           "en": "Refactored the entire project with Shadcn UI + Tailwind CSS",
           "zh": "使用 Shadcn UI + Tailwind CSS 重构了整个项目",
           "fr": "Refonte complète du projet avec Shadcn UI + Tailwind CSS",
-          "ru": "Полный рефакторинг проекта с использованием Shadcn UI + Tailwind CSS"
+          "ru": "Выполнен полный рефакторинг проекта с использованием Shadcn UI + Tailwind CSS"
         }
       },
       {
@@ -936,7 +936,7 @@
           "en": "Improved AI-development friendliness via multiple Agents.md files",
           "zh": "通过多个 Agents.md 提升 AI 开发友好性",
           "fr": "Amélioration de la compatibilité avec le développement assisté par IA grâce à plusieurs fichiers Agents.md",
-          "ru": "Упрощена AI-разработка благодаря нескольким файлам Agents.md"
+          "ru": "Проект стал удобнее для AI-разработки благодаря нескольким файлам Agents.md"
         }
       },
       {
@@ -1023,7 +1023,7 @@
           "en": "In-depth DNS Leak Test: captures every recursive resolver you use, with ECS and DNSSEC analysis",
           "zh": "深度 DNS 泄漏测试：捕获所有递归解析器并分析 ECS 与 DNSSEC",
           "fr": "Test de fuite DNS approfondi : capture tous les résolveurs récursifs utilisés, avec analyse ECS et DNSSEC",
-          "ru": "Расширенный тест утечки DNS: выявляет все используемые рекурсивные резолверы и анализирует ECS и DNSSEC"
+          "ru": "Углублённый тест утечки DNS: выявляет все используемые рекурсивные резолверы и анализирует ECS и DNSSEC"
         }
       },
       {
@@ -1077,7 +1077,7 @@
           "en": "Auto theme mode now follows the OS light/dark switch instantly",
           "zh": "修复自动主题模式下跟随系统切换时不立即生效的问题",
           "fr": "Le mode thème automatique suit désormais instantanément le changement clair/sombre du système",
-          "ru": "Автоматическая тема теперь мгновенно реагирует на переключение светлой и тёмной темы в операционной системе (OS)"
+          "ru": "Автоматическая тема теперь мгновенно реагирует на переключение светлой/тёмной темы в операционной системе"
         }
       },
       {
@@ -1203,7 +1203,7 @@
           "en": "Enriched the information display of WebRTC Test and Rule Test",
           "zh": "丰富 WebRTC 测试和规则测试的信息展示",
           "fr": "Amélioration de l'affichage des informations du test WebRTC et du test de règles",
-          "ru": "Расширено отображение сведений в тестах WebRTC и правил"
+          "ru": "Расширено отображение сведений в тесте WebRTC и тесте правил"
         }
       },
       {
@@ -1434,7 +1434,7 @@
           "en": "Supported Russian language",
           "zh": "支持俄语语言",
           "fr": "Support de la langue russe",
-          "ru": "Поддержка русского языка"
+          "ru": "Добавлена поддержка русского языка"
         }
       },
       {
