@@ -38,9 +38,7 @@ const USER_ITEM_TYPES = new Set(['event', 'transaction', 'replay_event', 'feedba
 // SDK can't know the visitor's public IP, and once the envelope leaves this
 // relay Sentry only sees OUR server's address — Sentry's forwarded-for
 // headers are ignored by its SaaS edge (verified empirically), so rewriting
-// the envelope is the only reliable path. With no signed-in identity on
-// events, the IP becomes the user key, which is what makes per-issue "users
-// affected" counts work. `ip_address` is always overwritten (the SDK can
+// the envelope is the only reliable path. `ip_address` is always overwritten (the SDK can
 // only ever hold a worse guess); other `user` fields are preserved. Any
 // parse trouble returns the body unchanged: losing an IP is acceptable,
 // losing the event is not. Exported for tests.
