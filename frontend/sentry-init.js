@@ -23,8 +23,6 @@ const initSentry = (app, router, earlyErrors = []) => {
         // Distinguish local `pnpm dev` events from production ones in the
         // Sentry UI ("development" / "production")
         environment: env.MODE,
-        // Opt in to IP collection only (narrower than sendDefaultPii)
-        initialScope: { user: { ip_address: '{{auto}}' } },
         integrations: [
             // Route-change performance tracing via vue-router → Web Vitals
             // (LCP / CLS / INP) and per-route load metrics under Insights.

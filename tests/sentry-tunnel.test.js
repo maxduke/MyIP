@@ -1,11 +1,11 @@
-// api/sentry-tunnel.js — envelope-header parsing, visitor-IP resolution,
-// and the guard branches that return before any upstream forward (method
-// gate / unconfigured / invalid envelope / foreign DSN). No real Sentry
-// traffic is ever sent.
+// api/sentry-tunnel.js — envelope-header parsing, visitor-IP resolution and
+// injection into event items, and the guard branches that return before any
+// upstream forward (method gate / unconfigured / invalid envelope / foreign
+// DSN). No real Sentry traffic is ever sent.
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert';
 
-import tunnelHandler, { parseEnvelopeDsn, visitorIpFrom } from '../api/sentry-tunnel.js';
+import tunnelHandler, { parseEnvelopeDsn, visitorIpFrom, injectUserIp } from '../api/sentry-tunnel.js';
 
 const OUR_DSN = 'https://publickey@o111.ingest.sentry.io/222';
 
@@ -77,4 +77,78 @@ test('visitorIpFrom returns null without a trustworthy header', () => {
     assert.strictEqual(visitorIpFrom({ 'cf-connecting-ip': 'not-an-ip' }), null);
     // Spoofable generic headers are deliberately ignored.
     assert.strictEqual(visitorIpFrom({ 'x-forwarded-for': '203.0.113.7' }), null);
+});
+
+// -- injectUserIp ------------------------------------------------------------
+
+const IP = '203.0.113.7';
+
+// Builds an envelope from [itemHeaderObject, payloadString] pairs.
+const buildEnvelope = (items) => Buffer.from(
+    `${JSON.stringify({ dsn: OUR_DSN })}\n` +
+    items.map(([header, payload]) => `${JSON.stringify(header)}\n${payload}`).join('\n'),
+);
+
+// Re-parses an envelope's items into [header, payloadString] pairs, honoring
+// per-item `length` so the assertions walk the buffer the way Sentry would.
+const parseItems = (buf) => {
+    const items = [];
+    let pos = buf.indexOf(0x0a) + 1;
+    while (pos < buf.length) {
+        const headerNl = buf.indexOf(0x0a, pos);
+        const header = JSON.parse(buf.subarray(pos, headerNl).toString('utf8'));
+        const start = headerNl + 1;
+        const end = typeof header.length === 'number'
+            ? start + header.length
+            : (buf.indexOf(0x0a, start) === -1 ? buf.length : buf.indexOf(0x0a, start));
+        items.push([header, buf.subarray(start, end).toString('utf8')]);
+        pos = buf[end] === 0x0a ? end + 1 : end;
+    }
+    return items;
+};
+
+test('injectUserIp stamps ip_address onto event items', () => {
+    const body = buildEnvelope([[{ type: 'event' }, '{"message":"boom"}']]);
+    const [[, payload]] = parseItems(injectUserIp(body, IP));
+    assert.deepStrictEqual(JSON.parse(payload).user, { ip_address: IP });
+});
+
+test('injectUserIp recomputes an explicit item length', () => {
+    const original = '{"message":"boom"}';
+    const body = buildEnvelope([[{ type: 'event', length: Buffer.byteLength(original) }, original]]);
+    const [[header, payload]] = parseItems(injectUserIp(body, IP));
+    assert.strictEqual(header.length, Buffer.byteLength(payload));
+    assert.deepStrictEqual(JSON.parse(payload).user, { ip_address: IP });
+});
+
+test('injectUserIp overwrites ip_address but keeps other user fields', () => {
+    const body = buildEnvelope([
+        [{ type: 'event' }, '{"user":{"id":"u1"}}'],
+        // The SDK can only ever hold a worse guess at the visitor's IP
+        // (e.g. a leftover "{{auto}}" sentinel) — ours always wins.
+        [{ type: 'transaction' }, '{"user":{"id":"u2","ip_address":"{{auto}}"}}'],
+    ]);
+    const items = parseItems(injectUserIp(body, IP));
+    assert.deepStrictEqual(JSON.parse(items[0][1]).user, { id: 'u1', ip_address: IP });
+    assert.deepStrictEqual(JSON.parse(items[1][1]).user, { id: 'u2', ip_address: IP });
+});
+
+test('injectUserIp leaves non-event items byte-identical', () => {
+    // Attachment payloads are opaque bytes (may contain newlines when a
+    // length is present) and must never be re-serialized.
+    const attachment = 'line1\nline2';
+    const body = buildEnvelope([
+        [{ type: 'attachment', length: Buffer.byteLength(attachment) }, attachment],
+        [{ type: 'event' }, '{}'],
+    ]);
+    const items = parseItems(injectUserIp(body, IP));
+    assert.strictEqual(items[0][1], attachment);
+    assert.deepStrictEqual(JSON.parse(items[1][1]).user, { ip_address: IP });
+});
+
+test('injectUserIp returns malformed bodies unchanged', () => {
+    const headerOnly = Buffer.from('{"dsn":"x"}');
+    assert.strictEqual(injectUserIp(headerOnly, IP), headerOnly);
+    const badItem = Buffer.from('{"dsn":"x"}\nnot-json\n{}');
+    assert.strictEqual(injectUserIp(badItem, IP), badItem);
 });
