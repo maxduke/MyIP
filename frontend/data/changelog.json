@@ -1429,21 +1429,21 @@
     "date": "Beta",
     "content": [
       {
-        "type": "add",
-        "change": {
-          "en": "Supported Russian language",
-          "zh": "支持俄语语言",
-          "fr": "Support de la langue russe",
-          "ru": "Добавлена поддержка русского языка"
-        }
-      },
-      {
         "type": "improve",
         "change": {
           "en": "Optimized loading speed by 50%+",
           "zh": "使用多种方式优化加载速度，提升 50%+",
           "fr": "Optimisation de la vitesse de chargement de 50%+",
           "ru": "Скорость загрузки повышена более чем на 50%"
+        }
+      },
+      {
+        "type": "add",
+        "change": {
+          "en": "Supported Russian language",
+          "zh": "支持俄语语言",
+          "fr": "Support de la langue russe",
+          "ru": "Добавлена поддержка русского языка"
         }
       },
       {
