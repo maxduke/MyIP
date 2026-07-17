@@ -7,7 +7,7 @@ import fs from 'node:fs';
 
 import changelog from '../frontend/data/changelog.json' with { type: 'json' };
 
-const REQUIRED_LOCALES = ['en', 'zh', 'fr', 'tr'];
+const REQUIRED_LOCALES = ['en', 'zh', 'fr', 'ru'];
 const VALID_TYPES = new Set(['add', 'improve', 'fix']);
 
 describe('changelog.json', () => {

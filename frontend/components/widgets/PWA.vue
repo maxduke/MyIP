@@ -40,12 +40,6 @@ const popupCount = () => {
     return currentCount;
 }
 
-const visitCount = () => {
-    let count = localStorage.getItem('pwaVisitCount') || 0;
-    count = parseInt(count, 10);
-    return count;
-}
-
 const showPWA = () => {
     const pwaInstall = document.getElementsByTagName('pwa-install')[0];
     if (!pwaInstall) return;
@@ -80,18 +74,13 @@ onMounted(() => {
         }
     });
 
-    // Track how many times the user has loaded the app. We skip the prompt
-    // on the very first visit so a brand-new user isn't nagged immediately;
-    // from the second visit onward we fall back to the original popupCount
-    // gate (max 2 prompts ever).
-    const currentVisits = visitCount() + 1;
-    localStorage.setItem('pwaVisitCount', currentVisits);
-
-    if (currentVisits >= 2 && popupCount() < 2) {
-        setTimeout(() => {
-            showPWA();
-        }, 30000);
-    }
+    // Eligibility (visit count, prompt cap, standalone) was already decided
+    // by App.vue via shouldOfferPwaInstall() — this component only mounts at
+    // the prompt moment. The short delay lets the pwa-install element
+    // upgrade and process the manifest before the dialog opens.
+    setTimeout(() => {
+        showPWA();
+    }, 3000);
 });
 </script>
 

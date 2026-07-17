@@ -225,6 +225,7 @@ const cacheable = (maxAgeSeconds) => (req, res, next) => {
 app.use('/api', requireReferer);
 
 const FIVE_MIN_CACHE = 5 * 60;
+const ONE_HOUR_CACHE = 60 * 60;
 const ONE_DAY_CACHE = 24 * 60 * 60;
 const THIRTY_DAYS_CACHE = 30 * 24 * 60 * 60;
 const ONE_YEAR_CACHE = 365 * 24 * 60 * 60;
@@ -242,6 +243,9 @@ app.get('/api/ip2location', requireValidIP(), cacheable(ONE_DAY_CACHE), ip2locat
 app.get('/api/maxmind', requireValidIP(), cacheable(ONE_DAY_CACHE), maxmindHandler);
 app.get('/api/whois', cacheable(ONE_DAY_CACHE), getWhois);
 app.get('/api/github-stars', cacheable(ONE_DAY_CACHE), githubStarsHandler);
+// Feature flags derived from env vars — they only change on a redeploy, so
+// an hour of caching is safe.
+app.get('/api/configs', cacheable(ONE_HOUR_CACHE), validateConfigs);
 // Cache for 30 days — registry / historical data that changes on a monthly
 // (or slower) cadence: IEEE OUI assignments, ASN metadata, ASN interconnection,
 // and append-only BGP routing history.
@@ -258,7 +262,6 @@ app.get('/api/dnsleaktest/session/:token', dnsLeakGetResult);
 app.get('/api/invisibility', invisibilitytestHandler);
 app.get('/api/getuserinfo', getUserinfo);
 app.put('/api/updateuserachievement', updateUserAchievement);
-app.get('/api/configs', validateConfigs);
 // Shared reports stay no-store: an edge cache could serve a report past its
 // KV expiry, and private diagnostic data doesn't belong in a public cache.
 app.get('/api/report/:id', requireValidReportId(), getReportHandler);

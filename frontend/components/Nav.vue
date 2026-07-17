@@ -119,13 +119,14 @@
                   </span>
                   <div class="flex min-w-0 flex-1 flex-col gap-1">
                     <span class="truncate text-sm font-semibold leading-none">{{ userName }}</span>
-                    <span v-if="remoteUserInfoFetched">
+                    <span v-if="remoteUserInfoFetched && remoteUserInfo.userLevel">
                       <Badge :class="levelBadgeClass"
                         class="border-transparent text-[10px] font-medium px-1.5 py-0 h-4">
                         {{ t('user.Level.' + remoteUserInfo.userLevel) }}
                       </Badge>
                     </span>
-                    <span v-else class="text-xs text-muted-foreground">{{ t('user.Fields.Fetching') }}</span>
+                    <span v-else-if="!remoteUserInfoFetched" class="text-xs text-muted-foreground">{{
+                      t('user.Fields.Fetching') }}</span>
                   </div>
                 </div>
                 <dl class="mt-3 space-y-1 text-xs">
@@ -136,8 +137,7 @@
                   <div class="flex items-baseline justify-between gap-2">
                     <dt class="text-muted-foreground">{{ t('user.Fields.FunctionUses') }}</dt>
                     <dd class="font-medium">
-                      <span v-if="remoteUserInfoFetched">{{ remoteUserInfo.functionUses.total }} {{
-                        t('user.Fields.Times') }}</span>
+                      <span v-if="remoteUserInfoFetched">{{ remoteUserInfo.functionUses?.total ?? 0 }}</span>
                       <span v-else class="text-muted-foreground">{{ t('user.Fields.Fetching') }}</span>
                     </dd>
                   </div>

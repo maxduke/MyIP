@@ -27,9 +27,14 @@ frontendApp.use('/api', createProxyMiddleware({
 // Browser TTL on top of these, so the longer values are upper bounds):
 //   - dist/assets/**       Vite-hashed JS/CSS/images — content-addressed → 1y immutable
 //   - dist/fonts/**        non-hashed but essentially never change → 1y immutable
-//   - top-level images     favicon / logos / achievements / … → 24h
-//   - index.html + manifest never cache — otherwise stale HTML keeps pointing
-//                          at a hashed chunk that no longer exists post-deploy
+//   - top-level images     favicon / logos / achievements / … → 7d
+//                          (not content-hashed, so changing one of these
+//                          images requires renaming the file)
+//   - index.html + manifest 24h at the edge (s-maxage), zero in browsers —
+//                          the build's postbuild purge evicts them on deploy,
+//                          so the TTL only caps drift between deploys;
+//                          manifest references only stable /logos/* paths, so
+//                          a stale copy never points at dead assets
 //   - everything else      (robots.txt, …) → 1h
 const distDir = path.join(__dirname, './dist');
 
@@ -39,9 +44,9 @@ function setStaticHeaders(res, filePath) {
   if (rel.startsWith('assets/') || rel.startsWith('fonts/')) {
     res.setHeader('Cache-Control', `public, max-age=${24 * 60 * 60 * 365}, immutable`);
   } else if (/\.(png|jpg|jpeg|webp|svg|ico)$/i.test(rel)) {
-    res.setHeader('Cache-Control', `public, max-age=${24 * 60 * 60}`);
+    res.setHeader('Cache-Control', `public, max-age=${7 * 24 * 60 * 60}`);
   } else if (rel.endsWith('.html') || rel === 'manifest.webmanifest') {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.setHeader('Cache-Control', `public, max-age=0, s-maxage=${24 * 60 * 60}, must-revalidate`);
   } else {
     res.setHeader('Cache-Control', `public, max-age=${60 * 60}`);
   }
@@ -61,8 +66,9 @@ frontendApp.use(express.static(distDir, { setHeaders: setStaticHeaders }));
 //     asset request, not a client route — let it 404 rather than return an HTML
 //     body, which would break a missing JS/CSS chunk's importer after a deploy
 //     (`*/*` requests otherwise match `accepts('html')`).
-//   - index.html is never cached (same as the static layer), so a deploy can't
-//     leave a stale shell pointing at hashed chunks that no longer exist.
+//   - Client-route loads stay uncached (unlike / and /index.html on the
+//     static layer): only those two URLs live at the edge, so a deploy-time
+//     purge stays a two-URL operation.
 frontendApp.use((req, res, next) => {
   if (req.method !== 'GET' || !req.accepts('html')) return next();
   if (req.path.split('/').pop().includes('.')) return next();

@@ -14,14 +14,14 @@ const getIPFromIPChecking6 = async (originalSite) => {
                 source: source
             };
         } else {
-            console.error("Invalid IP from IPCheck.ing IPv6:", ip);
+            console.warn("Invalid IP from IPCheck.ing IPv6:", ip);
             return {
                 ip: null,
                 source: source
             };
         }
     } catch (error) {
-        console.error("Error fetching IP from IPCheck.ing IPv6:", error);
+        console.warn("Error fetching IP from IPCheck.ing IPv6:", error);
     }
     // Fallback
     const { ip, source } = await getIPFromIpify_V6();
@@ -59,7 +59,7 @@ const getFromTrace = async () => {
         }
         return ip;
     } catch (error) {
-        console.error("Error fetching IP from IPCheck.ing IPv6 Trace:", error);
+        console.warn("Error fetching IP from IPCheck.ing IPv6 Trace:", error);
         throw error;
     }
 };

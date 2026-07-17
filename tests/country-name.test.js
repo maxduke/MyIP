@@ -25,9 +25,9 @@ describe('getCountryName(abbr, lang)', () => {
     assert.equal(getCountryName('UG', 'fr'), 'Ouganda');
   });
 
-  it('returns Turkish name for tr', () => {
-    assert.equal(getCountryName('TR', 'tr'), 'Türkiye');
-    assert.equal(getCountryName('US', 'tr'), 'Amerika Birleşik Devletleri');
+  it('returns Russian name for ru', () => {
+    assert.equal(getCountryName('RU', 'ru'), 'Россия');
+    assert.equal(getCountryName('US', 'ru'), 'Соединенные Штаты');
   });
 
   it('is case-insensitive on the country code', () => {

@@ -13,3 +13,19 @@ export function isRunningAsPwa() {
     return window.matchMedia('(display-mode: standalone)').matches
         || window.navigator.standalone === true;
 }
+
+// Proactive install-prompt eligibility, checked by App.vue BEFORE mounting
+// the PWA widget — ineligible visits never load pwa-install or its manifest
+// fetch. Counts this visit as a side effect: the prompt skips the very first
+// visit and is capped at 2 shows ever (PWA.vue bumps pwaPopupCount when the
+// dialog actually opens).
+export const shouldOfferPwaInstall = () => {
+    try {
+        const visits = parseInt(localStorage.getItem('pwaVisitCount') || '0', 10) + 1;
+        localStorage.setItem('pwaVisitCount', visits);
+        const popups = parseInt(localStorage.getItem('pwaPopupCount') || '0', 10);
+        return !isRunningAsPwa() && visits >= 2 && popups < 2;
+    } catch {
+        return false; // storage disabled — never prompt
+    }
+};

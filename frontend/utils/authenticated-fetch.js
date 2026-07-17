@@ -44,6 +44,10 @@ export async function authenticatedFetch(url, method = 'GET', body = null, timeo
 
         return response.json();
     } catch (error) {
+        // Timeout aborts keep their identity: rewrapping would hide the
+        // AbortError name from sentry-init's beforeSend filter, which drops
+        // them as visitor connectivity noise rather than defects.
+        if (error.name === 'AbortError') throw error;
         throw new Error(`Fetch failed: ${error.message}`);
     }
 }

@@ -179,8 +179,12 @@ export default function useSpeedTestCharts(t) {
 
     // Initialize charts
     const initCharts = async () => {
-        // Dynamically import Chart.js
-        const { Chart, registerables } = await import('chart.js/auto');
+        // Dynamically import Chart.js. On broken/blocked visitor networks
+        // the chunk can fail or resolve null — bail and run chartless
+        // (downstream already null-guards every charts.* access).
+        const mod = await import('chart.js/auto').catch(() => null);
+        if (!mod?.Chart) return;
+        const { Chart, registerables } = mod;
         Chart.register(...registerables);
 
         const config = getChartConfig(t);

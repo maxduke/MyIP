@@ -15,6 +15,7 @@
 //   - all scrolling + navigation actions use scrollToElement + advancedToolsRef.openTool(slug)
 //   - `h` key infoMask switch only executes when isInfosLoaded is true
 
+import { watch } from 'vue';
 import { trackEvent } from '../utils/analytics.js';
 import { emitAppEvent } from '../utils/app-events.js';
 import { mappingKeys, keyMap, navigateCards } from '../utils/shortcut.js';
@@ -167,7 +168,9 @@ function buildShortcutConfig({ refs, store, t, configs, userPreferences }) {
         },
         {
             keys: 'q',
-            action: () => { queryIPRef.value.openModal(); trackEvent('ShortCut', 'ShortCut', 'QueryIP'); },
+            // Async components (see Home.vue): ref is null until the chunk
+            // lands, so these actions optional-chain instead of throwing.
+            action: () => { queryIPRef.value?.openModal(); trackEvent('ShortCut', 'ShortCut', 'QueryIP'); },
             description: t('shortcutKeys.IPCheck'),
         },
         {
@@ -194,18 +197,18 @@ function buildShortcutConfig({ refs, store, t, configs, userPreferences }) {
         },
         {
             keys: 'a',
-            action: () => { footerRef.value.openAbout(); trackEvent('ShortCut', 'ShortCut', 'About'); },
+            action: () => { footerRef.value?.openAbout(); trackEvent('ShortCut', 'ShortCut', 'About'); },
             description: t('shortcutKeys.About'),
         },
         {
             keys: 'x',
-            action: () => { additionalRef.value.openCurlModal(); trackEvent('ShortCut', 'ShortCut', 'Curl'); },
+            action: () => { additionalRef.value?.openCurlModal(); trackEvent('ShortCut', 'ShortCut', 'Curl'); },
             description: t('shortcutKeys.Curl'),
         },
         {
             keys: '?',
             action: () => {
-                helpModalRef.value.openModal();
+                helpModalRef.value?.openModal();
                 trackEvent('ShortCut', 'ShortCut', 'Help');
                 // Achievement rule (CleverTrickery) lives in data/achievement-rules.js.
                 emitAppEvent('shortcut:help-opened');
@@ -242,8 +245,17 @@ export function useShortcuts({ refs, store, t, configs, userPreferences }) {
     const loadShortcuts = () => {
         setTimeout(() => {
             registerShortcutKeys();
+            // Help is an async component (Home.vue): on slow networks its
+            // chunk may land after this timer, so wait for the ref instead
+            // of silently skipping the keyMap hand-off.
             if (refs.helpModalRef.value) {
                 refs.helpModalRef.value.keyMap = keyMap;
+            } else {
+                const stop = watch(refs.helpModalRef, (help) => {
+                    if (!help) return;
+                    help.keyMap = keyMap;
+                    stop();
+                });
             }
         }, 2000);
     };

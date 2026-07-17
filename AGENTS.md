@@ -14,7 +14,7 @@ halves: a Vue 3 SPA front-end and an Express 5 back-end API.
 
 | Layer | Technology |
 |---|---|
-| Frontend | Vue 3 (`<script setup>`) · Pinia · vue-router (HTML5 history) · vue-i18n (`en`/`zh`/`fr`/`tr`) |
+| Frontend | Vue 3 (`<script setup>`) · Pinia · vue-router (HTML5 history) · vue-i18n (`en`/`zh`/`fr`/`ru`) |
 | Build | Vite + `@vitejs/plugin-vue`; Tailwind CSS v4 + `tw-animate-css` |
 | UI | shadcn-vue copy-in primitives (reka-ui) · lucide icons · circle-flags via `@iconify/vue` · vaul-vue drawer · vue-sonner toast |
 | Backend | Express 5 |
