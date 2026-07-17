@@ -22,7 +22,12 @@ const loadFirebaseAuth = () => {
     ]).then(([{ initializeApp }, authModule]) => ({
         ...authModule,
         auth: authModule.getAuth(initializeApp(firebaseConfig)),
-    }));
+    })).catch((error) => {
+        // Don't memoize a transient chunk-load failure — the next auth
+        // action should retry the import instead of replaying the rejection.
+        authModulePromise = null;
+        throw error;
+    });
     return authModulePromise;
 };
 

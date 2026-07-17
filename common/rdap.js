@@ -80,6 +80,7 @@ export async function rdapDomain(domain, { timeoutMs = 5000 } = {}) {
 // Numeric value of an IP for prefix math. Returns null on junk — callers
 // validate first, but bootstrap CIDR bases also pass through here.
 const ipToBigInt = (ip) => {
+    if (typeof ip !== 'string') return null;
     if (!ip.includes(':')) {
         const parts = ip.split('.');
         if (parts.length !== 4) return null;

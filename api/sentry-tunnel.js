@@ -13,6 +13,7 @@ import logger from '../common/logger.js';
 // the DSN the SDK was configured with. Returns a URL or null. Exported for
 // tests.
 export const parseEnvelopeDsn = (rawBody) => {
+    if (!Buffer.isBuffer(rawBody)) return null;
     try {
         const text = rawBody.toString('utf8');
         const newline = text.indexOf('\n');
@@ -43,6 +44,7 @@ const USER_ITEM_TYPES = new Set(['event', 'transaction', 'replay_event', 'feedba
 // parse trouble returns the body unchanged: losing an IP is acceptable,
 // losing the event is not. Exported for tests.
 export const injectUserIp = (rawBody, ip) => {
+    if (!Buffer.isBuffer(rawBody)) return rawBody;
     const NL = 0x0a;
     try {
         const headerEnd = rawBody.indexOf(NL);
@@ -103,7 +105,15 @@ export default async (req, res) => {
         return res.status(404).json({ error: 'Tunnel not configured' });
     }
 
-    const dsn = parseEnvelopeDsn(req.body);
+    // express.raw always yields a Buffer here, but guard anyway so a
+    // misconfigured parser (string / array body) can't reach the byte-level
+    // envelope walk below.
+    const rawBody = req.body;
+    if (!Buffer.isBuffer(rawBody)) {
+        return res.status(400).json({ error: 'Invalid envelope' });
+    }
+
+    const dsn = parseEnvelopeDsn(rawBody);
     if (!dsn) {
         return res.status(400).json({ error: 'Invalid envelope' });
     }
@@ -113,7 +123,7 @@ export default async (req, res) => {
 
     const visitorIp = visitorIpFrom(req.headers);
 
-    const body = visitorIp ? injectUserIp(req.body, visitorIp) : req.body;
+    const body = visitorIp ? injectUserIp(rawBody, visitorIp) : rawBody;
 
     try {
         const projectId = dsn.pathname.replace(/^\//, '');

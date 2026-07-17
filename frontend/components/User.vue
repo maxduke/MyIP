@@ -115,6 +115,13 @@ watch(() => store.allHasLoaded, (newVal) => {
     if (newVal) getUserInfo();
 });
 
+// The unknown-auth-hint boot resolves sign-in AFTER allHasLoaded (background
+// probe in main.js), so the watcher above already ran and skipped; retry when
+// the signed-in state lands. getUserInfo self-guards against double fetches.
+watch(isSignedIn, (signed) => {
+    if (signed && store.allHasLoaded) getUserInfo();
+});
+
 watch(() => triggerUserBenefits.value, (newVal) => {
     if (newVal) openUserBenefits();
 });

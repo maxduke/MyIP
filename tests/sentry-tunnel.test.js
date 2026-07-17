@@ -37,6 +37,18 @@ test('parseEnvelopeDsn returns null for garbage input', () => {
     assert.strictEqual(parseEnvelopeDsn(Buffer.from('{"no_dsn":1}\n{}')), null);
 });
 
+test('parseEnvelopeDsn returns null for non-Buffer input', () => {
+    assert.strictEqual(parseEnvelopeDsn(`{"dsn":"${OUR_DSN}"}\n{}`), null);
+    assert.strictEqual(parseEnvelopeDsn(undefined), null);
+});
+
+test('returns 400 when the body is not a Buffer', async () => {
+    process.env.VITE_SENTRY_DSN_FRONTEND = OUR_DSN;
+    const res = makeRes();
+    await tunnelHandler({ method: 'POST', body: `{"dsn":"${OUR_DSN}"}\n{}` }, res);
+    assert.strictEqual(res.statusCode, 400);
+});
+
 test('rejects non-POST methods with 405', async () => {
     const res = makeRes();
     await tunnelHandler({ method: 'GET' }, res);
@@ -144,6 +156,12 @@ test('injectUserIp leaves non-event items byte-identical', () => {
     const items = parseItems(injectUserIp(body, IP));
     assert.strictEqual(items[0][1], attachment);
     assert.deepStrictEqual(JSON.parse(items[1][1]).user, { ip_address: IP });
+});
+
+test('injectUserIp returns non-Buffer bodies unchanged', () => {
+    const str = '{"dsn":"x"}\n{"type":"event"}\n{}';
+    assert.strictEqual(injectUserIp(str, IP), str);
+    assert.strictEqual(injectUserIp(undefined, IP), undefined);
 });
 
 test('injectUserIp returns malformed bodies unchanged', () => {

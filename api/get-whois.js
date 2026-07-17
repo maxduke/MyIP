@@ -22,7 +22,8 @@ function domainHasWhoisText(result) {
 
 export default async (req, res) => {
     const query = req.query.q;
-    if (!query) {
+    // typeof check also rejects the array form (?q=a&q=b) express produces.
+    if (!query || typeof query !== 'string') {
         return res.status(400).json({ error: 'No address provided' });
     }
     if (!isValidIP(query) && !isValidDomain(query)) {
