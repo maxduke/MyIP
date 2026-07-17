@@ -3,6 +3,10 @@ FROM node:24-alpine AS build-stage
 # corepack ships with the node image and provisions pnpm at the version pinned
 # by the `packageManager` field in package.json — no global npm install needed.
 RUN corepack enable
+# node-gyp toolchain for native deps without musl prebuilds (node-pty, pulled
+# in by the code-inspector dev plugin) — build stage only, the production
+# stage below stays toolchain-free.
+RUN apk add --no-cache python3 make g++
 WORKDIR /app
 # Copy the manifests first so this layer (and the install below) stays cached
 # unless dependencies actually change. pnpm-workspace.yaml carries the
