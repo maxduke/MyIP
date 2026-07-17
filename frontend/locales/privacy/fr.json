@@ -49,7 +49,7 @@
           "Des rapports d'erreur techniques : ce qui a échoué dans le code, sur quelle page, ainsi que le type de votre navigateur et de votre système d'exploitation.",
           "Des mesures de performance, comme le temps de chargement des pages.",
           "En cas d'erreur, une rediffusion des instants qui l'ont précédée, pour nous aider à reproduire le problème.",
-          "Au-delà de ce qui est visible dans ces rediffusions, votre adresse IP n'est pas jointe aux données de télémétrie : la collecte d'IP est explicitement désactivée et les rapports n'atteignent Sentry que via notre propre relais.",
+          "Votre adresse IP, jointe aux rapports d'erreur lors de leur passage par notre relais. Les problèmes liés au réseau sont souvent impossibles à diagnostiquer sans elle, et elle nous permet d'estimer combien de visiteurs sont touchés par une erreur. Elle n'est jamais partagée et est supprimée avec le reste de la télémétrie.",
           "Toutes les données de télémétrie sont supprimées automatiquement après 30 jours de conservation."
         ]
       },
@@ -57,7 +57,7 @@
         "title": "Pourquoi nous les collectons",
         "analytics": "Nous utilisons les données d'analyse pour comprendre l'utilisation du site et améliorer l'expérience utilisateur. Ces données ne servent pas à vous identifier personnellement et ne sont jamais vendues.",
         "account": "Les données de votre compte (e-mail et nombre d'utilisations des fonctionnalités avancées) servent uniquement à identifier votre compte, à fournir les fonctionnalités nécessitant une connexion et à calculer vos succès. Nous ne les utilisons pas à des fins publicitaires et ne les vendons jamais.",
-        "telemetry": "La télémétrie d'erreurs et de performance sert uniquement à détecter et corriger les défauts. Elle n'est jamais utilisée pour vous identifier ou vous suivre, et elle est supprimée automatiquement après une courte période de conservation."
+        "telemetry": "La télémétrie d'erreurs et de performance sert uniquement à détecter et corriger les défauts. Elle n'est jamais utilisée à des fins publicitaires ni pour vous suivre sur d'autres sites, et elle est supprimée automatiquement après une courte période de conservation."
       },
       "cookies": {
         "title": "Cookies et stockage local",

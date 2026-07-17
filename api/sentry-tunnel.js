@@ -2,9 +2,11 @@
 // envelopes, so ad/privacy blockers that block *.ingest.sentry.io don't
 // silence error reporting. The browser SDK posts envelopes here (see
 // `tunnel` in frontend/sentry-init.js); we validate that the envelope is
-// addressed to OUR project and forward it. backend-server.js mounts the
+// addressed to OUR project and forward it, passing the visitor's real IP
+// along in Sentry's forwarded-for header. backend-server.js mounts the
 // route only when VITE_SENTRY_DSN_FRONTEND is set.
 import { fetchUpstream } from '../common/fetch-with-timeout.js';
+import { isValidIP } from '../common/valid-ip.js';
 import logger from '../common/logger.js';
 
 // The envelope header is the first newline-delimited JSON line and carries
@@ -19,6 +21,12 @@ export const parseEnvelopeDsn = (rawBody) => {
     } catch {
         return null;
     }
+};
+
+// Resolves the visitor's real IP from the incoming tunnel request.
+export const visitorIpFrom = (headers) => {
+    const ip = headers?.['cf-connecting-ip'];
+    return isValidIP(ip) ? ip : null;
 };
 
 export default async (req, res) => {
@@ -42,12 +50,17 @@ export default async (req, res) => {
         return res.status(403).json({ error: 'DSN not allowed' });
     }
 
+    const visitorIp = visitorIpFrom(req.headers);
+
     try {
         const projectId = dsn.pathname.replace(/^\//, '');
         const upstream = `https://${dsn.host}/api/${projectId}/envelope/`;
         const apiRes = await fetchUpstream(upstream, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-sentry-envelope' },
+            headers: {
+                'Content-Type': 'application/x-sentry-envelope',
+                ...(visitorIp ? { 'X-Sentry-Forwarded-For': visitorIp } : {}),
+            },
             body: req.body,
         });
         res.status(apiRes.status).send(await apiRes.text());

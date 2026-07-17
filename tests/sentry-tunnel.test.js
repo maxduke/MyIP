@@ -1,10 +1,11 @@
-// api/sentry-tunnel.js — envelope-header parsing and the guard branches that
-// return before any upstream forward (method gate / unconfigured / invalid
-// envelope / foreign DSN). No real Sentry traffic is ever sent.
+// api/sentry-tunnel.js — envelope-header parsing, visitor-IP resolution,
+// and the guard branches that return before any upstream forward (method
+// gate / unconfigured / invalid envelope / foreign DSN). No real Sentry
+// traffic is ever sent.
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert';
 
-import tunnelHandler, { parseEnvelopeDsn } from '../api/sentry-tunnel.js';
+import tunnelHandler, { parseEnvelopeDsn, visitorIpFrom } from '../api/sentry-tunnel.js';
 
 const OUR_DSN = 'https://publickey@o111.ingest.sentry.io/222';
 
@@ -61,4 +62,19 @@ test('returns 403 when the envelope targets a foreign DSN', async () => {
     const foreign = envelopeFor('https://otherkey@o999.ingest.sentry.io/888');
     await tunnelHandler({ method: 'POST', body: foreign }, res);
     assert.strictEqual(res.statusCode, 403);
+});
+
+// -- visitorIpFrom -----------------------------------------------------------
+
+test('visitorIpFrom returns the Cloudflare connecting IP when valid', () => {
+    assert.strictEqual(visitorIpFrom({ 'cf-connecting-ip': '203.0.113.7' }), '203.0.113.7');
+    assert.strictEqual(visitorIpFrom({ 'cf-connecting-ip': '2001:db8::1' }), '2001:db8::1');
+});
+
+test('visitorIpFrom returns null without a trustworthy header', () => {
+    assert.strictEqual(visitorIpFrom({}), null);
+    assert.strictEqual(visitorIpFrom(undefined), null);
+    assert.strictEqual(visitorIpFrom({ 'cf-connecting-ip': 'not-an-ip' }), null);
+    // Spoofable generic headers are deliberately ignored.
+    assert.strictEqual(visitorIpFrom({ 'x-forwarded-for': '203.0.113.7' }), null);
 });

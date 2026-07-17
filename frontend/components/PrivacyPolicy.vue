@@ -55,7 +55,7 @@ const store = useMainStore();
 const { isFireBaseSet } = storeToRefs(store);
 
 // Bump when the policy text changes materially.
-const LAST_UPDATED = '2026-07-14';
+const LAST_UPDATED = '2026-07-17';
 
 // Sentry telemetry is a build-time decision (see frontend/AGENTS.md): the
 // section only renders on deployments actually built with a DSN.
