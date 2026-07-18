@@ -499,7 +499,7 @@ const animateProbes = async () => {
 const apiLang = () => {
     const current = lang.value;
     if (current === 'zh') return 'zh-CN';
-    if (current && ['en', 'fr', 'tr', 'zh-CN'].includes(current)) return current;
+    if (current && ['en', 'fr', 'ru', 'zh-CN'].includes(current)) return current;
     return 'zh-CN';
 };
 

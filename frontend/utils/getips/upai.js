@@ -17,11 +17,11 @@ const getIPFromUpai = async () => {
         if (isValidIP(ip)) {
             return { ip: ip, source: source };
         } else {
-            console.error("Invalid IP from Upai:", ip);
+            console.warn("Invalid IP from Upai:", ip);
             return { ip: null, source: source };
         }
     } catch (error) {
-        console.error("Error fetching IP from Upai:", error);
+        console.warn("Error fetching IP from Upai:", error);
         return { ip: null, source: "Upai" };
     }
 };

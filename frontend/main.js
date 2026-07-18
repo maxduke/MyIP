@@ -7,6 +7,7 @@ import router from './router';
 import { analytics } from './utils/analytics';
 import { getTimezoneInfo } from './utils/timezone';
 import { isRunningAsPwa } from './utils/pwa';
+import { readAuthHint } from './utils/auth-hint';
 import { unregisterLegacyServiceWorker } from './utils/unregister-service-worker';
 import { addCollection } from '@iconify/vue';
 
@@ -34,13 +35,27 @@ if (import.meta.env.DEV) {
     }
 }
 
-// The flag icon JSON is hundreds of KB — keep it dynamic so it doesn't bloat
-// the first-paint bundle. `@iconify/vue` itself is statically imported (above)
-// because a dozen components already pull it in synchronously, so wrapping
-// addCollection in another dynamic() would just be a no-op Promise tick.
-import('@iconify-json/circle-flags/icons.json').then(({ default: flags }) => {
-    addCollection(flags);
+// Stale-deploy self-heal. After a deploy, pages loaded before it lazy-import
+// hashed assets that no longer exist; Vite surfaces every such failure
+// (module or CSS) as `vite:preloadError`. Reload once to pick up the fresh
+// index.html. The timestamp latch (per-tab) stops a reload loop when the
+// real cause is elsewhere (offline, blocked CDN): within the window the
+// event just propagates as before. Registered at module eval so it's in
+// place before any lazy import can fail.
+window.addEventListener('vite:preloadError', (event) => {
+    const LATCH_KEY = 'preloadReloadAt';
+    const lastReload = Number(sessionStorage.getItem(LATCH_KEY) || 0);
+    if (Date.now() - lastReload < 60 * 1000) return;
+    sessionStorage.setItem(LATCH_KEY, String(Date.now()));
+    event.preventDefault();
+    window.location.reload();
 });
+
+// The flag icon JSON is hundreds of KB — loaded after mount (see the mount
+// chain below) so it doesn't compete for boot bandwidth.
+const loadFlagIcons = () => import('@iconify-json/circle-flags/icons.json')
+    .then((mod) => { if (mod?.default) addCollection(mod.default); })
+    .catch(() => { /* non-fatal: flag icons degrade gracefully */ });
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -51,18 +66,33 @@ const store = useMainStore(pinia);
 app.use(i18n);
 app.use(router);
 
-// Sentry error monitoring — VITE_SENTRY_DSN_FRONTEND is a build-time
-// constant, so when it's unset Vite folds this branch away and the Sentry
-// chunk neither ships nor loads. The returned promise joins the mount gate
-// below: the chunk loads in parallel with the auth/config/locale fetches the
-// mount already waits for, so console/error instrumentation is guaranteed to
-// be in place before any component code runs (checkAllIPs fires immediately
-// at mount). A failed load must never block the app — hence the catch.
-const sentryReady = import.meta.env.VITE_SENTRY_DSN_FRONTEND
-    ? import('./sentry-init')
-        .then(({ initSentry }) => initSentry(app, router))
-        .catch(() => {})
-    : Promise.resolve();
+// Sentry — build-time env gate: without the DSN the chunk neither ships nor
+// loads. The SDK chunk stays OFF the boot critical path: it loads after
+// mount (see the mount chain's finally below) so it never competes with the
+// locale pack the first render waits on. Until init, a tiny buffer catches
+// uncaught errors / rejections — and any of them triggers an immediate
+// load, so a boot that never reaches mount still reports. Perf data
+// survives the late init (buffered observers, backdated pageload span).
+const earlyErrors = [];
+let loadSentry = () => {};
+if (import.meta.env.VITE_SENTRY_DSN_FRONTEND) {
+    const onEarlyError = (event) => {
+        earlyErrors.push(event);
+        loadSentry();
+    };
+    window.addEventListener('error', onEarlyError);
+    window.addEventListener('unhandledrejection', onEarlyError);
+    let loading = null;
+    loadSentry = () => {
+        loading ??= import('./sentry-init')
+            .then(({ initSentry }) => {
+                initSentry(app, router, earlyErrors);
+                window.removeEventListener('error', onEarlyError);
+                window.removeEventListener('unhandledrejection', onEarlyError);
+            })
+            .catch(() => {});
+    };
+}
 
 //
 // Initialize a series of operations
@@ -97,18 +127,33 @@ unregisterLegacyServiceWorker();
 // Check Firebase environment
 store.checkFirebaseEnv();
 
-// Fetch backend configs and user preferences. loadActiveLocaleMessages() loads
-// just the active locale (+ en fallback) and runs in parallel here, so it adds no
-// serial latency over the auth/config waits the mount already gates on.
+// Backend configs load fire-and-forget: components read `store.configs`
+// reactively, so the first render never waits on this round trip.
+store.fetchConfigs();
+
+// Gate the first render only on what it actually needs; the legs all run in
+// parallel. Auth is hint-gated (utils/auth-hint.js): only a previously
+// signed-in visitor loads Firebase and waits for it before first render, so
+// the first authenticatedFetch round carries their token. Everyone else
+// mounts without the SDK.
+const authHint = readAuthHint();
 Promise.all([
-    store.isFireBaseSet ? store.initializeAuthListener() : Promise.resolve(),
-    store.loadPreferences(), // Load user preferences
-    store.fetchConfigs(),     // Fetch backend configs
-    loadActiveLocaleMessages(), // Load the active language pack before first render
-    sentryReady               // Sentry instrumentation in place before first render
+    store.isFireBaseSet && authHint === '1' ? store.initializeAuthListener() : Promise.resolve(),
+    store.loadPreferences(),
+    loadActiveLocaleMessages(),
 ]).then(() => {
     app.mount('#app');
 }).catch(error => {
+    earlyErrors.push(error); // reaches Sentry once it initializes below
     console.error("Failed to initialize the app properly:", error);
-    app.mount('#app'); // Even if there is an error during initialization, continue to mount the application
+    app.mount('#app'); // Mount even if initialization partially failed
+}).finally(() => {
+    loadFlagIcons(); // deferred boot-bandwidth work, app is on screen now
+    loadSentry();
+    // Unknown hint (first visit since the flag shipped, or storage cleared):
+    // probe auth once in the background so an already-signed-in user is
+    // recognized and the next boot takes the exact path.
+    if (store.isFireBaseSet && authHint === null) {
+        setTimeout(() => store.initializeAuthListener(), 3000);
+    }
 });

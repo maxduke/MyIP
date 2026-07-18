@@ -20,14 +20,14 @@ const getIPFromCloudflare_V4 = async () => {
                 source: source
             };
         } else { 
-            console.error("Invalid IP from Cloudflare:", ip);
+            console.warn("Invalid IP from Cloudflare:", ip);
             return {
                 ip: null,
                 source: source
             };
         }
     } catch (error) {
-        console.error("Error fetching IP from Cloudflare:", error);
+        console.warn("Error fetching IP from Cloudflare:", error);
     }
     // Fallback
     const { ip, source } = await getIPFromMyExternalIP_V4();

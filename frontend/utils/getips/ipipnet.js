@@ -15,10 +15,10 @@ const getIPFromIPIP = async () => {
                 source: source
             };
         } else {
-            console.error("Invalid IP from IPIP.net:", ip);
+            console.warn("Invalid IP from IPIP.net:", ip);
         }
     } catch (error) {
-        console.error("Error fetching IP from IPIP.net:", error);
+        console.warn("Error fetching IP from IPIP.net:", error);
     }
     // Fallback
     const { ip, source } = await getIPFromUpai();

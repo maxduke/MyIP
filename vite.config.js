@@ -4,12 +4,16 @@ import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import { CodeInspectorPlugin } from 'code-inspector-plugin';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
+import { PREFS_STORAGE_KEY, LEGACY_PREFS_KEYS } from './frontend/data/default-preferences.js';
 
 dotenv.config();
 
-// Sentry source-map upload — build-time only, gated on SENTRY_AUTH_TOKEN
-// uploaded to Sentry, then deleted from dist/ — users never download them.
-const sentryUploadEnabled = !!process.env.SENTRY_AUTH_TOKEN;
+// Sentry source-map upload — build-time only. Needs SENTRY_AUTH_TOKEN and a
+// production SENTRY_ENVIRONMENT (unset means production, matching the
+// backend convention) — dev/test builds neither generate nor upload maps.
+// Maps go to Sentry, then get deleted from dist/ — users never download them.
+const sentryUploadEnabled = !!process.env.SENTRY_AUTH_TOKEN
+  && (process.env.SENTRY_ENVIRONMENT || 'production') === 'production';
 
 const backEndPort = parseInt(process.env.BACKEND_PORT || 11966, 10);
 const frontEndPort = parseInt(process.env.FRONTEND_PORT || 18966, 10);
@@ -67,6 +71,70 @@ function siteUrlHtmlPlugin() {
   };
 }
 
+// Build-only inline script that modulepreloads the visitor's locale pack.
+// Mount waits on the active locale's messages, but their dynamic import can
+// only start after index.js has downloaded and executed — a serialized
+// round-trip on the boot critical path. This plugin finds the emitted
+// locale-pack chunks in the bundle and injects a small head script that
+// picks the language exactly like locales/i18n.js (stored prefs incl.
+// legacy keys → ?hl= → browser language → en) and appends
+// <link rel="modulepreload"> for it (plus the en fallback pack, which
+// non-English boots also await) while the HTML is still streaming — the
+// packs then download in parallel with the main bundle. A wrong pick only
+// wastes one preload; the real import decides. Dev serves no bundle, so
+// nothing is injected there.
+const localePreloadPlugin = () => {
+  const preloadScript = (chunks) => `(function () {
+  var chunks = ${JSON.stringify(chunks)};
+  var keys = ${JSON.stringify([PREFS_STORAGE_KEY, ...LEGACY_PREFS_KEYS])};
+  var lang = null;
+  for (var i = 0; i < keys.length && !lang; i++) {
+    try {
+      var stored = JSON.parse(localStorage.getItem(keys[i]) || '{}').lang;
+      if (chunks[stored]) lang = stored;
+    } catch (e) { /* malformed entry — try the next key */ }
+  }
+  if (!lang) {
+    var hl = new URLSearchParams(location.search).get('hl');
+    if (hl) {
+      lang = chunks[hl] ? hl : 'en';
+    } else {
+      var bl = (navigator.language || '').slice(0, 2).toLowerCase();
+      lang = chunks[bl] ? bl : 'en';
+    }
+  }
+  (lang === 'en' ? ['en'] : [lang, 'en']).forEach(function (l) {
+    if (!chunks[l]) return;
+    var link = document.createElement('link');
+    link.rel = 'modulepreload';
+    link.crossOrigin = '';
+    link.href = chunks[l];
+    document.head.appendChild(link);
+  });
+})();`;
+
+  return {
+    name: 'locale-preload',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html, ctx) {
+        const chunks = {};
+        for (const [fileName, chunk] of Object.entries(ctx.bundle || {})) {
+          if (chunk.type !== 'chunk') continue;
+          const facade = (chunk.facadeModuleId || '').replaceAll('\\', '/');
+          const match = facade.match(/\/frontend\/locales\/([a-z]{2})\.json$/);
+          if (match) chunks[match[1]] = '/' + fileName;
+        }
+        if (Object.keys(chunks).length === 0) return html;
+        return {
+          html,
+          tags: [{ tag: 'script', children: preloadScript(chunks), injectTo: 'head' }],
+        };
+      },
+    },
+  };
+};
+
 function manualChunks(id) {
   const normalizedId = id.replaceAll('\\', '/');
 
@@ -96,6 +164,7 @@ export default defineConfig({
     }),
     tailwindcss(),
     siteUrlHtmlPlugin(),
+    localePreloadPlugin(),
     CodeInspectorPlugin({
       bundler: 'vite',
       hideDomPathAttr: true,

@@ -14,14 +14,14 @@ const getIPFromIPChecking4 = async (originalSite) => {
                 source: source
             };
         } else {
-            console.error("Invalid IP from IPCheck.ing IPv4:", ip);
+            console.warn("Invalid IP from IPCheck.ing IPv4:", ip);
             return {
                 ip: null,
                 source: source
             };
         }
     } catch (error) {
-        console.error("Error fetching IP from IPCheck.ing IPv4:", error);
+        console.warn("Error fetching IP from IPCheck.ing IPv4:", error);
     }
     // Fallback
     const { ip, source } = await getIPFromIpify_V4();
@@ -59,7 +59,7 @@ const getFromTrace = async () => {
         }
         return ip;
     } catch (error) {
-        console.error("Error fetching IP from IPCheck.ing IPv4 Trace:", error);
+        console.warn("Error fetching IP from IPCheck.ing IPv4 Trace:", error);
         throw error;
     }
 };

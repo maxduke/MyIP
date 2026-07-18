@@ -279,6 +279,17 @@ const checkSTUNServer = (stun) => {
     try {
       log(`new RTCPeerConnection -> stun:${stun.url}`);
       pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:' + stun.url }] });
+
+      // Privacy extensions may swap RTCPeerConnection for a stub that
+      // constructs fine but lacks the real API surface — the same finding
+      // as a blocked constructor: WebRTC is blocked, not broken. Drop the
+      // stub without close() (it may not have one) before failing.
+      if (typeof pc.createDataChannel !== 'function' || typeof pc.createOffer !== 'function') {
+        log('stubbed RTCPeerConnection: createDataChannel/createOffer missing');
+        pc = null;
+        failWith('StatusUnavailable');
+        return;
+      }
       activeConnections.add(pc);
 
       pc.onicegatheringstatechange = () => {

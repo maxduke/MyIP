@@ -3,7 +3,7 @@
     <!-- Primary footer links: Sponsor / Privacy / About / Changelog / Special
          Thanks. The last three open the same About sheet on their own tab.
          Text-only (no per-button icons) to keep the row calm. -->
-    <div class="flex flex-wrap items-center justify-center gap-x-3 mb-2 max-w-[70%] mx-auto">
+    <div class="flex flex-wrap items-center justify-center gap-x-3 mb-2 mx-auto">
       <Button variant="link" size="default" as-child class="text-[#d63384] hover:text-[#d63384]">
         <a href="https://github.com/sponsors/jason5ng32" target="_blank" rel="noopener">
           {{ t('about.Sponsor') }}

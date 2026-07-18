@@ -33,7 +33,7 @@
       "account": {
         "title": "What we collect when you sign in",
         "paragraphs": [
-          "Signing in is optional — you can use every tool on the site without an account. We use Google Firebase Authentication to manage your login and to sync your achievements and preferences. When you are signed in, the following is collected:"
+          "Signing in is optional — you can use every tool on the site without an account. We use Google Firebase Authentication to manage your login and to sync your achievements. When you are signed in, the following is collected:"
         ],
         "bullets": [
           "Your sign-in email, used to identify your account so we can provide the features that require logging in.",
@@ -49,7 +49,7 @@
           "Technical error reports: what went wrong in the code, on which page, and your browser and operating system type.",
           "Performance timings, such as how fast pages load.",
           "When an error occurs, a replay of the moments leading up to it, so we can reproduce the problem.",
-          "Beyond what is visible in such replays, your IP address is not attached to telemetry data: we explicitly disable IP collection, and reports reach Sentry only via our own relay.",
+          "Your IP address, attached to error reports as they pass through our relay. Network-related problems often cannot be diagnosed without it, and it lets us estimate how many visitors an error affects. It is never shared and is deleted together with the rest of the telemetry.",
           "All telemetry data is deleted automatically after 30 days of retention."
         ]
       },
@@ -57,7 +57,7 @@
         "title": "Why we collect it",
         "analytics": "We use the analytics data to understand how the site is used and to improve the user experience. This data is not used to personally identify you, and we never sell it.",
         "account": "Your account data (email and advanced-feature usage count) is used only to identify your account, to provide the features that require signing in, and to calculate your achievements. We do not use it for advertising and never sell it.",
-        "telemetry": "Error and performance telemetry is used solely to find and fix defects. It is never used to identify or track you, and it is deleted automatically after a short retention period."
+        "telemetry": "Error and performance telemetry is used solely to find and fix defects. It is never used for advertising or to track you across sites, and it is deleted automatically after a short retention period."
       },
       "cookies": {
         "title": "Cookies & local storage",

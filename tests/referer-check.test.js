@@ -76,9 +76,11 @@ describe('refererCheck — ALLOWED_DOMAINS parsing', () => {
 });
 
 describe('refererCheck — malformed inputs', () => {
-  it('throws on non-URL strings (caller must catch)', () => {
-    // URL constructor throws on garbage; current code doesn't try/catch.
-    // Documenting the behavior so callers know to validate upstream.
-    assert.throws(() => refererCheck('not-a-url'));
+  it('returns false on non-URL strings instead of throwing', () => {
+    // Scanners send garbage Referer headers; parse failure means denial,
+    // not an exception bubbling up to a 500.
+    assert.equal(refererCheck('not-a-url'), false);
+    assert.equal(refererCheck('http://'), false);
+    assert.equal(refererCheck('%%%'), false);
   });
 });
