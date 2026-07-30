@@ -380,15 +380,50 @@ describe('ipapi-is normalize', () => {
 
 // -- service-status handlers ----------------------------------------------
 
+const withServiceStatusFetchStub = async (run) => {
+    const originalFetch = globalThis.fetch;
+    const calls = [];
+    globalThis.fetch = async (url) => {
+        calls.push(String(url));
+        const body = String(url).endsWith('/summary.json')
+            ? {
+                status: { indicator: 'none' },
+                components: [{ id: 'api', name: 'API', status: 'operational' }],
+            }
+            : { incidents: [] };
+        return new Response(JSON.stringify(body), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+        });
+    };
+    try {
+        await run(calls);
+    } finally {
+        globalThis.fetch = originalFetch;
+    }
+};
+
 describe('service-status overview handler', () => {
-    it('serves the in-memory overview shape without any upstream call', async () => {
-        const res = createResponse();
-        await serviceStatusHandler(createRequest(), res);
-        // Before the poller's first tick the snapshot is empty, but the shape
-        // ({ updatedAt, providers[] }) is always present — and nothing was fetched.
-        assert.equal(res.statusCode, 200);
-        assert.ok(Array.isArray(res.body.providers), 'providers must be an array');
-        assert.ok('updatedAt' in res.body, 'overview must carry updatedAt');
+    it('hydrates once and coalesces concurrent cold-start requests', async () => {
+        await withServiceStatusFetchStub(async (calls) => {
+            const first = createResponse();
+            const concurrent = createResponse();
+            await Promise.all([
+                serviceStatusHandler(createRequest(), first),
+                serviceStatusHandler(createRequest(), concurrent),
+            ]);
+
+            assert.equal(first.statusCode, 200);
+            assert.ok(first.body.updatedAt, 'overview must carry a refresh timestamp');
+            assert.ok(first.body.providers.length > 0, 'overview must include providers');
+            assert.deepEqual(concurrent.body, first.body);
+            assert.equal(calls.length, first.body.providers.length * 2);
+
+            const warm = createResponse();
+            await serviceStatusHandler(createRequest(), warm);
+            assert.equal(calls.length, first.body.providers.length * 2);
+            assert.deepEqual(warm.body, first.body);
+        });
     });
 });
 
@@ -399,13 +434,13 @@ describe('service-status detail handler', () => {
         assert.equal(res.statusCode, 405);
     });
 
-    it('serves components + incidents arrays (empty until the poller fills the snapshot)', async () => {
+    it('serves components + incidents from the hydrated snapshot', async () => {
         const res = createResponse();
         await serviceStatusDetailHandler(createRequest({ query: { id: 'claude' } }), res);
         assert.equal(res.statusCode, 200);
         assert.equal(res.body.id, 'claude');
-        assert.ok(Array.isArray(res.body.components));
-        assert.ok(Array.isArray(res.body.incidents));
+        assert.deepEqual(res.body.components, [{ name: 'API', status: 'operational' }]);
+        assert.deepEqual(res.body.incidents, []);
     });
 });
 
