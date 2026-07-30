@@ -32,7 +32,7 @@ describe('Vercel deployment', () => {
     it('routes every API path through the single Express function', () => {
         assert.deepEqual(config.rewrites[0], {
             source: '/api/:path*',
-            destination: '/vercel-server',
+            destination: '/vercel-server.js',
         });
     });
 });
