@@ -11,6 +11,13 @@ holds shared back-end code (guards, logger, fetch helper, MaxMind / CAIDA
 services, service-status poller), parts of which the frontend also imports
 (`valid-ip.js`, `fetch-with-timeout.js`).
 
+Vercel builds `vercel-server.js` as one Express Function. The files in this
+directory remain separate handler modules for maintainability; `vercel.json`
+uses an explicit build allowlist so Vercel does not deploy each file as its
+own Function. `common/referer-check.js` trusts Vercel's exact system-provided
+deployment, branch, and production hostnames in addition to
+`ALLOWED_DOMAINS`, so preview deployments do not require per-URL config.
+
 Roughly one handler file per route: IP-geolocation sources (`ipinfo-io` /
 `ipapi-com` / `ipapi-is` / `ip2location-io` / `ip-sb` / `ipcheck-ing` /
 `maxmind`), tool backends (`get-whois` / `dns-resolver` / `mac-checker` /
@@ -62,7 +69,8 @@ states its route and purpose — read those for specifics.
 `common/guards.js`, attached in `backend-server.js` — handlers never repeat
 these checks:
 
-- `requireReferer` — global on `/api/*` (ALLOWED_DOMAINS + localhost).
+- `requireReferer` — global on `/api/*` (ALLOWED_DOMAINS + localhost + exact
+  Vercel system hostnames).
 - `requireValidIP()` — per-route for `?ip=`; handler sees a well-formed IP.
 - `requireValidDomain()` — `?domain=`, lowercases in place so the edge cache
   sees one canonical key.

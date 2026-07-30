@@ -54,6 +54,7 @@ use npm / yarn — they'd produce a competing lockfile.
 ├── sentry-instrument.js         ← backend Sentry bootstrap via `node --import`;
 │                                  no-op without SENTRY_DSN_BACKEND
 ├── frontend-server.js           ← static server for `pnpm start` (+ SPA fallback)
+├── vercel-server.js / vercel.json ← single-function Vercel adapter + routing
 ├── ecosystem.config.cjs         ← pm2 definitions (carries the `--import` flag)
 ├── index.html                   ← Vite entry
 ├── vite.config.js / jsconfig.json (alias @ → frontend/) / package.json
