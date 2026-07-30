@@ -3,12 +3,22 @@ import { describe, it, afterEach, beforeEach } from 'node:test';
 
 import { refererCheck } from '../common/referer-check.js';
 
-// backup ALLOWED_DOMAINS before each test, restore after each test
-let backup;
-beforeEach(() => { backup = process.env.ALLOWED_DOMAINS; });
+const ENV_KEYS = [
+  'ALLOWED_DOMAINS',
+  'VERCEL_URL',
+  'VERCEL_BRANCH_URL',
+  'VERCEL_PROJECT_PRODUCTION_URL',
+];
+let envBackup;
+beforeEach(() => {
+  envBackup = Object.fromEntries(ENV_KEYS.map((key) => [key, process.env[key]]));
+  ENV_KEYS.forEach((key) => delete process.env[key]);
+});
 afterEach(() => {
-  if (backup === undefined) delete process.env.ALLOWED_DOMAINS;
-  else process.env.ALLOWED_DOMAINS = backup;
+  for (const [key, value] of Object.entries(envBackup)) {
+    if (value === undefined) delete process.env[key];
+    else process.env[key] = value;
+  }
 });
 
 describe('refererCheck — base cases', () => {
@@ -72,6 +82,31 @@ describe('refererCheck — ALLOWED_DOMAINS parsing', () => {
     process.env.ALLOWED_DOMAINS = '';
     assert.equal(refererCheck('http://localhost/'), true);
     assert.equal(refererCheck('https://example.com/'), false);
+  });
+
+  it('trims configured domains', () => {
+    process.env.ALLOWED_DOMAINS = ' example.com , another.example ';
+    assert.equal(refererCheck('https://example.com/'), true);
+    assert.equal(refererCheck('https://another.example/'), true);
+  });
+});
+
+describe('refererCheck — Vercel system domains', () => {
+  it('accepts deployment, branch, and production URLs by exact hostname', () => {
+    process.env.VERCEL_URL = 'myip-git-sha-maxduke.vercel.app';
+    process.env.VERCEL_BRANCH_URL = 'myip-git-dev-maxduke.vercel.app';
+    process.env.VERCEL_PROJECT_PRODUCTION_URL = 'myip.vercel.app';
+
+    assert.equal(refererCheck('https://myip-git-sha-maxduke.vercel.app/'), true);
+    assert.equal(refererCheck('https://myip-git-dev-maxduke.vercel.app/'), true);
+    assert.equal(refererCheck('https://myip.vercel.app/'), true);
+  });
+
+  it('does not trust look-alike or subdomain variants', () => {
+    process.env.VERCEL_URL = 'myip.vercel.app';
+
+    assert.equal(refererCheck('https://evil-myip.vercel.app/'), false);
+    assert.equal(refererCheck('https://sub.myip.vercel.app/'), false);
   });
 });
 

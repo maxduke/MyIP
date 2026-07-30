@@ -1,3 +1,6 @@
+packages:
+  - '.'
+
 allowBuilds:
   '@code-inspector/core': true
   '@firebase/util': true
