@@ -23,6 +23,10 @@ describe('IP_DATABASES', () => {
       assert.equal(typeof db.enabled, 'boolean');
     }
   });
+
+  it('keeps MaxMind disabled until backend readiness is known', () => {
+    assert.equal(IP_DATABASES.find((db) => db.id === 6).enabled, false);
+  });
 });
 
 describe('createInitialIpDBs()', () => {
@@ -64,7 +68,13 @@ describe('buildDbUrl()', () => {
 
 describe('applyConfigAvailability()', () => {
   // Shape of a real /api/configs payload (booleans only).
-  const configs = { ipChecking: true, ipInfo: false, ipapiis: false, ip2location: true };
+  const configs = {
+    ipChecking: true,
+    ipInfo: false,
+    ipapiis: false,
+    ip2location: true,
+    maxmind: false,
+  };
 
   it('follows the configKey flag for keyed sources', () => {
     const out = applyConfigAvailability(createInitialIpDBs(), configs);
@@ -73,12 +83,27 @@ describe('applyConfigAvailability()', () => {
     assert.equal(byId[1], false);  // ipInfo: false
     assert.equal(byId[3], false);  // ipapiis: false
     assert.equal(byId[4], true);   // ip2location: true
+    assert.equal(byId[6], false);  // maxmind: false
+  });
+
+  it('enables MaxMind when both backend readers are ready', () => {
+    const out = applyConfigAvailability(createInitialIpDBs(), {
+      ...configs,
+      maxmind: true,
+    });
+    assert.equal(out.find((db) => db.id === 6).enabled, true);
   });
 
   it('keeps key-free sources always enabled', () => {
     const allOff = applyConfigAvailability(createInitialIpDBs(),
-      { ipChecking: false, ipInfo: false, ipapiis: false, ip2location: false });
-    for (const id of [2, 5, 6]) {
+      {
+        ipChecking: false,
+        ipInfo: false,
+        ipapiis: false,
+        ip2location: false,
+        maxmind: false,
+      });
+    for (const id of [2, 5]) {
       assert.equal(allOff.find((db) => db.id === id).enabled, true, `id ${id} must stay enabled`);
     }
   });

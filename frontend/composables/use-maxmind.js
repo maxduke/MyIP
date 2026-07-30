@@ -21,6 +21,10 @@ import getCountryName from '../data/country-name.js';
 const lookupCache = new Map();
 const pendingLookups = new Map();
 
+export const getEnabledMaxMindSource = (sources) => (
+    sources.find((source) => source.text === 'MaxMind' && source.enabled) || null
+);
+
 // Pure dedup wrapper (exported for tests): concurrent calls with the same key
 // await the same doLookup() run; non-null results are cached permanently.
 export const dedupedLookup = async (key, doLookup) => {
@@ -46,7 +50,7 @@ export function useMaxmind() {
     const { t } = useI18n();
 
     const lookupMaxmind = async (ip) => {
-        const source = store.ipDBs.find((s) => s.text === 'MaxMind');
+        const source = getEnabledMaxMindSource(store.ipDBs);
         if (!source) return null;
 
         const lang = store.lang;

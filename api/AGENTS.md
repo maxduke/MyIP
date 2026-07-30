@@ -14,9 +14,13 @@ services, service-status poller), parts of which the frontend also imports
 Vercel builds `vercel-server.js` as one Express Function. The files in this
 directory remain separate handler modules for maintainability; `vercel.json`
 uses an explicit build allowlist so Vercel does not deploy each file as its
-own Function. `common/referer-check.js` trusts Vercel's exact system-provided
-deployment, branch, and production hostnames in addition to
-`ALLOWED_DOMAINS`, so preview deployments do not require per-URL config.
+own Function. `vercel-prepare.js` downloads licensed MaxMind databases during
+the Vercel build when credentials are configured; the Node Function bundles
+and opens those immutable files at cold start. Without them, `/api/configs`
+disables MaxMind so the frontend skips that source instead of generating 503
+noise. `common/referer-check.js` trusts Vercel's exact system-provided
+deployment, branch, and production hostnames in addition to `ALLOWED_DOMAINS`,
+so preview deployments do not require per-URL config.
 
 Roughly one handler file per route: IP-geolocation sources (`ipinfo-io` /
 `ipapi-com` / `ipapi-is` / `ip2location-io` / `ip-sb` / `ipcheck-ing` /
