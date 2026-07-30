@@ -18,7 +18,9 @@ own Function. `vercel-prepare.js` downloads licensed MaxMind databases during
 the Vercel build when credentials are configured; the Node Function bundles
 and opens those immutable files at cold start. Without them, `/api/configs`
 disables MaxMind so the frontend skips that source instead of generating 503
-noise. `common/referer-check.js` trusts Vercel's exact system-provided
+noise. The Service Status handlers lazily hydrate and deduplicate their
+in-memory snapshot because serverless instances do not run the standalone
+backend's boot-time poller. `common/referer-check.js` trusts Vercel's exact system-provided
 deployment, branch, and production hostnames in addition to `ALLOWED_DOMAINS`,
 so preview deployments do not require per-URL config.
 

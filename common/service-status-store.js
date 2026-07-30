@@ -16,18 +16,21 @@ import { STATUS_PROVIDERS } from './service-status-providers.js';
 import { assembleProvider } from './service-status-transform.js';
 
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+const STATUS_FETCH_TIMEOUT_MS = 5 * 1000;
 
 // Latest snapshot served to clients. `updatedAt` stays null until the first
 // successful-or-degraded refresh lands.
 let snapshot = { updatedAt: null, providers: [] };
+let snapshotRefreshedAtMs = 0;
+let refreshPromise = null;
 let schedulerStarted = false;
 
 // Fetch + parse one JSON endpoint; throws on non-2xx so the caller can degrade.
-async function fetchJson(url) {
-    const res = await fetchUpstream(url);
+const fetchJson = async (url) => {
+    const res = await fetchUpstream(url, { timeoutMs: STATUS_FETCH_TIMEOUT_MS });
     if (!res.ok) throw new Error(`upstream ${res.status}`);
     return res.json();
-}
+};
 
 // Refresh a single provider. Never throws.
 //
@@ -37,7 +40,7 @@ async function fetchJson(url) {
 // blips (DNS hiccups, TLS resets) that shouldn't surface as "status
 // unavailable". Only the genuinely-degraded case (no prior good data) is a
 // warn; recoverable blips drop to debug to keep the prod log quiet.
-async function refreshProvider(provider, previous) {
+const refreshProvider = async (provider, previous) => {
     const [summary, incidents] = await Promise.allSettled([
         fetchJson(`${provider.api}/api/v2/summary.json`),
         fetchJson(`${provider.api}/api/v2/incidents.json`),
@@ -60,18 +63,38 @@ async function refreshProvider(provider, previous) {
         entry.incidents = previous.incidents;
     }
     return entry;
-}
+};
 
-// Refresh every provider in parallel and publish a new snapshot. Exported so
-// boot can await an initial fill before the server starts serving.
-export async function refreshServiceStatus() {
+// Refresh every provider in parallel and publish a new snapshot.
+const performServiceStatusRefresh = async () => {
     const prevById = new Map(snapshot.providers.map((p) => [p.id, p]));
     const providers = await Promise.all(
         STATUS_PROVIDERS.map((p) => refreshProvider(p, prevById.get(p.id))),
     );
-    snapshot = { updatedAt: new Date().toISOString(), providers };
+    snapshotRefreshedAtMs = Date.now();
+    snapshot = { updatedAt: new Date(snapshotRefreshedAtMs).toISOString(), providers };
     return snapshot;
-}
+};
+
+// Coalesce overlapping refreshes. This covers both concurrent serverless
+// cold-start requests and the long-running scheduler racing with a request.
+export const refreshServiceStatus = () => {
+    if (refreshPromise) return refreshPromise;
+    refreshPromise = performServiceStatusRefresh().finally(() => {
+        refreshPromise = null;
+    });
+    return refreshPromise;
+};
+
+// Serverless adapters do not run bootBackend() or its background scheduler.
+// Hydrate on the first Service Status request, then reuse the warm-instance
+// snapshot for the same interval as the long-running poller.
+export const ensureServiceStatusSnapshot = async () => {
+    const isFresh = snapshotRefreshedAtMs > 0
+        && Date.now() - snapshotRefreshedAtMs < REFRESH_INTERVAL_MS;
+    if (!isFresh) await refreshServiceStatus();
+    return snapshot;
+};
 
 // Lightweight overview: every provider's status light, without the heavier
 // components / incidents arrays. Served by /api/service-status so the initial
