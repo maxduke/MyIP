@@ -1,8 +1,8 @@
 // Passthrough behavior of common/sentry-cron.js when no backend DSN is set —
 // the wrapper must be a transparent no-op (result and rejection both flow
 // through) so periodic jobs behave identically on Sentry-less deployments.
-// Also covers common/logger.js's flattenLogAttributes (the pino-context →
-// Sentry-log-attributes normalizer used by the forwarding hook).
+// Also covers common/logger.js's log-mode gate and flattenLogAttributes
+// normalizer used by the forwarding hook.
 import { test } from 'node:test';
 import assert from 'node:assert';
 
@@ -10,7 +10,7 @@ import assert from 'node:assert';
 // (both modules evaluate the gate once at load).
 delete process.env.SENTRY_DSN_BACKEND;
 const { withCronMonitor } = await import('../common/sentry-cron.js');
-const { flattenLogAttributes } = await import('../common/logger.js');
+const { flattenLogAttributes, shouldUseJsonLogs } = await import('../common/logger.js');
 
 test('returns the job result unchanged when Sentry is not configured', async () => {
     const result = await withCronMonitor('test-job', async () => 42, {
@@ -30,6 +30,12 @@ test('runs the job exactly once', async () => {
     let calls = 0;
     await withCronMonitor('test-job', async () => { calls += 1; }, {});
     assert.strictEqual(calls, 1);
+});
+
+test('uses JSON logs for explicit and Vercel serverless environments', () => {
+    assert.strictEqual(shouldUseJsonLogs({ LOG_FORMAT: 'json' }), true);
+    assert.strictEqual(shouldUseJsonLogs({ VERCEL: '1' }), true);
+    assert.strictEqual(shouldUseJsonLogs({}), false);
 });
 
 test('flattens Error values into message + stack attributes', () => {
