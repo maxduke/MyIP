@@ -11,7 +11,12 @@
     },
     {
       "src": "vercel-server.js",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "common/maxmind-db/*.mmdb"
+        ]
+      }
     }
   ],
   "rewrites": [

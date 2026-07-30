@@ -32,7 +32,23 @@ globalThis.document = {
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-const { dedupedLookup } = await import('../frontend/composables/use-maxmind.js');
+const {
+  dedupedLookup,
+  getEnabledMaxMindSource,
+} = await import('../frontend/composables/use-maxmind.js');
+
+describe('getEnabledMaxMindSource', () => {
+  it('returns MaxMind only while the backend advertises it as ready', () => {
+    const sources = [
+      { text: 'IP.sb', enabled: true },
+      { text: 'MaxMind', enabled: false },
+    ];
+
+    assert.equal(getEnabledMaxMindSource(sources), null);
+    sources[1].enabled = true;
+    assert.equal(getEnabledMaxMindSource(sources), sources[1]);
+  });
+});
 
 describe('dedupedLookup — in-flight sharing', () => {
   it('concurrent calls with the same key share one doLookup run', async () => {

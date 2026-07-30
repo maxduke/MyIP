@@ -15,6 +15,8 @@ import {
   MAXMIND_ASN_DB,
   getMaxMindDbPaths,
   isMaxMindReady,
+  areMaxMindDatabasesPresent,
+  initializeMaxMindIfPresent,
   openMaxMindReaders,
   reloadMaxMindDatabases,
   lookupMaxMind,
@@ -37,6 +39,17 @@ describe('maxmind-service — path + ready contract', () => {
   it('exported constants match the file names they describe', () => {
     assert.equal(MAXMIND_CITY_DB, 'GeoLite2-City.mmdb');
     assert.equal(MAXMIND_ASN_DB, 'GeoLite2-ASN.mmdb');
+  });
+
+  it('leaves MaxMind disabled when packaged databases are absent', async () => {
+    const missingPaths = {
+      cityDbPath: path.join(MAXMIND_DB_DIR, 'missing-city.mmdb'),
+      asnDbPath: path.join(MAXMIND_DB_DIR, 'missing-asn.mmdb'),
+    };
+
+    assert.equal(areMaxMindDatabasesPresent(missingPaths), false);
+    assert.equal(await initializeMaxMindIfPresent('missing-test', missingPaths), false);
+    assert.equal(isMaxMindReady(), false);
   });
 
   it('lookupMaxMind throws 503-tagged error when readers are not ready', () => {

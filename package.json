@@ -5,6 +5,7 @@
   "type": "module",
   "packageManager": "pnpm@11.17.0",
   "scripts": {
+    "postinstall": "node vercel-prepare.js",
     "dev": "concurrently \"vite\" \"nodemon --import ./sentry-instrument.js backend-server.js\"",
     "build": "vite build",
     "postbuild": "node -e \"const{existsSync}=require('fs');const{spawnSync}=require('child_process');if(existsSync('scripts/purge-index-cache.js')){const r=spawnSync(process.execPath,['scripts/purge-index-cache.js'],{stdio:'inherit'});process.exit(r.status??1)}\"",

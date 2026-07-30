@@ -55,6 +55,7 @@ use npm / yarn — they'd produce a competing lockfile.
 │                                  no-op without SENTRY_DSN_BACKEND
 ├── frontend-server.js           ← static server for `pnpm start` (+ SPA fallback)
 ├── vercel-server.js / vercel.json ← single-function Vercel adapter + routing
+├── vercel-prepare.js            ← Vercel build-time MaxMind dataset preparation
 ├── ecosystem.config.cjs         ← pm2 definitions (carries the `--import` flag)
 ├── index.html                   ← Vite entry
 ├── vite.config.js / jsconfig.json (alias @ → frontend/) / package.json
