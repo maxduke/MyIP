@@ -6,6 +6,9 @@ import { after, before, describe, it } from 'node:test';
 const config = JSON.parse(
     await readFile(new URL('../vercel.json', import.meta.url), 'utf8'),
 );
+const packageJson = JSON.parse(
+    await readFile(new URL('../package.json', import.meta.url), 'utf8'),
+);
 
 describe('Vercel deployment', () => {
     it('builds exactly one Node function', () => {
@@ -14,7 +17,14 @@ describe('Vercel deployment', () => {
         assert.deepEqual(nodeBuilds, [{
             src: 'vercel-server.js',
             use: '@vercel/node',
+            config: {
+                includeFiles: ['common/maxmind-db/*.mmdb'],
+            },
         }]);
+    });
+
+    it('prepares optional MaxMind assets during Vercel installation', () => {
+        assert.equal(packageJson.scripts.postinstall, 'node vercel-prepare.js');
     });
 
     it('builds the Vite output as static assets with an SPA fallback', () => {
@@ -70,6 +80,7 @@ describe('Vercel Express adapter', () => {
 
         assert.equal(response.status, 200);
         assert.equal(typeof body.originalSite, 'boolean');
+        assert.equal(typeof body.maxmind, 'boolean');
         assert.equal(typeof body.reportSharing, 'boolean');
     });
 });

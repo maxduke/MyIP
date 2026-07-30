@@ -39,6 +39,13 @@ export function isMaxMindReady() {
 }
 
 /**
+ * Report whether both database files are available to open.
+ */
+export const areMaxMindDatabasesPresent = (dbPaths = getMaxMindDbPaths()) => (
+    fs.existsSync(dbPaths.cityDbPath) && fs.existsSync(dbPaths.asnDbPath)
+);
+
+/**
  * Open fresh MaxMind readers from the provided database paths.
  */
 export async function openMaxMindReaders(dbPaths = getMaxMindDbPaths()) {
@@ -53,12 +60,12 @@ export async function openMaxMindReaders(dbPaths = getMaxMindDbPaths()) {
 /**
  * Replace the active MaxMind readers after both databases are opened successfully.
  */
-export async function reloadMaxMindDatabases(reason = 'manual') {
+export async function reloadMaxMindDatabases(reason = 'manual', dbPaths = getMaxMindDbPaths()) {
     if (reloadPromise) {
         return reloadPromise;
     }
 
-    reloadPromise = openMaxMindReaders()
+    reloadPromise = openMaxMindReaders(dbPaths)
         .then(({ city, asn }) => {
             cityLookup = city;
             asnLookup = asn;
@@ -75,6 +82,25 @@ export async function reloadMaxMindDatabases(reason = 'manual') {
 
     return reloadPromise;
 }
+
+/**
+ * Load readers when packaged databases exist, otherwise leave the source disabled.
+ */
+export const initializeMaxMindIfPresent = async (
+    reason = 'startup',
+    dbPaths = getMaxMindDbPaths(),
+) => {
+    if (!areMaxMindDatabasesPresent(dbPaths)) {
+        return false;
+    }
+
+    try {
+        await reloadMaxMindDatabases(reason, dbPaths);
+        return true;
+    } catch {
+        return false;
+    }
+};
 
 /**
  * Watch database files and reload readers when another process publishes new files.

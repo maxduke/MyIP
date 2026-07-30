@@ -14,7 +14,8 @@ export const IP_DATABASES = [
   { id: 3, text: 'IPAPI.is', url: '/api/ipapiis?ip={{ip}}', enabled: true, configKey: 'ipapiis' },
   { id: 4, text: 'IP2Location.io', url: '/api/ip2location?ip={{ip}}', enabled: true, configKey: 'ip2location' },
   { id: 5, text: 'IP.sb', url: '/api/ipsb?ip={{ip}}', enabled: true },
-  { id: 6, text: 'MaxMind', url: '/api/maxmind?ip={{ip}}&lang={{lang}}', enabled: true },
+  // MaxMind fails closed until /api/configs confirms that both readers loaded.
+  { id: 6, text: 'MaxMind', url: '/api/maxmind?ip={{ip}}&lang={{lang}}', enabled: false, configKey: 'maxmind' },
 ];
 
 /**
