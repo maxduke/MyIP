@@ -333,4 +333,12 @@ async function bootBackend() {
     });
 }
 
-bootBackend();
+// Importing the Express app must stay side-effect free for serverless
+// adapters and tests. Direct Node/pm2 execution still performs the complete
+// dataset bootstrap and starts the long-lived backend listener.
+if (process.argv[1] && path.resolve(process.argv[1]) === __filename) {
+    bootBackend();
+}
+
+export { app, bootBackend };
+export default app;
