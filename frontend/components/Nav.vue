@@ -45,12 +45,12 @@
                 </NavigationMenuTrigger>
                 <NavigationMenuContent class="z-50">
                   <!-- Two-column grid on PC -->
-                  <ul class="relative grid grid-cols-2 gap-x-4 gap-y-0.5 min-w-[24rem]">
+                  <ul class="relative grid grid-cols-2 gap-x-4 gap-y-0.5 min-w-[28rem]">
                     <span aria-hidden="true"
                       class="pointer-events-none absolute inset-y-1 left-1/2 w-px -translate-x-1/2 bg-border"></span>
                     <li v-for="tool in advancedTools" :key="tool.slug">
                       <NavigationMenuLink as-child class="cursor-pointer">
-                        <button type="button" class="w-full truncate text-left" @click="openTool(tool.slug)">
+                        <button type="button" class="w-full text-left leading-snug" @click="openTool(tool.slug)">
                           {{ t(tool.titleKey) }}
                         </button>
                       </NavigationMenuLink>
@@ -81,11 +81,16 @@
 
       <!-- Right: Action area (ml-auto push to the right) -->
       <div class="ml-auto flex items-center gap-2">
+        <!-- Earth Online entry (code name: pulse) -->
+        <Pulse />
+
         <!-- Docs assistant entry point (ask box on desktop, icon on mobile) -->
         <DocsSearch />
 
-        <!-- Preferences -->
-        <JnTooltip :text="t('shortcutKeys.Preferences')">
+        <!-- Preferences — standalone cog only for Firebase-less self-hosted
+             instances (no user menu to host it). With the user system on,
+             preferences lives inside the user dropdown for every state. -->
+        <JnTooltip v-if="!isFireBaseSet" :text="t('nav.preferences.title')">
           <Button variant="ghost" size="icon" class="size-8 cursor-pointer" aria-label="Open preferences"
             @click="OpenPreferences">
             <Cog />
@@ -95,18 +100,21 @@
         <!-- Sign In / User Dropdown -->
         <DropdownMenu v-if="isFireBaseSet">
           <DropdownMenuTrigger as-child>
-            <!-- Not signed in -->
-            <Button v-if="!isSignedIn" size="sm" @click="getUserInfo" class="h-8 gap-1.5 cursor-pointer">
-              <span>{{ t('user.SignIn') }}</span>
+            <!-- Not signed in: the solid block reads as the "sign in"
+                 call-to-action, and the menu opens on the sign-in options, so
+                 the affordance is self-explaining one click deep. -->
+            <Button v-if="!isSignedIn" size="sm" @click="getUserInfo" class="h-8 gap-1 px-1.5 cursor-pointer"
+              aria-label="User menu">
+              <UserRound class="size-5" />
               <ChevronDown class="opacity-60" />
             </Button>
-            <Button v-else variant="ghost" size="sm" @click="getUserInfo" class="h-8 gap-1.5 px-1.5 cursor-pointer"
+            <!-- Signed in: avatar + chevron -->
+            <Button v-else variant="ghost" size="sm" @click="getUserInfo" class="h-8 gap-1 px-1 cursor-pointer"
               aria-label="User menu">
-              <span class="inline-flex size-6 overflow-hidden rounded-full">
+              <span class="inline-flex size-7 overflow-hidden rounded-full">
                 <img :src="userPhotoURL" :alt="userName" :title="userName" class="size-full object-cover"
                   referrerpolicy="no-referrer">
               </span>
-              <span v-if="!isMobile" class="text-sm font-medium max-w-40 truncate">{{ userName }}</span>
               <ChevronDown class="opacity-60" />
             </Button>
           </DropdownMenuTrigger>
@@ -137,11 +145,16 @@
                     <dt class="text-muted-foreground">{{ t('user.Fields.CreatedAt') }}</dt>
                     <dd class="font-medium">{{ userCreatedAt }}</dd>
                   </div>
-                  <div class="flex items-baseline justify-between gap-2">
-                    <dt class="text-muted-foreground">{{ t('user.Fields.FunctionUses') }}</dt>
-                    <dd class="font-medium">
-                      <span v-if="remoteUserInfoFetched">{{ remoteUserInfo.functionUses?.total ?? 0 }}</span>
-                      <span v-else class="text-muted-foreground">{{ t('user.Fields.Fetching') }}</span>
+                  <!-- How this account signs in. One account per email
+                       address, so this is also the only way in. -->
+                  <div v-if="linkedProviders.length" class="flex items-baseline justify-between gap-2">
+                    <dt class="text-muted-foreground">{{ t('user.Fields.SignInMethods') }}</dt>
+                    <dd class="flex min-w-0 items-center gap-1.5 font-medium">
+                      <span v-for="provider in linkedProviders" :key="provider.providerId"
+                        class="inline-flex items-center gap-1" :title="provider.label">
+                        <Icon v-if="provider.icon" :icon="provider.icon" class="size-3.5 shrink-0" />
+                        <span>{{ provider.label }}</span>
+                      </span>
                     </dd>
                   </div>
                 </dl>
@@ -166,6 +179,10 @@
             </template>
 
             <DropdownMenuSeparator />
+            <DropdownMenuItem class="cursor-pointer" @select="OpenPreferences">
+              <Cog />
+              <span>{{ t('nav.preferences.title') }}</span>
+            </DropdownMenuItem>
             <DropdownMenuItem class="cursor-pointer" @select="store.setTriggerUserBenefits(true)">
               <HeartHandshake />
               <span>{{ t('user.Benefits.Title') }}</span>
@@ -186,7 +203,7 @@
     <!-- Mobile navigation drawer. Flex column so the link list scrolls instead
          of clipping on short screens when Advanced Tools is expanded. -->
     <Sheet v-if="isMobile" :open="isNavMenuOpen" @update:open="onNavMenuChange">
-      <SheetContent side="left" class="w-72 p-0 flex flex-col gap-0" :title="t('nav.Navigation')">
+      <SheetContent side="left" class="w-80 p-0 flex flex-col gap-0" :title="t('nav.Navigation')">
         <div class="flex shrink-0 items-center justify-between border-b px-4 py-3">
           <h5 class="m-0 text-base font-semibold">{{ t('nav.Navigation') }}</h5>
           <SheetClose />
@@ -207,7 +224,7 @@
               <CollapsibleContent>
                 <div class="my-0.5 ml-3 flex flex-col gap-0.5 border-l pl-3">
                   <button v-for="tool in advancedTools" :key="tool.slug" type="button"
-                    class="block w-full truncate rounded-md px-3 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+                    class="block w-full rounded-md px-3 py-1.5 text-left text-sm leading-snug text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
                     @click="openTool(tool.slug)">
                     {{ t(tool.titleKey) }}
                   </button>
@@ -226,7 +243,8 @@
             <span>Star on GitHub</span>
             <!-- Same /api/github-stars count as the desktop badge (fetched on
                  mount); hidden until it lands / on error. -->
-            <span v-if="githubStarsLabel" class="ml-auto tabular-nums text-muted-foreground inline-flex items-center gap-1">
+            <span v-if="githubStarsLabel"
+              class="ml-auto tabular-nums text-muted-foreground inline-flex items-center gap-1">
               <Icon icon="ri:star-fill" class="size-3.5 text-yellow-400" />
               {{ githubStarsLabel }}
             </span>
@@ -243,7 +261,7 @@ import { useRouter } from 'vue-router';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
-import unixToDateTime from '@/utils/timestamp-to-date';
+import { unixToDateTime } from '@/utils/time-utils';
 import { Sheet, SheetContent, SheetClose } from '@/components/ui/sheet';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import {
@@ -265,19 +283,21 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import {
-  Award, ChevronDown, HeartHandshake,
+  Award, ChevronDown, UserRound, HeartHandshake,
   LogOut, Menu, Cog,
 } from '@lucide/vue';
 import DocsSearch from '@/components/widgets/DocsSearch.vue';
+import Pulse from '@/components/widgets/Pulse.vue';
 import { Icon } from '@iconify/vue';
 import brandIcon from './svgicons/Brand.vue';
 import { SECTION_IDS } from '@/data/sections';
 import { ADVANCED_TOOLS } from '@/data/tools.js';
+import { isToolAvailable } from '@/utils/tool-availability.js';
 import { fetchWithTimeout } from '@/utils/fetch-with-timeout.js';
 import { formatStarCount } from '@/utils/format-star-count.js';
 import { isRunningAsPwa } from '@/utils/pwa.js';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const store = useMainStore();
 const router = useRouter();
 
@@ -292,12 +312,10 @@ const isPwa = isRunningAsPwa();
 
 const navItems = SECTION_IDS;
 
-// Tools shown in the nav, mirroring Advanced.vue's enabledCards: original-site-
-// only tools stay hidden on self-hosted instances. Reactive on configs.
+// Tools shown in the nav, mirroring Advanced.vue's enabledCards: gated tools
+// stay hidden where the deployment lacks them. Reactive on configs.
 const configs = computed(() => store.configs);
-const advancedTools = computed(() =>
-  ADVANCED_TOOLS.filter((tool) => !tool.requiresOriginalSite || configs.value.originalSite),
-);
+const advancedTools = computed(() => ADVANCED_TOOLS.filter((tool) => isToolAvailable(tool, configs.value)));
 
 // Mobile: Advanced Tools sub-list expanded by default for discoverability.
 const mobileToolsOpen = ref(true);
@@ -331,9 +349,11 @@ const isFireBaseSet = computed(() => store.isFireBaseSet);
 const isSignedIn = computed(() => store.isSignedIn);
 const userName = computed(() => store.user?.displayName);
 const userPhotoURL = computed(() => store.user?.photoURL);
-const userCreatedAt = computed(() => unixToDateTime(store.user?.metadata.createdAt));
+const userCreatedAt = computed(() => unixToDateTime(store.user?.metadata.createdAt, locale.value));
 const remoteUserInfo = computed(() => store.remoteUserInfo);
 const remoteUserInfoFetched = computed(() => store.remoteUserInfoFetched);
+// Sign-in methods attached to this account.
+const linkedProviders = computed(() => store.linkedProviders);
 
 // Level Badge Color: mapped to semantic token, keep each level color distinction
 const levelBadgeClass = computed(() => {
@@ -359,7 +379,7 @@ const onNavMenuChange = (val) => {
   store.setOpenSheet(val ? 'navMenu' : null);
 };
 
-// Consumed by `p` shortcut in use-shortcuts.js via defineExpose.
+// Opens the Preferences sheet
 const OpenPreferences = () => {
   store.toggleSheet('preferences');
   trackEvent('Nav', 'NavClick', 'Preferences');

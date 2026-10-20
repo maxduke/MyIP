@@ -3,18 +3,33 @@
 Single source of truth for anyone — human or AI — contributing to MyIP.
 Area-specific details: @frontend/AGENTS.md (Vue SPA) · @api/AGENTS.md (Express API).
 
+## Local skill discovery
+
+Before choosing a workflow for a project task, check the repository-root
+`.skills/` **directory**. It contains local skills at `.skills/<name>/SKILL.md`
+and may not appear in the agent's automatically supplied skill list.
+
+- If the directory exists, discover its skill files with
+  `rg --files --hidden --no-ignore .skills -g SKILL.md` (it is gitignored).
+- Read each skill's frontmatter `name` and `description`; read the full
+  `SKILL.md` for any skill that applies, then follow its workflow.
+- Complete this discovery before choosing a fallback tool or telling the
+  user that a project capability or service is unavailable. Load supporting
+  files only when the selected skill requires them.
+
 ## Overview
 
 **MyIP** (IPCheck.ing) is an open-source IP toolbox: IP lookup, connectivity
-tests, WebRTC / DNS-leak detection, speed test, MTR, Whois, security
-checklist, browser fingerprint, anonymity checks, and more. Single repo, two
-halves: a Vue 3 SPA front-end and an Express 5 back-end API.
+tests, WebRTC / DNS-leak detection, speed test, MTR, Whois, ASN profile,
+security checklist, browser fingerprint, anonymity checks, persona check, IP
+calculator, and more. Single repo, two halves: a Vue 3 SPA front-end and an
+Express 5 back-end API.
 
 ## Stack
 
 | Layer | Technology |
 |---|---|
-| Frontend | Vue 3 (`<script setup>`) · Pinia · vue-router (HTML5 history) · vue-i18n (`en`/`zh`/`fr`/`ru`) |
+| Frontend | Vue 3 (`<script setup>`) · Pinia · vue-router (HTML5 history) · vue-i18n (locales registered in `common/locale-registry.js`) |
 | Build | Vite + `@vitejs/plugin-vue`; Tailwind CSS v4 + `tw-animate-css` |
 | UI | shadcn-vue copy-in primitives (reka-ui) · lucide icons · circle-flags via `@iconify/vue` · vaul-vue drawer · vue-sonner toast |
 | Backend | Express 5 |
@@ -23,7 +38,7 @@ halves: a Vue 3 SPA front-end and an Express 5 back-end API.
 | Error monitoring | Sentry — optional & env-gated on both halves: `@sentry/vue` (no `VITE_SENTRY_DSN_FRONTEND`, no Sentry in the build — see frontend/AGENTS.md) + `@sentry/node` (no `SENTRY_DSN_BACKEND`, never loaded — see api/AGENTS.md) |
 | PWA | `manifest.webmanifest` only — installable but online-only, no service worker |
 | Tests | Node built-in test runner (`node --test`) |
-| Runtime libs | chart.js · svgmap · @cloudflare/speedtest · maxmind · whoiser · thumbmarkjs · ua-parser-js · detect-gpu · @vueuse/core |
+| Runtime libs | chart.js · chartjs-chart-geo · @cloudflare/speedtest · maxmind · whoiser · thumbmarkjs · ua-parser-js · detect-gpu · @vueuse/core |
 
 ## Commands
 
@@ -54,8 +69,7 @@ use npm / yarn — they'd produce a competing lockfile.
 ├── sentry-instrument.js         ← backend Sentry bootstrap via `node --import`;
 │                                  no-op without SENTRY_DSN_BACKEND
 ├── frontend-server.js           ← static server for `pnpm start` (+ SPA fallback)
-├── vercel-server.js / vercel.json ← single-function Vercel adapter + routing
-├── vercel-prepare.js            ← Vercel build-time MaxMind dataset preparation
+├── vercel/ / vercel.json       ← isolated single-Function Vercel deployment
 ├── ecosystem.config.cjs         ← pm2 definitions (carries the `--import` flag)
 ├── index.html                   ← Vite entry
 ├── vite.config.js / jsconfig.json (alias @ → frontend/) / package.json
@@ -79,7 +93,9 @@ use npm / yarn — they'd produce a competing lockfile.
 
 ### Comments
 
-- **Every new file opens with a header comment** stating its purpose.
+- **Every new file opens with a header comment** stating its purpose —
+  except `frontend/components/ui/`, which holds shadcn-vue CLI output kept
+  verbatim so it can be re-synced (see frontend/AGENTS.md).
 - **Large templates / functions carry block comments** per meaningful region.
 - **Comments describe the code as it is now** — no changelog narration
   (`previously…`, `…fixes that`); git history covers the past. A comment
@@ -87,9 +103,13 @@ use npm / yarn — they'd produce a competing lockfile.
 
 ### i18n coverage
 
-- Copy-surfacing features land in **all four locales** in the same change —
-  including `frontend/data/changelog.json` entries
-  (`tests/changelog.test.js` enforces it).
+- Copy-surfacing features land in **every `full` locale** in the same change —
+  including `frontend/data/changelog.json` entries (`tests/changelog.test.js`
+  and `tests/locale-packs.test.js` enforce it against `en`). `beta` locales are
+  free to lag: their gaps resolve down the fallback chain in
+  `common/locale-registry.js`, which is also where a new language is registered.
+- Contributor-facing walkthrough: [TRANSLATING.md](TRANSLATING.md) — keep it in
+  step when the registry, the pack gate or `pnpm i18n-status` changes.
 
 ### Logging (backend)
 
@@ -117,7 +137,7 @@ use npm / yarn — they'd produce a competing lockfile.
 Access control and timeouts live in shared middleware, not handlers
 (details in @api/AGENTS.md):
 
-- `requireReferer` is global on `/api/*`; `requireValidIP()` per-route —
+- `requireReferer` is global on `/api/*`; `requirePublicIP()` per-route —
   handlers never repeat these checks.
 - Every upstream HTTP call goes through `fetchUpstream`
   (`common/fetch-with-timeout.js`, 8s timeout). Never a bare `fetch()` in `api/`.
@@ -143,3 +163,5 @@ Access control and timeouts live in shared middleware, not handlers
 
 If [local-context.md](./local-context.md) exists in the workspace root, read
 it too — it lists machine-local Knowledge Hub paths (not in git).
+
+Vercel deployment and upstream-sync guidance: [VERCEL.md](./VERCEL.md).

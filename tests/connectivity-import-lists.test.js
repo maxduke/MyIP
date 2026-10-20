@@ -1,0 +1,167 @@
+// Data-integrity tests for the curated Connectivity import lists
+// (frontend/data/connectivity-import-lists.js): shape, uniqueness, size
+// floor, HTTPS-only URLs, locale coverage of list names, and a committed
+// favicon PNG for every member, built-in target, and tile-preview
+// reference. When icons are missing locally, a before() hook auto-fetches
+// them via scripts/fetch-favicons.js (skipped under CI, which stays
+// offline and deterministic — there the assertions just tell the
+// contributor to run `pnpm fetch-favicons` and commit the PNGs). With all
+// PNGs committed, the whole spec runs without touching the network.
+
+import assert from 'node:assert/strict';
+import { describe, it, before } from 'node:test';
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import {
+    IMPORT_LISTS,
+    BUILTIN_FAVICONS,
+    DEFAULT_LIST_MEMBERS,
+    SYSTEM_IMPORT_LIST,
+    TILE_PREVIEW,
+    faviconPath,
+    CONNECTIVITY_TARGET_LIMIT,
+} from '../frontend/data/connectivity-import-lists.js';
+import { fetchFavicons } from '../scripts/fetch-favicons.js';
+import { FULL_LOCALE_CODES } from '../common/locale-registry.js';
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const faviconFile = (id) => path.join(repoRoot, 'public', 'favicons', `${id}.png`);
+const allMembers = IMPORT_LISTS.flatMap((l) => l.members);
+
+// Every id that must have a committed PNG: members + built-ins + defaults.
+const faviconIds = [...new Set([
+    ...allMembers.map((m) => m.id),
+    ...BUILTIN_FAVICONS.map((b) => b.id),
+    ...DEFAULT_LIST_MEMBERS.map((m) => m.id),
+])];
+const missingFavicons = () => faviconIds.filter((id) => !existsSync(faviconFile(id)));
+
+// Failure message for a still-missing PNG — after the local auto-fetch has
+// had its chance, or under CI where no network is allowed.
+const faviconHelp = (id) => (process.env.CI
+    ? `missing public/favicons/${id}.png — run pnpm fetch-favicons locally and commit the PNGs`
+    : `missing public/favicons/${id}.png — auto-fetch could not find a PNG — hand-source a `
+      + `64px PNG into public/favicons/${id}.png (or run pnpm fetch-favicons)`);
+
+describe('import lists data integrity', () => {
+    // Local runs self-heal: missing PNGs are fetched before the existence
+    // assertions re-check them. CI never touches the network — the
+    // committed-PNG gate stays intact there.
+    before(async () => {
+        const missing = missingFavicons();
+        if (!missing.length || process.env.CI) return;
+        await fetchFavicons({ ids: missing });
+    });
+
+    it('list ids are unique and every list carries an emoji icon', () => {
+        const ids = IMPORT_LISTS.map((l) => l.id);
+        assert.equal(new Set(ids).size, ids.length);
+        for (const list of IMPORT_LISTS) {
+            assert.ok(typeof list.emoji === 'string' && list.emoji.length > 0,
+                `${list.id} needs an emoji`);
+        }
+    });
+
+    it('every list has at least 10 members', () => {
+        for (const list of IMPORT_LISTS) {
+            assert.ok(list.members.length >= 10, `${list.id} has ${list.members.length}`);
+        }
+    });
+
+    it('member ids are globally unique (import-entry ids derive from them)', () => {
+        const ids = allMembers.map((m) => m.id);
+        assert.equal(new Set(ids).size, ids.length);
+    });
+
+    it('member hostnames are unique within each list (import dedupe is by hostname)', () => {
+        // Cross-list overlap is deliberate — themed lists stay semantically
+        // complete even where they intersect the defaults (AI ⊃ ChatGPT).
+        for (const list of IMPORT_LISTS) {
+            const hosts = list.members.map((m) => new URL(m.url).hostname);
+            assert.equal(new Set(hosts).size, hosts.length, list.id);
+        }
+    });
+
+    it('members shared with the defaults reuse the exact default definition', () => {
+        // Overlapping entries are references into DEFAULT_LIST_MEMBERS, so
+        // url / iconDomain can never drift between the two.
+        const defaults = new Map(DEFAULT_LIST_MEMBERS.map((m) => [m.id, m]));
+        let shared = 0;
+        for (const m of allMembers) {
+            if (!defaults.has(m.id)) continue;
+            assert.equal(m, defaults.get(m.id), m.id);
+            shared += 1;
+        }
+        assert.ok(shared > 0, 'expected some default members inside themed lists');
+    });
+
+    it('the system import list re-exposes the defaults under a non-clashing id', () => {
+        assert.equal(SYSTEM_IMPORT_LIST.members, DEFAULT_LIST_MEMBERS);
+        assert.ok(SYSTEM_IMPORT_LIST.emoji.length > 0);
+        assert.ok(!IMPORT_LISTS.some((l) => l.id === SYSTEM_IMPORT_LIST.id));
+    });
+
+    it('default list members are well-formed and favicon-backed', () => {
+        const ids = DEFAULT_LIST_MEMBERS.map((m) => m.id);
+        assert.equal(new Set(ids).size, ids.length);
+        for (const m of DEFAULT_LIST_MEMBERS) {
+            assert.equal(new URL(m.url).protocol, 'https:', m.id);
+            assert.ok(existsSync(faviconFile(m.id)), faviconHelp(m.id));
+        }
+    });
+
+    it('every member URL is HTTPS and parseable', () => {
+        for (const m of allMembers) {
+            assert.equal(new URL(m.url).protocol, 'https:', m.id);
+        }
+    });
+
+    it('every siteUrl override (members + defaults) is HTTPS and parseable', () => {
+        for (const m of [...allMembers, ...DEFAULT_LIST_MEMBERS]) {
+            if (m.siteUrl === undefined) continue;
+            assert.equal(new URL(m.siteUrl).protocol, 'https:', m.id);
+        }
+    });
+
+    it('every member and built-in target has a committed favicon PNG', () => {
+        const builtinIds = BUILTIN_FAVICONS.map((b) => b.id);
+        for (const id of [...allMembers.map((m) => m.id), ...builtinIds]) {
+            assert.ok(existsSync(faviconFile(id)), faviconHelp(id));
+        }
+    });
+
+    it('faviconPath points into the committed directory', () => {
+        assert.equal(faviconPath('telegram'), '/favicons/telegram.png');
+    });
+
+    it('tile preview references resolve to emoji or real members', () => {
+        const memberIds = new Set(allMembers.map((m) => m.id));
+        for (const item of TILE_PREVIEW) {
+            if (item.type === 'emoji') assert.ok(item.emoji, 'emoji item needs a char');
+            else assert.ok(memberIds.has(item.id), item.id);
+        }
+    });
+
+    it('no single list exceeds the shared target cap', () => {
+        for (const list of IMPORT_LISTS) {
+            assert.ok(list.members.length <= CONNECTIVITY_TARGET_LIMIT, list.id);
+        }
+    });
+
+    it('every list (and the system list) is named in every full locale pack', () => {
+        // ConnectivityAddDialog renders `connectivity.importLists.<id>` for
+        // IMPORT_LISTS and SYSTEM_IMPORT_LIST alike. Translations can't be
+        // auto-filled — the failure message names the exact file and key.
+        const listIds = [...IMPORT_LISTS.map((l) => l.id), SYSTEM_IMPORT_LIST.id];
+        for (const locale of FULL_LOCALE_CODES) {
+            const packPath = path.join(repoRoot, 'frontend', 'locales', `${locale}.json`);
+            const names = JSON.parse(readFileSync(packPath, 'utf8')).connectivity?.importLists ?? {};
+            for (const id of listIds) {
+                assert.ok(typeof names[id] === 'string' && names[id].trim().length > 0,
+                    `frontend/locales/${locale}.json is missing a non-empty `
+                    + `connectivity.importLists.${id}`);
+            }
+        }
+    });
+});

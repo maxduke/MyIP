@@ -9,7 +9,7 @@
 
     <!-- Query Dialog -->
     <Dialog :open="isOpen" @update:open="onOpenChange">
-        <DialogContent :title="t('ipcheck.Title')" class="max-w-xl min-h-[200px]">
+        <DialogContent :title="t('ipcheck.Title')" class="max-w-2xl min-h-50">
             <DialogHeader :icon="Search" :title="t('ipcheck.Title')" />
 
             <div class="space-y-4">
@@ -45,7 +45,9 @@
 
                     <IpDetailPanel :data="modalQueryResult" :ip-geo-source="ipGeoSource" :asn-infos="asnInfos"
                         :asn-history-infos="asnHistoryInfos" :asn-connectivity-infos="asnConnectivityInfos"
-                        :configs="configs" :is-dark-mode="isDarkMode" :enable-map="false" />
+                        :configs="configs" :is-dark-mode="isDarkMode" map-mode="inline"
+                        country-traffic-mode="inline" @view-usage="onOpenChange(false)"
+                        @open-tool="onOpenChange(false)" />
                 </div>
             </div>
         </DialogContent>
@@ -56,23 +58,27 @@
 // QueryIP — manual IP lookup. Shares IpDetailPanel with IPCard so the info display stays in sync.
 // Differences from IPCard:
 // - No Copy button (the IP was typed by the user — copying it is pointless).
-// - No Map button (Dialog-in-Dialog stacking is avoided; enableMap=false).
-// - Own asnInfos / asnHistoryInfos caches (local to this component; not shared with IPCard).
+// - Map & country-traffic expand inline instead of opening dialogs (this IS a Dialog already).
+// - The panel's "view usage" link closes this dialog first, for the same reason.
+// - Own asnInfos / asnHistoryInfos caches (local to this component; not shared with IPCard);
+//   asnInfos comes from useAsnInfo().
 import { ref, computed, watch, nextTick } from 'vue';
 import { useMainStore } from '@/store';
-import { isValidIP } from '@/utils/valid-ip.js';
+import { isValidIP, isUsablePublicIP } from '@/utils/valid-ip.js';
+import { toApiTag } from '@/utils/locale-registry.js';
 import FitText from '@/components/widgets/FitText.vue';
 import { HERO_TIERS } from '@/composables/use-fit-text.js';
 import { transformDataFromIPapi } from '@/utils/transform-ip-data.js';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
-import { authenticatedFetch } from '@/utils/authenticated-fetch';
+import { authenticatedFetch, fetchErrorLabel, logSourceFetchFailure } from '@/utils/authenticated-fetch';
 import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { JnTooltip } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import IpDetailPanel from '../ip-infos/IpDetailPanel.vue';
+import { useAsnInfo } from '@/composables/use-asn-info.js';
 import { Monitor, Search } from '@lucide/vue';
 
 const { t } = useI18n();
@@ -88,7 +94,7 @@ const modalQueryResult = ref(null);
 const modalQueryError = ref('');
 const isChecking = ref('idle');
 const ipGeoSource = ref(userPreferences.value.ipGeoSource);
-const asnInfos = ref({});
+const { asnInfos } = useAsnInfo();
 const asnHistoryInfos = ref({});
 const asnConnectivityInfos = ref({});
 
@@ -96,17 +102,28 @@ watch(() => userPreferences.value.ipGeoSource, (newVal) => {
     ipGeoSource.value = newVal;
 }, { deep: true });
 
+// Emptying the box retracts whatever the last attempt complained about —
+// the message no longer describes anything on screen.
+watch(inputIP, (value) => {
+    if (value.trim() === '') modalQueryError.value = '';
+});
+
+const rejectQuery = (message) => {
+    modalQueryError.value = message;
+    modalQueryResult.value = null;
+    isChecking.value = 'idle';
+};
+
 const submitQuery = async () => {
-    if (isValidIP(inputIP.value)) {
-        modalQueryError.value = '';
-        modalQueryResult.value = null;
-        isChecking.value = 'running';
-        await fetchIPForModal(inputIP.value);
-    } else {
-        modalQueryError.value = t('ipcheck.Error');
-        modalQueryResult.value = null;
-        isChecking.value = 'idle';
-    }
+    if (!isValidIP(inputIP.value)) return rejectQuery(t('ipcheck.Error'));
+    // Only publicly routable space has geolocation, so answer here rather
+    // than walking every geo source to collect the same "no data" from each.
+    if (!isUsablePublicIP(inputIP.value)) return rejectQuery(t('ipcheck.reservedIP'));
+
+    modalQueryError.value = '';
+    modalQueryResult.value = null;
+    isChecking.value = 'running';
+    await fetchIPForModal(inputIP.value);
 };
 
 const isOpen = ref(false);
@@ -129,7 +146,7 @@ const openQueryIP = () => {
 const openModal = () => onOpenChange(true);
 
 const fetchIPForModal = async (ip) => {
-    const selectedLang = lang.value === 'zh' ? 'zh-CN' : lang.value;
+    const selectedLang = toApiTag(lang.value);
     const sources = store.ipDBs.filter(s => s.enabled);
 
     // Cyclic walk from the user's preferred source
@@ -150,7 +167,7 @@ const fetchIPForModal = async (ip) => {
             isChecking.value = 'idle';
             return;
         } catch (error) {
-            console.error(`Error fetching IP details from source ${source.id}:`, error);
+            logSourceFetchFailure(`Error fetching IP details from source ${source.id} (${fetchErrorLabel(error)}):`, error);
             currentIdx = (currentIdx + 1) % sources.length;
             attempts++;
         }

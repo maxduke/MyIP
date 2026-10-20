@@ -7,14 +7,24 @@
     "SignInToView": "Sign In to View",
     "SignInToUse": "Please sign in to use",
     "InvalidUserToken": "Invalid User Token",
+    "QuotaExceeded": "You've used up this month's free quota for this feature. It resets automatically next month.",
+    "QuotaSponsorCta": "Sponsor Us",
+    "ViewUsage": "View usage",
+    "Usage": {
+      "Title": "Usage Stats",
+      "Note": "Advanced features come with a free monthly quota, which resets automatically at the start of each month (UTC). Repeat IP advanced data queries are served from cache and don't use your quota.",
+      "IpinfoFeature": "IP Advanced Data",
+      "PercentUsed": "{percent}% used",
+      "SponsorNote": "Sponsoring on GitHub raises your monthly quotas."
+    },
     "MyAchievements": "My Achievements",
     "Fields": {
       "User": "User",
       "CreatedAt": "Created At",
       "LastLogin": "Last Login",
       "Level": "User Level",
-      "FunctionUses": "Advanced Usage",
-      "Fetching": "Fetching..."
+      "Fetching": "Fetching...",
+      "SignInMethods": "Sign-in"
     },
     "Level": {
       "Standard": "Standard User",
@@ -24,17 +34,38 @@
       "HonoraryMember": "Honorary Member"
     },
     "Benefits": {
-      "Title": "User Benefits",
-      "Benefit": "Benefit",
-      "Note1": "As an open-source product, your use of IPCheck.ing is free of charge.",
-      "Note2": "However, to prevent abuse, we limit some features. By logging in, you will receive the following benefits:",
-      "Benefit1": "When you use IPCheck.ing as IP data source, all fields are displayed in full",
-      "Benefit2": "You can use the invisibility test",
-      "Benefit3": "You can use the in-depth DNS leak test",
-      "Benefit4": "You can view your own achievement badges",
-      "Benefit5": "You can ask IPChecking Copilot, our AI assistant",
-      "Benefit6": "Reduces access restrictions on some features",
-      "FootNote": "More benefits are being developed..."
+      "Title": "Benefits & Usage",
+      "Benefit": "Benefits",
+      "Note1": "As an open-source product, IPCheck.ing is free to use. Maintaining it takes considerable effort and cost.",
+      "Note2": "To keep the project running sustainably and prevent abuse, some advanced features require signing in. Every signed-in user gets a generous monthly quota — if it's not enough for you, consider sponsoring us to unlock higher limits.",
+      "Current": "Current",
+      "Tiers": {
+        "Visitor": {
+          "Name": "Visitors",
+          "Item1": "IP lookup with multi-source comparison",
+          "Item2": "Connectivity and service availability checks",
+          "Item3": "WebRTC / DNS leak tests",
+          "Item4": "Speed test, global latency and MTR",
+          "Item5": "Whois, DNS resolver and more advanced tools",
+          "Item6": "No registration required — open source and self-hostable"
+        },
+        "SignedIn": {
+          "Name": "Signed-in Users",
+          "Item1": "Everything in Visitors",
+          "Item2": "View advanced IP data: quality score, proxy detection, network type and nativeness",
+          "Item3": "Use the invisibility test",
+          "Item4": "Use the in-depth DNS leak test",
+          "Item5": "View your achievement badges",
+          "Item6": "Ask IPilot, our AI assistant",
+          "Item7": "Advanced features come with a free monthly quota that resets every month"
+        },
+        "Sponsor": {
+          "Name": "Sponsors",
+          "Item1": "Everything in Signed-in Users",
+          "Item2": "Higher monthly quotas for advanced features",
+          "Item3": "Support the ongoing development of this open-source project"
+        }
+      }
     },
     "Achievements": {
       "Title": "Achievements",
@@ -131,6 +162,30 @@
         "CrossingTheWall": {
           "Title": "Crossing The Wall",
           "Meet": "All 8 test IPs are different in the Rule Test"
+        },
+        "GlobeTrotter": {
+          "Title": "Globe Trotter",
+          "Meet": "Reach 10 countries or regions in your IP history"
+        },
+        "HelloWorld": {
+          "Title": "Hello World",
+          "Meet": "Share a status on Earth Online"
+        },
+        "AddSweetAdd": {
+          "Title": "Add Sweet Add",
+          "Meet": "Add a custom target in the Connectivity test"
+        },
+        "PrettyDirty": {
+          "Title": "Pretty Dirty",
+          "Meet": "Any IP card shows a quality score of 1"
+        },
+        "SqueakyClean": {
+          "Title": "Squeaky Clean",
+          "Meet": "Any IP card shows a quality score of 100"
+        },
+        "WalkWithPenguins": {
+          "Title": "Walk With Penguins",
+          "Meet": "Any IP card locates you in Antarctica"
         }
       }
     }
@@ -152,7 +207,9 @@
     "SearchDocs": "Search docs…",
     "DocsToolConfirm": "Share your current test results?",
     "DocsToolSummary": "Read your on-page results",
-    "AskCopilot": "Ask IPChecking Copilot",
+    "DocsToolRunConfirm": "Run tests on your page?",
+    "DocsToolRunSummary": "Ran your network tests",
+    "AskIPilot": "Ask IPilot",
     "OpenDocs": "Open docs",
     "DocsGreetingTitle": "How can I help?",
     "DocsGreetingSubtitle": "Ask me anything about MyIP — the tools, your results, or self-hosting.",
@@ -162,8 +219,105 @@
       "Compare my WebRTC test and DNS leak test results and give me suggestions",
       "How do I read MTR results?",
       "How do I deploy my own MyIP?",
-      "I want to see more help documents"
+      "I want to sponsor the MyIP project"
     ],
+    "pulse": {
+      "title": "Earth Online",
+      "tooltip": "Visitors from around the world",
+      "others": "Others",
+      "shareStatus": "Share your status",
+      "liveMap": "Live visitor heatmap",
+      "noVisitors": "No visitors yet",
+      "quiet": "All quiet right now — be the first to share",
+      "loadError": "Couldn't load the latest activity — try again in a moment",
+      "share": "Visitor share",
+      "latest": "Latest",
+      "sent": "Sent",
+      "alreadySent": "This status has already been sent",
+      "rateLimited": "Only one status can be shared in a short period",
+      "limitedTitle": "Limited-time status",
+      "outages": {
+        "title": "Global Outage Events",
+        "outage": "Internet Outage",
+        "anomaly": "Traffic Anomaly",
+        "ongoing": "Ongoing",
+        "ended": "Recovered",
+        "started": "Started {time}",
+        "lasted": "Lasted {duration}",
+        "quiet": "All quiet — no outage events in the past 30 days",
+        "loadMore": "Load more",
+        "cause": {
+          "GOVERNMENT_DIRECTED": "Government Directed",
+          "POWER_OUTAGE": "Power Outage",
+          "CABLE_CUT": "Cable Cut",
+          "TECHNICAL_PROBLEM": "Technical Problem",
+          "MECHANICAL": "Mechanical Problem",
+          "UNKNOWN": "Unknown Cause",
+          "WEATHER": "Severe Weather",
+          "FIRE": "Fire",
+          "CYBERATTACK": "Cyberattack",
+          "NATURAL_DISASTER": "Natural Disaster",
+          "MAINTENANCE": "Maintenance",
+          "MILITARY_ACTION": "Military Action"
+        },
+        "level": {
+          "NATIONWIDE": "Nationwide",
+          "REGIONAL": "Regional",
+          "NETWORK": "Network"
+        }
+      },
+      "statuses": {
+        "fast": "Blazing fast network",
+        "ok": "All good here",
+        "slow": "Network feels slow",
+        "flaky": "Connection keeps dropping",
+        "blocked": "A site won't open",
+        "good": "Feeling good today",
+        "bad": "Rough day today",
+        "passing": "Just passing by",
+        "lag": "Game lag is unreal",
+        "newip": "Just got a new IP",
+        "vpn": "Cruising through a VPN",
+        "night": "Up late tonight",
+        "vibing": "Vibe coding",
+        "fixing": "Fixing the family Wi-Fi again",
+        "tuning": "Shaved off another 10ms",
+        "prgday": "Happy 0x100th day!",
+        "internetday": "LO and behold, happy Internet Day",
+        "halloween": "Trick or ping!",
+        "diwali": "Festival of lights (and fiber)",
+        "christmas": "Santa's on a low-latency route",
+        "newyear": "New year, new IP!",
+        "privacyday": "This status is end-to-end encrypted",
+        "lunar": "May all your red packets arrive",
+        "valentine": "Looking for a stable connection",
+        "jobs": "Stay hungry, stay foolish.",
+        "eid": "Eid Mubarak, world!",
+        "aprilfools": "My IP is 127.0.0.1",
+        "earthday": "Logging off to touch grass",
+        "turing": "This status was sent by a human. Probably.",
+        "emojiday": "📶🌍🎉✨",
+        "birthday": "Happy birthday, IPCheck.ing!"
+      },
+      "festivalDesc": {
+        "prgday": "Programmers' Day — the 256th day of the year, 0x100 in hex",
+        "internetday": "Oct 29, 1969: ARPANET tried to send LOGIN — it crashed after “LO”",
+        "halloween": "Halloween (Oct 31) — the scariest thing is still packet loss",
+        "diwali": "Diwali — may your lamps and your fiber both shine",
+        "christmas": "Christmas — sleigh on a dedicated line, zero jitter",
+        "newyear": "New Year — fireworks included, no extra bandwidth required",
+        "privacyday": "Data Privacy Day (Jan 28) — yes, we see the irony of broadcasting this",
+        "lunar": "Lunar New Year — zero packet loss on the red packets",
+        "valentine": "Valentine's Day — TCP and true love both start with a handshake",
+        "jobs": "Steve Jobs's birthday (Feb 24, 1955) — from his 2005 Stanford speech",
+        "eid": "Eid al-Fitr — warm wishes from this corner of Earth Online",
+        "aprilfools": "April Fools' Day — there's no place like 127.0.0.1",
+        "earthday": "Earth Day (Apr 22) — even Earth Online recommends a little Earth Offline",
+        "turing": "Alan Turing's birthday (Jun 23, 1912) — father of the Turing test",
+        "emojiday": "World Emoji Day (Jul 17) — words are so last century",
+        "birthday": "IPCheck.ing's birthday — v1.0 shipped on Nov 6, 2020"
+      }
+    },
     "preferences": {
       "title": "Preferences",
       "preferenceTips": "These settings are saved in your browser for easy reuse. Some options require refreshing the page to take effect.",
@@ -178,10 +332,16 @@
       "autoRunTips": "IP info is always checked when the page loads. Choose which other modules run automatically on startup.",
       "simpleMode": "Simple Mode",
       "simpleModeTips": "Hide the description text of each module, suitable for users who are already familiar with the application.",
-      "connectivityMultipleTests": "Multiple Connectivity Refreshes",
-      "connectivityMultipleTestsTips": "When enabled, the app runs multiple checks at startup and displays the lowest latency.",
-      "popupConnectivityNotifications": "Pop-up Connectivity Alerts",
-      "popupConnectivityNotificationsTips": "When enabled, the initial check's results are shown as a pop-up alert.",
+      "connectivity": {
+        "defaultList": "Default List",
+        "defaultListTips": "The list the section opens on when the page loads.",
+        "multipleTests": "Multiple Refreshes",
+        "multipleTestsTips": "Run several checks per pass and show the lowest latency.",
+        "notifications": "Pop-up Alerts",
+        "notificationsTips": "Show the initial check's results as a pop-up alert.",
+        "titleOpensSite": "Card Title Opens Website",
+        "titleOpensSiteTips": "Clicking a card's title opens the site in a new tab; off leaves the title as plain text."
+      },
       "ipHistory": "IP History",
       "ipHistoryEnabled": "Record IP History",
       "ipHistoryDays": "Retention Days",
@@ -189,9 +349,11 @@
       "ipDB": "IP Geolocation Database",
       "ipDBTips": "You can select the default IP geolocation source to use. If the selected source is unavailable, the system will use the subsequent sources in order.",
       "language": "Language Setting",
-      "languageTips": "Refreshing the browser will take effect."
+      "languageTips": "Refreshing the browser will take effect. Languages in beta may contain incomplete translations."
     },
-    "DocsPrompt": "Type your question…"
+    "DocsPrompt": "Type your question…",
+    "DocsSignInTitle": "Sign In Required",
+    "DocsSignInMessage": "Sign in to ask IPilot"
   },
   "securitychecklist": {
     "Title": "Security Checklist",
@@ -217,8 +379,7 @@
     "ShowAll": "Show All",
     "ShowUnchecked": "Show Unchecked",
     "ShowIgnored": "Show Ignored",
-    "ShowChecked": "Show Checked",
-    "Loading": "Loading..."
+    "ShowChecked": "Show Checked"
   },
   "curl": {
     "Title": "Command Line API",
@@ -324,6 +485,7 @@
     "SectionFlagged": "Flagged countries",
     "PresetHighRisk": "Heavily-censored countries",
     "PresetOpen": "Usually-open countries",
+    "RunVerify": "Run Realtime Test",
     "RealtimeNote": "You can select multiple probes for real-time connectivity testing to comprehensively evaluate the website's block status. When running the test, 2 probes will be executed per country; matching results from both probes indicate higher reliability.",
     "RealtimeFooterNote": "Realtime probes mostly run from datacenter networks; their results can differ from actual residential-network observations, as some websites may block access from datacenter networks. Please read them together and make a judgment based on the actual situation."
   },
@@ -426,23 +588,295 @@
       "negative": "No evidence of you using a proxy or VPN was found in high latency analysis."
     }
   },
+  "personacheck": {
+    "Title": "In-depth Persona Check",
+    "Note": "There is an old test: if it looks like a duck, swims like a duck and quacks like a duck, it probably is a duck. Sites read you the same way — your IP may claim you are in country A, but your time zone, languages, installed fonts, keyboard and a dozen other signals each tell their own story, and together they are the persona a site actually sees. This tool measures that persona, compares it against the local resident you want to be read as, and shows exactly where the two diverge.",
+    "NoteVs": "It asks a different question than the Invisibility Test. That one checks whether your proxy itself can be detected; this one checks who sites think they are looking at — and how far that picture is from the one you expect to present.",
+    "Note2": "Start by choosing the country you want to be read as a local of.",
+    "axis": {
+      "match": "Match with the target",
+      "coherence": "Internal consistency",
+      "leak": "Identity leak"
+    },
+    "zone": {
+      "expected": "Expected identity",
+      "optional": "Sharper signals (optional)",
+      "run": "Run the check"
+    },
+    "selectCountry": "Search for a country",
+    "noCountryMatch": "No matching country",
+    "noProfile": "This territory has no local profile to compare against.",
+    "languageSingle": "This country has a single primary language.",
+    "languageMulti": "This country has several languages — pick the one you want to present.",
+    "timezoneMulti": "This country spans several time zones — pick the one you want to present.",
+    "hourCycle": {
+      "h11": "12-hour clock (0–11)",
+      "h12": "12-hour clock",
+      "h23": "24-hour clock",
+      "h24": "24-hour clock (1–24)"
+    },
+    "profile": {
+      "timezone": "Time zone"
+    },
+    "runCompare": "Run the check",
+    "runError": "The check could not complete.",
+    "source": {
+      "ipinfo": "IP lookup",
+      "webrtc": "WebRTC",
+      "dnsleak": "DNS leak"
+    },
+    "report": {
+      "grade": {
+        "A": "🎉 You look every bit like a local of {country}",
+        "B": "😊 You look somewhat like a local of {country}",
+        "C": "🤔 You don't quite look like a local of {country}",
+        "D": "😅 You don't look like a local of {country}",
+        "unknown": "🤷 Not enough signal to grade"
+      },
+      "gradeNote": {
+        "A": "Every signal we can read agrees with the persona you chose.",
+        "B": "The persona mostly holds, but a few signals point elsewhere.",
+        "C": "Several signals disagree with the persona, or with each other — the results below show which.",
+        "D": "Most signals point somewhere other than this persona.",
+        "unknown": "Run the underlying tests first — there is too little to go on."
+      },
+      "counts": {
+        "leak": "{n} exposing",
+        "warning": "{n} inconsistent",
+        "match": "{n} passing",
+        "unknown": "{n} unmeasured",
+        "notApplicable": "{n} not applicable"
+      },
+      "nothingActionable": "Nothing to fix — every measurable signal fits the persona.",
+      "howToFix": "How to fix it",
+      "verdict": {
+        "match": "Fits the persona.",
+        "mismatch": "Contradicts the persona.",
+        "leak": "Exposes your real environment.",
+        "unnatural": "Internally inconsistent — two signals that should agree tell different stories, which draws more attention than a plain mismatch.",
+        "unknown": "Not measurable right now.",
+        "not-applicable": "No conclusion is possible here."
+      },
+      "visibility": {
+        "public": "Any site sees this",
+        "probed": "Sites that probe for it",
+        "risk-engine": "Anti-fraud systems"
+      },
+      "profileTitle": "Measurement details",
+      "state": {
+        "match": "Passed",
+        "mismatch": "Not local",
+        "unnatural": "Inconsistent",
+        "leak": "Exposed",
+        "unknown": "Not measured",
+        "not-applicable": "N/A"
+      }
+    },
+    "detail": {
+      "expected": "Expected",
+      "actual": "Actual",
+      "disputed": "Sources disagree",
+      "v4": "IPv4",
+      "v6": "IPv6",
+      "candidateCount": "Candidates",
+      "matching": "Matches expected",
+      "ipType": "Address type",
+      "expectedOffset": "Expected offset",
+      "actualOffset": "Actual offset",
+      "sameOffset": "Same offset",
+      "primary": "Primary language",
+      "primaryExpected": "Expected primary",
+      "demoted": "Listed but not first",
+      "timeZone": "Time zone",
+      "reportedOffset": "Offset from Date",
+      "zoneOffset": "Offset from zone",
+      "samples": "Samples",
+      "expectedScripts": "Expected scripts",
+      "installedScripts": "Installed scripts",
+      "expectedLanguages": "Expected languages",
+      "voiceLanguages": "Voice languages",
+      "voiceCount": "Voices",
+      "expectedLayout": "Expected layout",
+      "actualLayout": "Actual layout",
+      "headerPrimary": "Header primary",
+      "scriptPrimary": "Script primary",
+      "headerLanguages": "Header languages",
+      "ipZone": "IP time zone",
+      "browserZone": "Browser time zone",
+      "ipOffset": "IP offset",
+      "browserOffset": "Browser offset",
+      "colo": "Cloudflare PoP",
+      "gpsTimezone": "Time zone at your position",
+      "accuracyMetres": "Accuracy (m)",
+      "cardIssuer": "Issuing bank",
+      "cardNetwork": "Card network",
+      "cardTier": "Card tier",
+      "cardType": "Card type"
+    },
+    "checks": {
+      "ip-country": {
+        "title": "IP country",
+        "fix": "Part of your exits land outside the target country — with several proxy exits, different cards genuinely show different countries, and any one exit is what some site will see. The fractions above say how many exits agree. Route everything through nodes in the target country; if a single source disagrees about one IP, that node may just be mislabelled in its database, which is not fixable from your side.",
+        "what": "Which country the IP lookup cards on the home page place your exit address in — every source is read, and every exit has to sit in the target country."
+      },
+      "webrtc-leak": {
+        "title": "WebRTC exposure",
+        "fix": "Block WebRTC, or use a setup where it can only ever see the proxy address. The cost is real: video calls and voice conferencing stop working. A browser extension that filters WebRTC is gentler than disabling it outright, but the extension itself leaves traces of its own.",
+        "what": "Whether WebRTC hands out an address from a different country than your persona."
+      },
+      "dns-resolver-country": {
+        "title": "DNS resolver country",
+        "fix": "Use a resolver in the target country, or let the proxy handle DNS resolution. Note that a public resolver like 1.1.1.1 will not expose your location, but it will not support your persona either — it is equally neutral for every country.",
+        "what": "Which country the DNS resolvers answering for you sit in."
+      },
+      "asn-type": {
+        "title": "Address type",
+        "fix": "A datacenter range is the single loudest \"this is a proxy\" signal an address carries. A residential exit fixes it outright, but costs considerably more and varies a lot in quality.",
+        "what": "Whether your address belongs to a residential ISP or a datacenter range."
+      },
+      "timezone-vs-persona": {
+        "title": "Time zone vs persona",
+        "fix": "Change the time zone at the operating-system level — that way every browser API stays consistent with itself. Extensions that override the time zone often change only part of it, creating the contradictions flagged under the coherence checks, which is worse than not changing it at all.",
+        "what": "Whether your browser's time zone is the one a local would have."
+      },
+      "language-match": {
+        "title": "Browser language",
+        "fix": "Change the language in your system or browser settings rather than rewriting a single HTTP header. The order matters too: sites read the whole list, and a local would rarely lead with a foreign language.",
+        "what": "Whether the language your browser leads with is one a local would use."
+      },
+      "script-fonts": {
+        "title": "Writing-system fonts",
+        "fix": "A machine set up for this locale ships that writing system's fonts. Installing them by hand is possible but rarely worth it: it changes one signal while the rest of the system stays in its original language, which usually creates more contradictions than it resolves. If this needs to hold up, the system language itself is the thing to change.",
+        "what": "Whether fonts for this country's writing system are installed on the machine."
+      },
+      "speech-voices": {
+        "title": "Speech synthesis voices",
+        "fix": "Text-to-speech packs follow the language your OS was installed with, and essentially no proxy or spoofing extension touches them. Adding a voice pack for the target language is a real fix, with the same caveat as fonts: one changed signal inside an otherwise unchanged system reads as deliberate.",
+        "what": "Which languages the text-to-speech packs on your system cover."
+      },
+      "keyboard-layout": {
+        "title": "Keyboard layout",
+        "fix": "Your physical keyboard layout is not what is typical for the target country. Only Chromium browsers expose this, so it is a narrower signal than the others — but wherever it is readable, it is hard to fake without changing the actual keyboard.",
+        "what": "Which physical keyboard layout your machine reports."
+      },
+      "edge-geo-consensus": {
+        "title": "Edge geolocation",
+        "fix": "Cloudflare's own reading of your exit address disagrees with the target country. When this and the IP lookup contradict each other, the address is more likely mislabelled in one database than actually moving — but every site behind Cloudflare sees this verdict, not the other one.",
+        "what": "Cloudflare's own reading of your exit address, formed independently of the databases above."
+      },
+      "accept-language-header": {
+        "title": "Language header vs script",
+        "fix": "The Accept-Language header your browser sends on the wire does not match what navigator.languages reports to scripts. Almost nothing produces this except an extension that rewrote one and left the other. Change the language in your browser or system settings instead — that moves both at once.",
+        "what": "Whether the language header sent on the wire matches what scripts are told. Deliberately independent of the target country: a pass only says your two language channels agree — whether the language itself fits is the Browser language check's job. Half-applied language spoofs fail exactly here."
+      },
+      "ip-timezone-vs-browser": {
+        "title": "IP time zone vs browser",
+        "fix": "The time zone of your exit IP and the one your browser reports are different places. This holds whichever country you are aiming for: a real machine sits somewhere, and both should say the same somewhere. Usually it means the proxy moved your address but not your system clock.",
+        "what": "Whether the time zone of your IP and the one your browser reports agree."
+      },
+      "gps-location": {
+        "title": "Device location (GPS)",
+        "fix": "Your device reports being physically in a different country than the one you are aiming for. No proxy touches this: any site that asks for your location gets the real answer, and browser extensions that fake it typically leave the accuracy and timing patterns intact. The realistic options are to deny location permission for sites that ask, or to accept that this one will not hold up.",
+        "what": "Which country your device reports being physically in."
+      },
+      "payment-region": {
+        "title": "Card issuer country",
+        "fix": "Your card was issued in a different country than the one you are presenting as. Merchants see the issuing country before almost anything else, and payment risk systems weigh it heavily against the address and IP. There is no browser-side fix for this — it is a property of the card itself.",
+        "what": "Which country issued the card behind the prefix you entered."
+      },
+      "intl-number-format": {
+        "title": "Number format",
+        "what": "How your browser groups digits and marks decimals.",
+        "fix": "Your browser groups numbers the way its own region does, not the way the target country does. This is separate from the language: a machine can carry the right language tag while its region still says elsewhere. Change the region — not just the language — in your system settings: Region on Windows, Language & Region on macOS."
+      },
+      "intl-date-format": {
+        "title": "Date format",
+        "what": "The order and separators your browser uses when writing a date.",
+        "fix": "Your browser writes dates in a different order or with different separators than a local would. Like the number format, this follows the system region rather than the language, and changing the region is what moves it."
+      },
+      "intl-hour-cycle": {
+        "title": "Clock format",
+        "what": "Whether your browser presents a 12-hour or 24-hour clock — the convention sites see when they format times.",
+        "fix": "The clock format follows the browser's language, not the system's 24-hour toggle — most browsers ignore that switch entirely (Safari is the main exception). To present the target country's convention, switch the browser's language or region to a locale of that country."
+      },
+      "timezone-authenticity": {
+        "title": "Time zone authenticity",
+        "what": "Whether the time zone your browser reports is the machine's real one.",
+        "fix": "The zone your browser reports is not the one the machine actually runs on: Intl and Date disagree, or past dates do not follow that zone's daylight-saving rules. This matters because it means the timezone check above passed on a value that is not real — a site reading the clock directly sees through it. Set the zone in your operating system rather than with an extension, and both the current offset and the historical rules move together."
+      }
+    },
+    "reason": {
+      "no-marker-script": "No marker writing system",
+      "bin-lookup-failed": "The card lookup service could not be reached — the digits may well be fine; try again later.",
+      "bin-not-recognized": "The card database did not recognize this prefix — a typo is the most common cause; double-check the digits and run again.",
+      "font-probe-unavailable": "Canvas unavailable",
+      "no-voice-packs": "No voice packs installed",
+      "keyboard-api-unavailable": "Not exposed by this browser",
+      "no-layout-expectation": "No layout expectation for this country",
+      "no-persona-languages": "Persona has no language set",
+      "geolocation-unsupported": "Geolocation not supported",
+      "ip-no-country": "The IP lookup returned no country",
+      "ip-no-type": "No source reported the network type",
+      "ip-no-timezone": "No source reported a time zone",
+      "webrtc-no-candidates": "WebRTC produced no candidates",
+      "dns-no-country": "No resolver could be located"
+    },
+    "optional": {
+      "gpsNote": "GPS position is one of the dimensions the check can measure — share it if you want it compared too.",
+      "gpsButton": "Share location",
+      "gpsGranted": "Location received.",
+      "gpsFailed": {
+        "denied": "Permission denied — this check will report as not measured.",
+        "timeout": "The location request timed out.",
+        "unavailable": "Your device could not determine a position.",
+        "unsupported": "This browser has no geolocation support."
+      },
+      "cardNote": "Sometimes you also want to pay as a local. Enter your card's first 6-8 digits and the check tells you whether the card reads as issued in that country.",
+      "cardError": "6 to 8 digits needed — enter at least 6 to look up the issuer.",
+      "cardReady": "Prefix ready — the issuing country is looked up when the check runs."
+    },
+    "dependencies": {
+      "note": "The check needs the results of all of these base tests — run any that are missing before starting:",
+      "runButton": "Run the missing tests",
+      "runButtonRunning": "Running the missing tests…",
+      "measured": "{n} of {total} measured",
+      "allReady": "All tests have run"
+    },
+    "step": {
+      "country": "Target country",
+      "language": "Main language",
+      "location": "Location",
+      "card": "Card prefix",
+      "awaitingCountry": "Pick a country first",
+      "otherTests": "Base tests"
+    },
+    "emptyHint": "Pick the country you want to look local to, then run the check.",
+    "readyHint": "Ready. Run the check to see how local you look.",
+    "value": {
+      "yes": "Yes",
+      "no": "No"
+    }
+  },
   "advancedtools": {
     "OpenInNewTab": "Open in new tab",
     "BackToHome": "Back to Home",
     "Title": "Advanced Tools",
-    "Note": "Tools that are used relatively infrequently, but are very useful when performing network testing.",
-    "PingTestNote": "Global Ping value test",
-    "MTRTestNote": "Global MTR route test",
+    "Note": "People who want the very best from their network usually reach for extra tools to fine-tune their connection.",
+    "PingTestNote": "Ping your IP from around the world",
+    "MTRTestNote": "Trace your network route from around the world",
     "DNSResolverNote": "Real-time multi-channel DNS resolution",
     "EnhancedDnsLeakTest": "Captures every recursive resolver, with ECS and DNSSEC analysis",
     "RuleTestNote": "Check the rule settings of proxy software",
     "CensorshipCheck": "Check which countries a website is blocked in",
     "ServiceStatus": "Check the live availability of well-known AI and developer services, and whether a recent incident explains the outage you're seeing",
-    "Whois": "Search for domain/IP registration information",
+    "Whois": "Search for domain/IP/ASN registration information",
+    "AsnProfile": "View the full profile of any AS",
     "InvisibilityTest": "Check if you are using a proxy or VPN",
     "MacChecker": "Query information of a physical address",
+    "IpCalculator": "Subnet math, notation conversion and IPv6 insight for any IP, prefix or range",
     "BrowserInfo": "Check browser information and fingerprint",
-    "SecurityChecklist": "Guide to securing your digital life"
+    "SecurityChecklist": "Guide to securing your digital life",
+    "PersonaCheck": "Compare what sites see against the country you want to look local to"
   },
   "macchecker": {
     "Title": "MAC Lookup",
@@ -468,17 +902,293 @@
     "isLocal": "Local address",
     "property": "Address property",
     "value": "Value",
-    "manufacturer": "Manufacturer details"
+    "manufacturer": "Manufacturer details",
+    "Examples": "See examples",
+    "exampleFull": "Full address",
+    "examplePrefix": "Vendor prefix",
+    "exampleSubBlock": "Small block",
+    "examplePrivate": "Private registration",
+    "exampleMulticast": "Multicast",
+    "exampleRandom": "Randomized"
+  },
+  "ipcalculator": {
+    "Title": "IP Calculator",
+    "Note": "Paste an IPv4 or IPv6 address, a CIDR prefix, an address range, a list of prefixes, a plain number, or one of the odd spellings that browsers still accept — the calculator recognises the input on its own and shows only what applies. Reach for it when you are carving up a subnet (network, broadcast, usable hosts, netmask, wildcard, splitting into smaller blocks), when you want to understand an IPv6 address (its type, an embedded IPv4, whether the interface identifier gives away a MAC), when a firewall or ACL needs a range expressed as the fewest CIDR blocks or a long list of prefixes collapsed, or when a bare number in a log or a suspicious URL has to be turned back into a normal address. Everything is computed in your browser; nothing is sent anywhere.",
+    "Note2": "Enter an IP, prefix, range, list or number to calculate:",
+    "Placeholder": "2001:db8::1/64",
+    "Calculate": "Calculate",
+    "Examples": "See examples",
+    "exampleObfuscated": "Obfuscated",
+    "exampleEui64": "EUI-64",
+    "MyIPs": "My IPs",
+    "copy": "Copy",
+    "copyAll": "Copy all",
+    "yes": "Yes",
+    "no": "No",
+    "kind": {
+      "ipv4": "IPv4",
+      "ipv4Cidr": "IPv4 prefix",
+      "ipv6": "IPv6",
+      "ipv6Cidr": "IPv6 prefix",
+      "integer": "Integer",
+      "hex": "Hexadecimal",
+      "range": "Range",
+      "cidrList": "Prefix list"
+    },
+    "scope": {
+      "global": "Globally routable",
+      "private": "Private",
+      "shared": "Shared (CGNAT)",
+      "loopback": "Loopback",
+      "linkLocal": "Link-local",
+      "multicast": "Multicast",
+      "documentation": "Documentation",
+      "reserved": "Reserved",
+      "unspecified": "Unspecified",
+      "broadcast": "Broadcast"
+    },
+    "invalid": {
+      "empty": "Enter something to calculate",
+      "listNoValid": "None of the items is a valid IP or prefix",
+      "cidrPrefix": "The prefix length after / is out of range for this family",
+      "cidrAddress": "The part before / is not a valid IP",
+      "ipv6Syntax": "Not a valid IPv6 address",
+      "hexTooLarge": "Hex value is longer than 128 bits",
+      "integerTooLarge": "Integer is larger than 128 bits",
+      "badOctal": "A number starting with 0 is read as octal, and 8 and 9 are not octal digits",
+      "range": "Both ends of a range must be valid IPs of the same family",
+      "unrecognized": "Unrecognized input"
+    },
+    "section": {
+      "Network": "Network",
+      "Representations": "Representations",
+      "Obfuscated": "Obfuscated notations",
+      "AsIPv6": "As IPv6",
+      "Split": "Split into subnets",
+      "Address": "Address",
+      "Type": "Type details",
+      "InterfaceId": "Interface identifier",
+      "Prefix": "Prefix",
+      "Range": "Range",
+      "Cidrs": "CIDR blocks",
+      "IPv4Blocks": "IPv4 blocks",
+      "IPv6Blocks": "IPv6 blocks"
+    },
+    "network": "Network",
+    "broadcast": "Broadcast",
+    "netmask": "Netmask",
+    "wildcard": "Wildcard mask",
+    "firstHost": "First host",
+    "lastHost": "Last host",
+    "firstAddress": "First",
+    "lastAddress": "Last",
+    "usable": "Usable hosts",
+    "total": "Total",
+    "ptr": "PTR record",
+    "ptrZone": "Reverse zone",
+    "class": "Class",
+    "rfc3021Note": "A /31 (RFC 3021) or /32 has no separate network or broadcast address; every address is usable.",
+    "networkBits": "Network bits",
+    "hostBits": "Host bits",
+    "prefixLength": "Prefix length",
+    "decimal": "Decimal",
+    "hex": "Hexadecimal",
+    "octal": "Octal",
+    "binary": "Binary",
+    "obfuscatedNote": "Browsers and most libraries also accept these spellings — the reason naive IP filters can be bypassed.",
+    "dottedHex": "Dotted hex",
+    "dottedOctal": "Dotted octal",
+    "shortForm": "Short form ({parts} parts)",
+    "mapped": "IPv4-mapped",
+    "mappedHex": "IPv4-mapped (hex)",
+    "compat": "IPv4-compatible",
+    "nat64": "NAT64",
+    "sixToFour": "6to4 prefix",
+    "splitTo": "Split to",
+    "showingFirst": "Showing the first {shown} of {total} subnets",
+    "subnetCount": "{count} subnets",
+    "compressed": "Compressed",
+    "expanded": "Expanded",
+    "zone": "Zone",
+    "embeddedIPv4": "Embedded IPv4",
+    "teredoServer": "Teredo server",
+    "teredoClient": "Teredo client",
+    "teredoPort": "Teredo port",
+    "teredoCone": "Cone NAT",
+    "locallyAssigned": "Locally assigned (fd00::/8)",
+    "globalId": "Global ID",
+    "subnetId": "Subnet ID",
+    "mcastScope": "Multicast scope",
+    "flags": "Flags",
+    "flagT": "T (transient)",
+    "flagP": "P (prefix-based)",
+    "flagR": "R (embedded RP)",
+    "noFlags": "None",
+    "solicitedNodeSuffix": "Solicited-node suffix",
+    "iid": "Interface ID",
+    "mac": "MAC from EUI-64",
+    "solicitedNode": "Solicited-node multicast",
+    "universalMac": "The interface ID is a modified EUI-64 derived from a globally unique MAC, so it identifies the hardware wherever the device goes.",
+    "localMac": "The interface ID is a modified EUI-64 built from a locally administered MAC.",
+    "privacyIid": "The interface ID is not EUI-64 shaped: a privacy extension, a randomised or a manually chosen identifier.",
+    "subnetRouterAnycast": "All-zero interface ID: the subnet-router anycast address of this prefix.",
+    "slash64s": "/64 subnets",
+    "start": "Start",
+    "end": "End",
+    "aggregated": "Single block",
+    "aggregationSummary": "{input} blocks in, {output} out, {addresses} addresses",
+    "invalidTokens": "Ignored: {list}"
   },
   "whois": {
     "Title": "Whois Search",
-    "Note": "Whois search is a service used to retrieve domain registration information. By entering a domain name or IP address, you can retrieve information such as the domain's registration details, registrar, registration date, expiration date, and more. The Whois information for IP addresses and domain names may have different fields. Additionally, some less common top-level domains (TLDs) may not have available information for Whois queries.",
-    "Note2": "Please enter a domain name or IP address to start the query:",
+    "Note": "Whois search is a service used to retrieve registration information. By entering a domain name, an IP address or an AS number (e.g. AS13335), you can retrieve information such as the registration details, registrar, registration date, expiration date, and more. The Whois information for domain names, IP addresses and AS numbers may have different fields. Additionally, some less common top-level domains (TLDs) may not have available information for Whois queries.",
+    "Note2": "Please enter a domain name, IP or AS number (e.g. AS13335) to start the query:",
     "Note3": "Whois information contains various types of fields. The following is the raw text information",
-    "Placeholder": "Domain Name or IP",
-    "invalidURL": "Invalid domain name or IP",
+    "Placeholder": "Domain, IP or AS number",
+    "invalidURL": "Invalid domain name, IP or AS number",
+    "reservedIP": "Private or reserved IP addresses have no public registry record, so there is nothing to look up.",
+    "noData": "No Whois or RDAP data is published for this query. Some top-level domains do not offer a public lookup service.",
     "fetchError": "Unable to fetch query results or query results are empty",
     "Provider": "Information Provider"
+  },
+  "asnprofile": {
+    "Title": "ASN Profile Lookup",
+    "Note": "An autonomous system (AS) is a network run by one organisation — an internet provider, a cloud or hosting company, a university or a large enterprise — that the rest of the internet knows by its AS number and reaches through BGP routing. Enter an AS number to see who registered it, how big it is, which address blocks it announces and whether they are RPKI-signed, where its IPv4 space is located, and which networks it buys transit from, exchanges traffic with or sells transit to. Data comes from multiple sources, including Cloudflare Radar, the regional RDAP services and PeeringDB.",
+    "InputLabel": "AS number",
+    "Placeholder": "e.g. AS13335",
+    "Lookup": "Look up",
+    "invalidInput": "Enter a valid AS number, e.g. AS13335 or 13335.",
+    "noData": "No data found for AS{asn}. It may be unassigned, reserved for private use, or not announced on the internet.",
+    "loadError": "This AS couldn't be loaded right now. Please try again in a moment.",
+    "partial": "Some sources didn't respond this time and are left out: {list}.",
+    "tier1": "Tier 1",
+    "facts": {
+      "rank": "Global rank",
+      "rankSource": "CAIDA AS Rank",
+      "announcedIpv4": "Announced IPv4",
+      "ipv4Share": "≈{share}% of the IPv4 internet",
+      "prefixes": "Prefixes v4 · v6",
+      "users": "Estimated users"
+    },
+    "registration": {
+      "title": "Registration",
+      "registry": "Registry",
+      "status": "Status",
+      "registered": "Registered",
+      "lastChanged": "Last changed",
+      "abuse": "Abuse contact",
+      "raw": "Raw whois record",
+      "copyRaw": "Copy raw record"
+    },
+    "reputation": {
+      "title": "Reputation",
+      "source": "IPCheck.ing data",
+      "desc": "How densely this network's announced IPv4 addresses appear on abuse and VPN lists, as a multiple of the global baseline IPCheck.ing scoring uses — the tick marks 1×, on a log scale. Proxies detected is how many of its addresses were found acting as public proxies.",
+      "abuse": "Abuse IP density",
+      "vpn": "VPN exit density",
+      "proxy": "Proxies detected",
+      "ratio": "{ratio}× baseline",
+      "belowBaseline": "At or below baseline",
+      "drop": "Listed on Spamhaus ASN-DROP",
+      "updated": "Data as of {date}",
+      "level": {
+        "none": "No elevated risk",
+        "low": "Low risk",
+        "medium": "Medium risk",
+        "high": "High risk"
+      }
+    },
+    "traffic": {
+      "title": "Traffic & connection quality",
+      "desc": "Shares of the HTTP traffic Cloudflare saw from this network over the last 7 days (IP version, encryption, device, human or bot), and averages of the speed tests its users ran."
+    },
+    "map": {
+      "title": "Global IP distribution",
+      "desc": "Where this network's IPv4 addresses are used, weighted by address count."
+    },
+    "prefixes": {
+      "title": "Announced prefixes",
+      "desc": "Every address block this AS originates in the global routing table. RPKI Valid means a signed record (ROA) authorises this AS to announce it, Invalid means it contradicts one, Unknown means none exists. Visibility is how many route-collector peers carry the prefix.",
+      "counts": "{v4} IPv4 · {v6} IPv6",
+      "rpki": "RPKI route origin",
+      "rpkiValid": "{pct}% valid",
+      "family": "Address family",
+      "all": "All",
+      "copy": "Copy the listed prefixes",
+      "download": "Download .txt",
+      "prefix": "Prefix",
+      "size": "Size",
+      "rpkiColumn": "RPKI",
+      "visibility": "Visibility",
+      "shown": "{shown} of {total} shown",
+      "showMore": "Show {count} more"
+    },
+    "rpki": {
+      "valid": "Valid",
+      "invalid": "Invalid",
+      "unknown": "Unknown"
+    },
+    "connectivity": {
+      "title": "Connectivity",
+      "desc": "Upstreams sell this AS transit, peers exchange traffic with it directly, customers buy transit from it — counted from CAIDA's relationship data, the same reading the graph below uses. The customer cone is how many ASes it reaches through its customers (CAIDA AS Rank). The graph draws only the main paths to Tier 1 networks, so the upstream count can exceed the nodes drawn.",
+      "cone": "Customer cone (ASes)",
+      "providers": "Upstreams",
+      "peers": "Peers",
+      "customers": "Customers",
+      "none": "None observed"
+    },
+    "peering": {
+      "title": "Peering & facilities",
+      "desc": "As registered by the network's own operators in PeeringDB. Internet exchanges are the IXPs it connects to, with port capacity summed per exchange; RS marks a session with the exchange's route servers. Facilities are the data centres it is present in.",
+      "policy": "Peering policy",
+      "traffic": "Traffic level",
+      "ratio": "Traffic ratio",
+      "irr": "IRR as-set",
+      "website": "Website",
+      "scope": "Geographic scope",
+      "exchanges": "Internet exchanges ({count})",
+      "facilities": "Facilities ({count})",
+      "rs": "RS",
+      "rsTitle": "Peers with the exchange's route servers",
+      "showAll": "Show all {count}",
+      "showLess": "Show fewer",
+      "types": {
+        "isp": "Cable/DSL/ISP",
+        "nsp": "NSP",
+        "content": "Content",
+        "enterprise": "Enterprise",
+        "education": "Educational/Research",
+        "nonProfit": "Non-profit",
+        "government": "Government",
+        "routeServer": "Route server",
+        "routeCollector": "Route collector",
+        "networkServices": "Network services"
+      },
+      "scopes": {
+        "regional": "Regional",
+        "northAmerica": "North America",
+        "asiaPacific": "Asia Pacific",
+        "europe": "Europe",
+        "southAmerica": "South America",
+        "africa": "Africa",
+        "australia": "Australia",
+        "middleEast": "Middle East",
+        "global": "Global"
+      },
+      "ratios": {
+        "balanced": "Balanced",
+        "mostlyInbound": "Mostly inbound",
+        "heavyInbound": "Heavy inbound",
+        "mostlyOutbound": "Mostly outbound",
+        "heavyOutbound": "Heavy outbound"
+      },
+      "policies": {
+        "open": "Open",
+        "selective": "Selective",
+        "restrictive": "Restrictive",
+        "no": "No peering"
+      }
+    }
   },
   "enhanceddnsleaktest": {
     "Title": "In-depth DNS Leak Test",
@@ -534,20 +1244,22 @@
   },
   "dnsresolver": {
     "Title": "DNS Resolution",
-    "Note": "In some regions, due to political or commercial reasons, some operators may contaminate certain domain names, resulting in incorrect results when accessed directly. Using DNS resolution checks will help you inspect the resolution results of domain names from well-known DNS providers around the world. Among the built-in DNS tests, some providers are from China, whose DNS resolution results may be contaminated. Please be discerning.",
+    "Note": "Resolve one domain against well-known public DNS providers around the world at the same time — over both classic DNS and DNS-over-HTTPS — and compare what each one answers. When the answers differ between providers or regions, it usually means a CDN is steering traffic to a nearby node, a cache somewhere is stale, or the record is being filtered or redirected along the way. Pick a record type, enter a domain or URL, and run the query: each row shows which country the resolver sits in, and the table can be filtered by region.",
     "Note2": "Please enter a URL or domain name to start resolution:",
     "Placeholder": "URL or Domain Name",
     "invalidURL": "Invalid URL or Domain Name",
     "fetchError": "Unable to fetch resolution results",
     "Provider": "DNS Provider",
     "Result": "Resolution Result",
-    "Record": "Record"
+    "Record": "Record",
+    "AllRegions": "All Regions"
   },
   "ruletest": {
     "Title": "Rule Test",
     "Name": "Test",
     "Note": "Rule test is used to determine if the proxy software's domain-based rules are set correctly. Before conducting the test, you need to refer to the card below and set different domain-based routing rules for the 8 different URLs of IPCheck.ing in your proxy software. Usually, the rule settings may use a format like: DOMAIN, ptest-3.ipcheck.ing, POLICY. The specific format may vary depending on the proxy software you are using.",
-    "StatusWait": "Awaiting Test or Test Error",
+    "StatusWait": "Awaiting Test",
+    "StatusTesting": "Testing…",
     "StatusError": "Test Error",
     "Country": "Proxy region",
     "RefreshAll": "Refresh All"
@@ -565,6 +1277,7 @@
     "CopyIP": "Copy IP Address",
     "CopySdpLog": "Copy SDP Log",
     "ViewOnMap": "View location on map",
+    "ShowCountryTraffic": "Show Online Activity Pattern",
     "InfoMask": "Hide IP Information",
     "IPHistory": "View IP History",
     "ShareReport": "Create Diagnostic Report",
@@ -608,7 +1321,8 @@
         "ruletest": "Egress IPs observed when fetching 8 test endpoints — more than one unique IP means traffic is split across different routes (e.g. proxy rules).",
         "browserinfo": "Browser, OS and display environment of the tested device.",
         "invisibility": "Proxy/VPN detection scores (0-100, higher = more likely detected) with the individual detection signals that flagged.",
-        "enhanceddnsleak": "Resolver-level DNS capture: every resolver IP that queried the test domain, with transport, ECS exposure and DNSSEC flags (do/cd)."
+        "enhanceddnsleak": "Resolver-level DNS capture: every resolver IP that queried the test domain, with transport, ECS exposure and DNSSEC flags (do/cd).",
+        "persona": "How closely the browser matches a local resident of the chosen country: an overall grade plus each check's verdict. Verdicts only — the underlying values are deliberately not stored in a shared report."
       }
     }
   },
@@ -617,7 +1331,7 @@
     "NotFound": "Report not found or expired",
     "NotFoundNote": "Shared reports auto-delete when they expire.",
     "LoadFailed": "Failed to load the report, please retry later.",
-    "Unsupported": "This report was created with a newer version and cannot be displayed.",
+    "Unsupported": "This report was created with a different version of the site and cannot be displayed.",
     "GeneratedBy": "Diagnostic report generated at {origin} on {time}",
     "Stale": "This report is more than 3 days old — the network may have changed since.",
     "TestMine": "Test my own network",
@@ -649,25 +1363,51 @@
     "UnknownCountry": "Unknown",
     "NoMatch": "No records match the selected filters.",
     "ClearAll": "Clear History",
-    "ClearConfirm": "Click again to confirm"
+    "ClearConfirm": "Click again to confirm",
+    "ViewMode": "History view",
+    "ByIP": "By IP",
+    "ByDate": "By date",
+    "UniqueIPCounts": "Tag counts: unique IPs across all retained records.",
+    "DailyRecordCounts": "Tag counts: records across all retained dates (one per IP per day).",
+    "LastSeen": "Last seen: {date}",
+    "FirstSeen": "First seen: {date}",
+    "RecordDates": "All recorded dates",
+    "MapTitle": "IP countries / regions",
+    "MapUnavailable": "Map unavailable. You can still use the country filters.",
+    "MapSelect": "Click to filter this country / region",
+    "MapUnselect": "Click to remove this country / region filter",
+    "ViewMap": "View map"
   },
   "ipInfos": {
     "Title": "IP Infos",
-    "Notes": "The program will first check your IP address from different sources (including IPv4 and IPv6), and then query the corresponding geographical data from the IP geolocation source you selected. If there is only 1 IP stack, the source without data will be displayed as empty.",
-    "Source": "IP Source",
+    "Notes": "The program will first check your IP address from several different probes (including IPv4 and IPv6), and then query the corresponding geographical data from the IP lookup data source you selected. If there is only 1 IP stack, the source without data will be displayed as empty.",
+    "Source": "IP Probe",
     "Country": "Region",
     "Region": "State",
     "City": "City",
+    "TimeZone": "Time Zone",
     "ISP": "ISP",
     "ASN": "ASN",
     "Coordinates": "Coordinates",
     "IPv4Error": "Fetch Failed or No IPv4 Address",
     "IPv6Error": "Fetch Failed or No IPv6 Address",
     "type": "Type",
-    "isProxy": "Proxy",
+    "anonymity": {
+      "label": "Anonymizer",
+      "tor": "Tor exit",
+      "relay": "iCloud Private Relay",
+      "residential": "Residential proxy",
+      "suspectedResidential": "Suspected residential proxy",
+      "proxy": "Proxy",
+      "proxySuspected": "Possible proxy",
+      "vpn": "VPN",
+      "vpnSuspected": "Possible VPN",
+      "none": "Not detected"
+    },
     "qualityScore": "IP Quality",
     "qualityScoreUnknown": "Score Unknown",
     "advancedUnlockCta": "To avoid abuse, sign in to view the following information",
+    "advancedQuotaCta": "Monthly quota for IP advanced data used up",
     "ASNInfo": {
       "trafficPercentage": "Traffic Percentage: ",
       "note": "Data for this AS : ",
@@ -675,6 +1415,12 @@
       "asnOrgName": "AS Organization : ",
       "asnCountryCode": "AS Country : ",
       "estimatedUsers": "Estimated Users : ",
+      "connectionQuality": "Average Connection Quality: ",
+      "connectionQualityTooltip": "Aggregated from Cloudflare speed tests run by users on this ASN",
+      "speedDownload": "Download : ",
+      "speedUpload": "Upload : ",
+      "latency": "Latency : ",
+      "jitter": "Jitter : ",
       "IPv4_Pct": "IPv4",
       "IPv6_Pct": "IPv6",
       "HTTP_Pct": "HTTP",
@@ -683,7 +1429,7 @@
       "Mobile_Pct": "Mobile",
       "Bot_Pct": "Bot",
       "Human_Pct": "Human",
-      "moreData": "More Data : "
+      "openProfile": "Open full ASN Profile"
     },
     "ASNHistory": {
       "announcedPrefixes": "Announced Prefixes: ",
@@ -701,15 +1447,13 @@
       "legendOrigin": "Origin",
       "legendTier1": "Tier 1 ISP",
       "legendIntermediate": "Intermediate AS",
+      "legendTransit": "Transit",
+      "legendPeering": "Peering",
       "zoomIn": "Zoom in",
       "zoomOut": "Zoom out",
       "zoomReset": "Reset zoom"
     },
     "advancedData": {
-      "proxyYes": "Flagged as proxy / VPN",
-      "proxyMaybe": "Possible proxy / VPN",
-      "proxyNo": "Not flagged",
-      "proxyUnknown": "Unknown type",
       "type": {
         "Residential": "Residential",
         "Wireless": "Wireless",
@@ -721,6 +1465,78 @@
       "NativeIPYes": "Aligned",
       "NativeIPNo": "Mismatched",
       "nativenessTooltip": "Whether the ASN's registered country matches the IP's geolocation country"
+    },
+    "scoreDetails": {
+      "toggle": "Score details",
+      "explainTitle": "How the score was reached",
+      "explain": {
+        "unknownOperator": "an unidentified operator",
+        "summary": {
+          "lowRisk": "IP address {ip} is operated by {operator} and has a quality score of {score}/100, which we consider low risk.",
+          "mediumRisk": "IP address {ip} is operated by {operator} and has a quality score of {score}/100, which we consider moderate risk.",
+          "highRisk": "IP address {ip} is operated by {operator} and has a quality score of {score}/100, which we consider high risk."
+        },
+        "network": {
+          "datacenter": "It belongs to a hosting / data center network rather than a standard home or mobile connection.",
+          "mobile": "It is on a mobile network, where one address is often shared by many users.",
+          "satellite": "It is on a satellite internet network, not ordinary home or business broadband.",
+          "isp": "It is on an ISP access network (home or business broadband), not a hosting provider."
+        },
+        "anonymity": {
+          "none": "No VPN, proxy, Tor or private relay use has been detected on it.",
+          "tor": "It is part of the Tor anonymity network.",
+          "relay": "It is an iCloud Private Relay exit, shared by many Apple users.",
+          "proxySingle": "A single source identifies it as a proxy.",
+          "proxyMulti": "Multiple independent sources identify it as a proxy.",
+          "residentialProxy": "It has been identified as a residential proxy exit.",
+          "residentialProxySuspected": "This IP was observed on {date} as a suspected residential (home) proxy exit.",
+          "residentialProxySuspectedUndated": "This IP has been observed as a suspected residential (home) proxy exit.",
+          "vpnSingle": "A single source identifies it as a VPN or anonymizing service.",
+          "vpnMulti": "Multiple independent sources identify it as a VPN or anonymizing service."
+        },
+        "anonymityLastSeen": "This was last observed on {date}.",
+        "reputation": {
+          "none": "No significant abuse reports or blocklist entries were found for it.",
+          "low": "There is minor abuse evidence against it (reports or blocklist entries).",
+          "lowDated": "There is minor abuse evidence against it; the latest abuse report is from {date}.",
+          "medium": "There is notable abuse evidence against it (reports or blocklist entries).",
+          "mediumDated": "There is notable abuse evidence against it; the latest abuse report is from {date}.",
+          "high": "There is strong abuse evidence against it (reports or blocklist entries).",
+          "highDated": "There is strong abuse evidence against it; the latest abuse report is from {date}."
+        },
+        "asn": {
+          "none": "Its network (ASN) shows no more abuse or VPN activity than is typical across the Internet.",
+          "low": "Its network (ASN) shows somewhat more abuse or VPN activity than is typical.",
+          "medium": "Its network (ASN) shows clearly elevated abuse or VPN activity.",
+          "high": "Its network (ASN) shows very high abuse or VPN activity."
+        }
+      },
+      "tagsTitle": "All attributes",
+      "tagState": {
+        "yes": "Yes",
+        "no": "No",
+        "suspected": "Suspected"
+      },
+      "tags": {
+        "isDatacenter": "Data center",
+        "isResidential": "Residential line",
+        "isMobile": "Mobile network",
+        "isSatellite": "Satellite",
+        "isProxy": "Proxy",
+        "isVPN": "VPN",
+        "isResidentialProxy": "Residential proxy",
+        "isRelay": "iCloud Private Relay",
+        "isTor": "Tor",
+        "isAbuser": "Abuse history",
+        "isCrawler": "Crawler",
+        "isNative": "ASN-Geo match"
+      }
+    },
+    "countryTraffic": {
+      "subtitle": "Typical weekly online activity in this country/region — view human-generated traffic only, or all traffic (including bot/automated traffic).",
+      "human": "Human Only",
+      "loading": "Loading...",
+      "error": "Failed to load online activity."
     }
   },
   "serviceStatus": {
@@ -765,24 +1581,22 @@
   },
   "connectivity": {
     "Title": "Network Connectivity",
-    "Note": "This test checks whether you can reach a given website. It works by loading a small image from that site. Delay values are for reference only and will be smaller in reality. You can add other websites you frequently use to the test list for quick testing.",
-    "ServiceStatusBanner": {
-      "Title": "A service not loading?",
-      "Note": "If an AI product like ChatGPT or Claude failed the test above, it might not be your network — the service itself could be down. Check its live availability and recent incidents.",
-      "CTA": "Open Service Status"
-    },
+    "Note": "This test checks your connectivity to a website. The higher the latency, the slower your connection to that site. You can import or add other websites you frequently use to the test list for quick testing.",
     "StatusWait": "Awaiting Test",
+    "StatusTesting": "Testing…",
     "StatusAvailable": "OK",
     "StatusUnavailable": "Unavailable",
     "StatusTimeout": "Timeout or Unavailable",
     "checking": "Checking...",
     "minTestTime": "Min Test Time: ",
     "RefreshThisTest": "Refresh This Test",
+    "OpenSite": "Open website",
     "RoundCount": "Round {n}: ",
     "addCustom": {
       "AddCard": "Add Test",
       "Title": "Add a custom test",
       "Hint": "We test by loading the site's favicon over HTTPS. Some sites may not be reachable this way. Custom tests are saved locally in your browser.",
+      "ProbeBlockedNote": "Some sites' security policies block cross-origin probes — they can show as unreachable even though they open fine.",
       "NameLabel": "Name",
       "NamePlaceholder": "e.g. Wikipedia",
       "UrlLabel": "URL",
@@ -792,15 +1606,70 @@
       "NameRequired": "Please enter a name.",
       "UrlRequired": "Please enter a URL.",
       "InvalidUrl": "That doesn't look like a valid URL.",
-      "LimitReached": "You've reached the 10 custom tests limit."
+      "LimitReached": "You've reached the 60 tests limit.",
+      "LastTargetTitle": "Can't Remove",
+      "LastTargetMessage": "At least one test site must remain."
+    },
+    "importDialog": {
+      "Title": "Add / Import Tests",
+      "CustomOption": "Add Custom",
+      "ImportOption": "Import a List",
+      "SiteCount": "{n} sites",
+      "Import": "Import",
+      "NotEnoughCapacity": "Not enough capacity — this list needs {need} slots, only {free} left.",
+      "Destination": "Add to",
+      "ImportAsNew": "Import as a new list"
+    },
+    "lists": {
+      "Tab": "Lists",
+      "Mine": "My Sites",
+      "Manage": "Manage lists",
+      "NewListPlaceholder": "New list name",
+      "Create": "Create",
+      "LimitReached": "You can keep up to {limit} lists.",
+      "Rename": "Rename",
+      "Delete": "Delete",
+      "MoveUp": "Move up",
+      "MoveDown": "Move down",
+      "DeleteNotEmpty": "Remove all its sites before deleting this list.",
+      "MineUndeletable": "The default list can't be deleted.",
+      "Save": "Save",
+      "Cancel": "Cancel",
+      "Hint": "A list must be emptied before it can be deleted; \"My Sites\" always stays."
+    },
+    "importLists": {
+      "defaults": "System Defaults",
+      "iran": "Iran Essentials",
+      "russia": "Russia Essentials",
+      "india": "India Essentials",
+      "china": "China Essentials",
+      "brazil": "Brazil Essentials",
+      "nigeria": "Nigeria Essentials",
+      "germany": "Germany Essentials",
+      "ai": "AI Services",
+      "social": "Social & Messaging",
+      "productivity": "Work & Productivity",
+      "education": "Online Education",
+      "streaming": "Streaming",
+      "music": "Music & Audio",
+      "sports": "Sports",
+      "travel": "Travel & Booking",
+      "gaming": "Gaming",
+      "developer": "Developer",
+      "cloud": "Cloud & CDN",
+      "finance": "Finance & Payments",
+      "crypto": "Crypto Exchanges",
+      "ecommerce": "Global E-commerce",
+      "news": "News & Wiki"
     }
   },
   "webrtc": {
     "id": "webrtc",
     "Title": "WebRTC Leak Test",
     "Name": "WebRTC Connection",
-    "Note": "WebRTC often establishes connections directly via UDP. If the test returns your real IP, it means your proxy settings do not cover these connections. In addition to detecting the IP you use when connecting to WebRTC, we also detect your NAT type. However, NAT type detection is not 100% accurate and is for reference only.",
+    "Note": "When the browser obtains network addresses through WebRTC, it may bypass your VPN or proxy and expose your real IP to websites. This test checks which IP is exposed when you connect over WebRTC; if the returned IP address or region is not what you expect, there may be a risk of WebRTC leaks and you may need to adjust your proxy settings. Besides the IP used for WebRTC connections, we also detect your NAT type.",
     "StatusWait": "Awaiting Test",
+    "StatusTesting": "Testing…",
     "StatusError": "Connection Error",
     "StatusUnavailable": "WebRTC Unavailable",
     "SdpLog": "SDP Log",
@@ -815,16 +1684,11 @@
   "dnsleaktest": {
     "Name": "DNS Endpoint Test",
     "Title": "DNS Leak Test",
-    "Note": "A DNS leak means that when you are connected to a VPN/proxy, your domain name resolutions are still done through your local ISP, thus posing a risk of DNS leaks.",
-    "Note2": "The method to test for DNS leaks involves accessing a newly generated domain name to detect which regional DNS exit you are resolving through. If the endpoint region returned matches your local service provider's region, there is a risk of DNS leakage. In this case, you may need to modify your VPN/proxy settings.",
+    "Note": "Even while you are using a VPN or proxy, DNS queries may still be sent over your local network, exposing the domains of the sites you visit. ISPs, firewalls, public Wi-Fi providers and others along the path can intercept them and learn which sites you are visiting. This test visits a newly generated domain name to detect which region your DNS queries go through; if the returned region differs from the region of the VPN/proxy you are using, there may be a risk of DNS leaks.",
     "EndpointCountry": "Endpoint Region",
     "StatusWait": "Awaiting Test",
-    "StatusError": "Test Error",
-    "EnhancedBanner": {
-      "Title": "Want to dig deeper?",
-      "Note": "Want to see every recursive resolver you're actually using, their ASN, whether any of them forwards a prefix of your real IP upstream via ECS, and whether DNSSEC validation is in play, open the \"In-depth DNS Leak Test\" below.",
-      "CTA": "Open the in-depth test"
-    }
+    "StatusTesting": "Testing…",
+    "StatusError": "Test Error"
   },
   "speedtest": {
     "Title": "Speed Test",
@@ -842,6 +1706,15 @@
     "connectionTo": " to test server:",
     "connectionEnd": " .",
     "testFailed": "Could not reach the speed test server. Please check your connection and try again.",
+    "phases": {
+      "probe": "Preliminary test",
+      "latency": "Latency test",
+      "download": "Download test",
+      "upload": "Upload test"
+    },
+    "phasePaused": "{phase} — paused",
+    "phaseFinished": "Test complete",
+    "phaseFailed": "Test failed",
     "quality": {
       "bad": "Bad",
       "poor": "Poor",
@@ -855,6 +1728,7 @@
     "Suggested": "Suggested regions",
     "NoProbe": "No probes available in this country/region",
     "GroupFull": "Up to {max} countries/regions — deselect some first",
+    "UnreachableTarget": "Probes run on the public internet, so private and reserved addresses cannot be reached from any country.",
     "ResultsHint": "Results will appear here after you select probes and run the test.",
     "Asia": "Asia",
     "Europe": "Europe",
@@ -912,6 +1786,7 @@
     "Title": "IP Check",
     "Placeholder": "e.g. 1.1.1.1",
     "Error": "Please enter a valid IPv4 or IPv6 address.",
+    "reservedIP": "Private, loopback and other reserved addresses have no geolocation, so there is nothing to look up.",
     "NoData": "Unable to fetch information for this IP. It may be unroutable (e.g. 0.0.0.0, private address) or the upstream source has no data for it."
   },
   "alert": {
@@ -928,7 +1803,9 @@
     "SignInFailed": "Sign In Failed",
     "SignInFailedReason": "Reason",
     "IpGeoSourceFallbackTitle": "IP Geolocation Source Switched",
-    "IpGeoSourceFallbackMessage": "{from} is temporarily unavailable — this result comes from {to} for now."
+    "IpGeoSourceFallbackMessage": "{from} is temporarily unavailable — this result comes from {to} for now.",
+    "SignInEmailTakenTitle": "This email is already in use",
+    "SignInEmailTakenMessage": "An account already exists for this email address. Please sign in with {other} instead."
   },
   "shortcutKeys": {
     "GoToTop": "Go to Top",
@@ -952,21 +1829,23 @@
     "HelpNote": "People who use shortcuts are really awesome!",
     "GoNext": "Next Card",
     "GoPrevious": "Previous Card",
-    "OpenHighlightedTool": "Open Highlighted Advanced Tool",
+    "OpenHighlightedTool": "Open Highlighted Card (Tool or Website)",
     "RefreshRuleTests": "Refresh Rule Tests",
     "CensorshipCheck": "Open Censorship Check panel",
-    "Preferences": "Open Preferences",
+    "Pulse": "Open Earth Online panel",
     "Whois": "Open Whois Search panel",
     "ServiceStatus": "Open Service Status panel",
     "InvisibilityTest": "Open Invisibility Test panel",
     "EnhancedDnsLeakTest": "Open In-depth DNS Leak Test panel",
     "MacChecker": "Open MAC lookup panel",
+    "IpCalculator": "Open IP Calculator panel",
     "BrowserInfo": "Open Browser Info panel",
-    "fullScreenAdvancedTools": "Full Screen Advanced Tools",
-    "SecurityChecklist": "Open Security Checklist panel"
+    "SecurityChecklist": "Open Security Checklist panel",
+    "PersonaCheck": "Open In-depth Persona Check panel",
+    "AsnProfile": "Open ASN Profile Lookup panel"
   },
   "page": {
-    "title": "IPCheck.ing - Check My IP Address and Geolocation - IP Leak Test - DNS Leak Test - IP Quality Check - Test Network Speed - Jason Ng Open Source",
+    "title": "IPCheck.ing - Check My IP Address and Geolocation - IP Leak Test - DNS Leak Test - IP Quality Check - Test Network Speed - All-in-one IP Toolbox",
     "description": "A better and open-source IP toolbox: check your IP address & geolocation, test IP for WebRTC and DNS IP leaks, run an IP quality check, browser fingerprint check, plus speed test, global latency test, MTR test, Whois search, and more.",
     "keywords": "MyIP, IP tool, IP check, IP Leak Check, IP quality check, IP lookup, DNS leak test, WebRTC leak test, browser fingerprint check, speed test, global latency test, MTR test, DNS lookup, Whois search",
     "footerLink": "https://github.com/jason5ng32/MyIP",
@@ -979,22 +1858,32 @@
   },
   "about": {
     "Title": "About",
-    "product1": "IPCheck.ing is a free IP toolbox that helps you check your IP information, test website availability, examine DNS exit information, perform speed tests, global latency tests, MTR tests, and more.",
-    "product2": "This is an open-source project, and you can view the source code by clicking on the GitHub icon at the bottom of the page.",
-    "product3": "Initially, this was a personal project for me to learn Vue.js and how to write code using AI. Over time, it gained more stars on GitHub, so I did a lot of refactoring and added many useful features. I hope you will enjoy it.",
-    "meTitle": "About Me",
-    "me1": "My name is Jason Ng, also known as Achán online. I'm not a professional programmer, but I love coding, open-source, and sharing.",
-    "me2": "Most of the time, I work as a product manager, a blogger, a motorcyle rider and a geek.",
-    "me3": "You can find a more detailed introduction about me in the following link:",
-    "contactTitle": "Contact Me",
-    "contact": "If you have any questions or suggestions, please contact me via email: jason[AT]kenengba.com.",
+    "project": [
+      "IPCheck.ing is a free all-in-one IP toolbox that helps you check your own IP information, test website availability, examine DNS exit information, and run speed tests, global latency tests, MTR tests and more.",
+      "This is an open-source project — click the GitHub icon at the bottom of the page to browse the source code.",
+      "If you are unsure how a feature works, open the \"Help Center\" link at the bottom of the page. The documentation is thorough: beyond describing each feature, it also explains networking concepts and how to troubleshoot network problems.",
+      "If you would like to take part in the open-source project, click the \"Contribute Code\" button at the bottom of the page to see how."
+    ],
+    "founderTitle": "About the Founder",
+    "founder": [
+      "This started out as a side project for Jason Ng (阿禅) to learn Vue.js and how to write code with AI. As it collected more and more stars on GitHub, he refactored it heavily and added many genuinely useful features. We hope you enjoy it.",
+      "He is not a professional programmer. Most of the time he works as a product manager, a blogger, a motorcycle rider and a geek — but he loves coding, open source and sharing.",
+      "You can find a more detailed introduction about him at the links below:"
+    ],
+    "contactTitle": "Contact Us",
+    "contact": [
+      "If you run into trouble using IPCheck.ing or deploying the MyIP project, head to the \"Help Center\" first. If you cannot find the answer there and are stuck, open an issue on GitHub or reach us by email.",
+      "And if you hit a bug and enjoy coding (or coding with AI), you are very welcome to send us a PR with your fix.",
+      "Our email: i[AT]ipcheck.ing."
+    ],
     "personal": "Personal Website",
-    "blog": "My Blog",
+    "blog": "Blog Posts",
     "linkedIn": "LinkedIn",
     "twitter": "Twitter",
     "Sponsor": "Sponsor Us",
     "Privacy": "Privacy",
     "HelpCenter": "Help Center",
+    "Contribute": "Contribute Code",
     "Close": "Close"
   },
   "acknowledgement": {
@@ -1006,5 +1895,9 @@
     "add": "Added",
     "improve": "Improved",
     "fix": "Fixed"
+  },
+  "pwa": {
+    "appDescription": "All in one IP Toolbox",
+    "installDescription": "You've already used IPCheck.ing {count} times — install it as an app for a smoother experience and quicker access."
   }
 }

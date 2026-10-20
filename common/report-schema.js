@@ -8,7 +8,10 @@
 
 import { isValidIP, isIPv6, isValidDomain } from './valid-ip.js';
 
-export const REPORT_VERSION = 1;
+// Bumped on breaking section changes; a viewer only renders its own version
+// (older links show the unsupported state — reports live at most 7 days).
+// 2: ipinfo cards' isProxy / proxy* fields became anonymity / anonymity*.
+export const REPORT_VERSION = 2;
 
 // TTL choices offered at creation time (days) — shared by the share dialog
 // and the backend. The first entry (1 day) is the default AND the value the
@@ -20,6 +23,14 @@ export const REPORT_TTL_DAYS = [1, 3, 7];
 // lands under ~100KB compact JSON; 256KB is ~3× that worst case while still
 // bounding what one KV key can cost. KV's own value limit (25MB) is far away.
 export const REPORT_MAX_BYTES = 256 * 1024;
+
+// Anonymity verdict codes for ipinfo cards — made by
+// utils/transform-ip-data.js, shared by the builder whitelist and the schema
+// enum below.
+export const ANONYMITY_CODES = [
+    'tor', 'relay', 'residential', 'suspected_residential',
+    'proxy', 'proxy_suspected', 'vpn', 'vpn_suspected', 'none',
+];
 
 // Connectivity status codes — single source shared by the recording component
 // (ConnectivityTest.vue), the builder whitelist (utils/report-builders.js)
@@ -83,6 +94,7 @@ const bool = () => ({ kind: 'bool' });
 const oneOf = (...values) => ({ kind: 'enum', values });
 const isoDate = () => ({ kind: 'isoDate' });
 const countryCode = () => ({ kind: 'countryCode' });
+const timeZone = () => ({ kind: 'timeZone' });
 const ipValue = () => ({ kind: 'ip' });
 const ipOrDomain = () => ({ kind: 'ipOrDomain' });
 const arr = (max, items) => ({ kind: 'array', max, items });
@@ -136,22 +148,25 @@ const SECTION_SPECS = {
             countryCode: opt(countryCode()),
             region: opt(str(64)),
             city: opt(str(64)),
+            timezone: opt(timeZone()),
             asn: opt(str(16)),
             isp: opt(str(128)),
             // IPCheck.ing-source enrichments — absent on other sources, when
             // the upstream sign-in-gates them, or when the value is 'unknown'
-            // (an unknown verdict carries no diagnostic signal).
-            isProxy: opt(oneOf('yes', 'maybe', 'no')),
+            // (an unknown line type carries no diagnostic signal).
+            anonymity: opt(oneOf(...ANONYMITY_CODES)),
             ipType: opt(oneOf('business', 'residential', 'wireless', 'hosting')),
             nativeIP: opt(bool()),
             qualityScore: opt(num(0, 100)),
-            proxyProtocol: opt(str(32)),
-            proxyProvider: opt(str(64)),
+            anonymityProtocol: opt(str(32)),
+            anonymityProvider: opt(str(64)),
         })),
     }),
     connectivity: obj({
         testedAt: isoDate(),
-        targets: arr(24, obj({
+        // 72 = 7 built-in targets + the 60-target custom/import cap, plus
+        // headroom; matches the builder's slice in utils/report-builders.js.
+        targets: arr(72, obj({
             id: str(48),
             name: str(64),
             status: oneOf(...Object.values(CONNECTIVITY_STATUS)),
@@ -281,6 +296,38 @@ const SECTION_SPECS = {
             cd: opt(bool()),
         })),
     }),
+    // Persona Check. Deliberately verdict-only: each check contributes its id,
+    // its axis and its conclusion, and nothing else. The live report's `detail`
+    // objects carry what the visitor themselves supplied or what their machine
+    // exposed — issuing bank, the country their position resolved to, their
+    // zone and language list — none of which belongs behind a link anyone can
+    // open. Same doctrine as the invisibility section, which stores its signals
+    // as key + flag rather than the evidence behind them.
+    persona: obj({
+        testedAt: isoDate(),
+        country: countryCode(),
+        grade: oneOf('A', 'B', 'C', 'D', 'unknown'),
+        // Null whenever there was too little signal to grade at all.
+        score: nullable(int(0, 100)),
+        counts: obj({
+            total: int(0, 64),
+            scored: int(0, 64),
+            match: int(0, 64),
+            mismatch: int(0, 64),
+            unnatural: int(0, 64),
+            leak: int(0, 64),
+            unknown: int(0, 64),
+            notApplicable: int(0, 64),
+        }),
+        // `id` stays a capped string rather than an enum: the check registry
+        // lives in the evaluating API, and duplicating its ids here would be a
+        // second list to keep in step for no validation gain.
+        results: arr(32, obj({
+            id: str(48),
+            axis: oneOf('match', 'coherence', 'leak'),
+            verdict: oneOf('match', 'mismatch', 'leak', 'unnatural', 'unknown', 'not-applicable'),
+        })),
+    }),
 };
 
 // Section ids in homepage order — the report page renders in this order.
@@ -331,6 +378,13 @@ const checkLeaf = (value, spec) => {
             // '' is a legal "unknown" — several sources can't always geolocate.
             return typeof value === 'string' && (value === '' || /^[a-z]{2}$/i.test(value))
                 ? null : 'expected 2-letter country code or empty string';
+        case 'timeZone':
+            // IANA zone names: 'UTC', 'Asia/Singapore', 'America/Argentina/Buenos_Aires'.
+            // Unlike countryCode, '' is not legal here — the builder omits the
+            // field rather than reporting a zone it couldn't derive.
+            return typeof value === 'string' && value.length <= 64
+                && /^[A-Za-z][A-Za-z0-9_+-]*(?:\/[A-Za-z0-9_+-]+)*$/.test(value)
+                ? null : 'expected IANA time zone name';
         case 'ip':
             return typeof value === 'string' && (isValidIP(value) || isMaskedIP(value))
                 ? null : 'expected IP address (full or tail-masked)';

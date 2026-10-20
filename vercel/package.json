@@ -1,0 +1,9 @@
+{
+  "name": "myip-vercel-adapter",
+  "description": "Build-time dataset preparation for the single Vercel Node Function",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "vercel-build": "node prepare.js"
+  }
+}

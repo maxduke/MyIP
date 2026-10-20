@@ -1,9 +1,7 @@
 // common/logger.js — shared pino logger for all backend code.
 //
 // LOG_LEVEL defaults to 'warn'; LOG_FORMAT=json switches off pino-pretty
-// for log shippers. Vercel Functions also use JSON automatically: their
-// traced bundle does not need the development-oriented transport worker.
-// No NODE_ENV dependency.
+// for log shippers. No NODE_ENV dependency.
 //
 // When SENTRY_DSN_BACKEND is set, the logMethod hook below mirrors log lines
 // to Sentry (no official pino transport exists; the hook runs in-process and
@@ -25,11 +23,7 @@ import pino from 'pino';
 
 dotenv.config({ quiet: true });
 
-export const shouldUseJsonLogs = (env = process.env) => (
-    env.LOG_FORMAT === 'json' || env.VERCEL === '1'
-);
-
-const useJson = shouldUseJsonLogs();
+const useJson = process.env.LOG_FORMAT === 'json';
 
 let sentry = null;
 if (process.env.SENTRY_DSN_BACKEND) {

@@ -17,13 +17,12 @@
       </div>
       <div class="text-base text-muted-foreground">
         <p v-if="!isSimpleMode">{{ t('dnsleaktest.Note') }}</p>
-        <p v-if="!isSimpleMode">{{ t('dnsleaktest.Note2') }}</p>
       </div>
     </header>
 
     <!-- Card grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-      <Card v-for="(leak, index) in leakTest" :key="leak.id"
+      <Card v-for="(leak, index) in leakTest" :key="leak.slot"
         class="keyboard-shortcut-card jn-card min-w-0 overflow-hidden transition-transform duration-300 ease-out hover:-translate-y-1.5 data-[keyboard-hover=true]:ring-2 data-[keyboard-hover=true]:ring-green-500/50">
         <CardContent class="p-4 min-w-0">
           <!-- Top: heartbeat icon + name + index -->
@@ -34,10 +33,8 @@
 
               <span class="font-mono text-muted-foreground shrink-0">#{{ index + 1 }}</span>
             </div>
-            <!-- Provider name (secondary information) — fixed per card, sourced
-                 from each provider's `name` export in utils/dnsleaks. -->
-            <p class="w-full min-w-0 mb-1 text-xs font-mono text-muted-foreground truncate"
-              :title="leak.providerName">
+            <!-- Provider that actually answered (changes on fallback). -->
+            <p class="w-full min-w-0 mb-1 text-xs font-mono text-muted-foreground truncate" :title="leak.providerName">
               {{ leak.providerName }}
             </p>
           </div>
@@ -84,82 +81,67 @@
       </Card>
     </div>
 
-    <!-- Enhanced DNS leak test banner — surfaces the deeper tool once the
-         homepage test has resolved (success or timeout). -->
-    <InfoBanner
-      :show="showEnhancedBanner"
-      :icon="Sparkles"
-      :title="t('dnsleaktest.EnhancedBanner.Title')"
-      :note="t('dnsleaktest.EnhancedBanner.Note')"
-      :cta="t('dnsleaktest.EnhancedBanner.CTA')"
-      @action="openEnhancedTest"
-    />
+    <!-- Section banner slot (data-driven; see InfoBanner.vue); settled once
+         the homepage test has resolved (success or timeout). -->
+    <InfoBanner section="dnsleak" :settled="hasEverSettled" />
   </section>
 </template>
 
 
 <script setup>
 import { ref, computed, onMounted, reactive } from 'vue';
-import { useRouter } from 'vue-router';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
-import { emitAppEvent } from '@/utils/app-events';
+import { emitAppEvent, waitForAppEvent } from '@/utils/app-events';
+import { useAppCommand } from '@/composables/use-app-command.js';
 import { JnTooltip } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useStatusTone, ipFieldTone, isFieldPending as isFieldPendingShared } from '@/composables/use-status-tone.js';
 import { createMaskGate } from '@/composables/use-info-mask.js';
 import { useMaxmind } from '@/composables/use-maxmind.js';
-import { EthernetPort, Play, MapPin, RotateCw, Sparkles, DoorOpen } from '@lucide/vue';
+import { EthernetPort, Play, MapPin, RotateCw, DoorOpen } from '@lucide/vue';
 import { Icon } from '@iconify/vue';
 import FitText from '@/components/widgets/FitText.vue';
 import InfoBanner from '@/components/widgets/InfoBanner.vue';
 import { INLINE_TIERS } from '@/composables/use-fit-text.js';
 import {
-  ipApi, surfshark, ipleak, browserleaks, runWithRetry,
+  ipApi, bashws, myipstack, fastly, browserleaks, surfshark, ipleak,
+  createDnsLeakRunner,
 } from '@/utils/dnsleaks';
 
-// One source of truth for which providers to run and in what order. Adding
-// a new provider = create the file under utils/dnsleaks and append it here.
-const PROVIDERS = [ipApi, surfshark, ipleak, browserleaks];
+// All providers in priority order: the first SLOT_COUNT hold a card each,
+// the rest are standbys. New provider = file under utils/dnsleaks + append.
+const PROVIDERS = [ipApi, surfshark, myipstack, fastly, bashws, browserleaks, ipleak];
+const SLOT_COUNT = 4;
+const ACTIVE = PROVIDERS.slice(0, SLOT_COUNT);
 
 
 const { t } = useI18n();
 const store = useMainStore();
-const router = useRouter();
 const { lookupMaxmind } = useMaxmind();
 // Skip the info-mask blur on waiting/error placeholders (not a real IP).
 const maskAttr = createMaskGate(t);
 const isStarted = ref(false);
 const userPreferences = computed(() => store.userPreferences);
 const isSimpleMode = computed(() => userPreferences.value.simpleMode);
-// Sticky flag for the Enhanced DNS Leak Test banner.
+// Sticky settled flag for the section's banner slot.
 const hasEverSettled = ref(false);
-
-// Also gated on configs.originalSite to match the Advanced.vue card gate.
-const showEnhancedBanner = computed(() =>
-  hasEverSettled.value && store.configs?.originalSite === true
-);
-
-const openEnhancedTest = () => {
-  trackEvent('Section', 'BannerClick', 'EnhancedDnsLeakTest');
-  // Open the in-depth DNS Leak Test's in-page drawer (tools are query-driven now).
-  router.push({ path: '/', query: { tool: 'enhanceddnsleaktest' } });
-};
+let runId = 0;
 
 const { dotClass, textClass } = useStatusTone();
 
 // Business status → 4 tone levels
 const toneOf = (leak) => ipFieldTone(leak.ip, {
-  waitLabels: t('dnsleaktest.StatusWait'),
+  waitLabels: [t('dnsleaktest.StatusWait'), t('dnsleaktest.StatusTesting')],
   errorLabels: t('dnsleaktest.StatusError'),
 });
 
 
 // Status
 const isFieldPending = (value) => isFieldPendingShared(value, {
-  waitLabels: t('dnsleaktest.StatusWait'),
+  waitLabels: [t('dnsleaktest.StatusWait'), t('dnsleaktest.StatusTesting')],
   errorLabels: t('dnsleaktest.StatusError'),
 });
 
@@ -171,15 +153,19 @@ const createDefaultCard = () => ({
   org: t('dnsleaktest.StatusWait'),
 });
 
-const leakTest = reactive(PROVIDERS.map((p) => ({
+// `slot` is the card's stable key; `id` / `providerName` follow the
+// provider that actually answered.
+const leakTest = reactive(ACTIVE.map((p) => ({
   ...createDefaultCard(),
+  slot: p.id,
   id: p.id,
   providerName: p.name,
 })));
 
 // Apply MaxMind lookup to a card that already has a resolved leak IP.
-const applyMaxMindGeo = async (index, ip) => {
+const applyMaxMindGeo = async (index, ip, currentRun) => {
   const geo = await lookupMaxmind(ip);
+  if (currentRun !== runId) return;
   if (geo) {
     leakTest[index].country_code = geo.country_code;
     leakTest[index].country = geo.country;
@@ -198,48 +184,55 @@ const markLeakCardError = (index) => {
   leakTest[index].org = t('dnsleaktest.StatusError');
 };
 
-// Run one provider against its card slot, with retry (3 attempts, fresh
-// prefix per attempt — see `runWithRetry` in utils/dnsleaks). On full
-// failure (all attempts threw) the card is flipped to the error state.
-const runProvider = async (index, provider) => {
+// Run one slot through its fallback chain (see utils/dnsleaks); the card
+// flips to error only when the whole chain fails.
+const runProvider = async (index, run, currentRun) => {
+  if (currentRun !== runId) return;
   try {
-    const { ip } = await runWithRetry(provider);
+    const { ip, provider } = await run(index);
+    if (currentRun !== runId) return;
+    leakTest[index].id = provider.id;
+    leakTest[index].providerName = provider.name;
     leakTest[index].ip = ip;
-    await applyMaxMindGeo(index, ip);
+    await applyMaxMindGeo(index, ip, currentRun);
   } catch (error) {
+    if (currentRun !== runId) return;
     console.error('Error fetching leak test data:', error);
     markLeakCardError(index);
   }
 };
 
-// Check all. Staggers startup by 300ms per provider to avoid a thundering-
+// Check all. Staggers startup by 200ms per provider to avoid a thundering-
 // herd on first paint.
 const checkAllDNSLeakTest = async (isRefresh) => {
+  const currentRun = ++runId;
+  const run = createDnsLeakRunner(PROVIDERS, SLOT_COUNT);
   isStarted.value = true;
-  if (isRefresh) {
-    trackEvent('Section', 'RefreshClick', 'DNSLeakTest');
-    leakTest.forEach((server) => {
-      server.ip = t('dnsleaktest.StatusWait');
-      server.country = t('dnsleaktest.StatusWait');
-      server.country_code = '';
-      server.org = t('dnsleaktest.StatusWait');
-    });
-  }
+  if (isRefresh) trackEvent('Section', 'RefreshClick', 'DNSLeakTest');
+  // Every run starts from the primary provider and "Testing…" — on boot
+  // this is a no-op for the slot, on refresh it drops the fallback result.
+  leakTest.forEach((server, index) => {
+    server.id = ACTIVE[index].id;
+    server.providerName = ACTIVE[index].name;
+    server.ip = t('dnsleaktest.StatusTesting');
+    server.country = t('dnsleaktest.StatusTesting');
+    server.country_code = '';
+    server.org = t('dnsleaktest.StatusTesting');
+  });
 
-  const delayedRun = (provider, index, delay) => new Promise((resolve) => {
+  const delayedRun = (index, delay) => new Promise((resolve) => {
     setTimeout(() => {
-      runProvider(index, provider).then(resolve, resolve);
+      runProvider(index, run, currentRun).then(resolve, resolve);
     }, delay);
   });
 
-  const promises = PROVIDERS.map((provider, index) =>
-    delayedRun(provider, index, 100 + index * 300),
-  );
+  const promises = ACTIVE.map((_, index) => delayedRun(index, index * 200));
 
   const allSettledPromise = Promise.allSettled(promises);
   const timeoutPromise = new Promise((resolve) => setTimeout(resolve, 6000));
 
   return Promise.race([allSettledPromise, timeoutPromise]).then(() => {
+    if (currentRun !== runId) return;
     store.setLoadingStatus('DNSLeakTest', true);
     // Local sticky flag for the Enhanced DNS Leak Test banner
     hasEverSettled.value = true;
@@ -257,12 +250,15 @@ const checkAllDNSLeakTest = async (isRefresh) => {
   });
 };
 
-onMounted(() => {
-  store.setMountingStatus('DNSLeakTest', true);
+// Command owner: run all leak providers. Resolves with the next
+// dnsleak:finished snapshot.
+useAppCommand('dnsleak:run', ({ isRefresh = false } = {}) => {
+  const finished = waitForAppEvent('dnsleak:finished');
+  checkAllDNSLeakTest(isRefresh);
+  return finished;
 });
 
-defineExpose({
-  checkAllDNSLeakTest,
-  leakTest,
+onMounted(() => {
+  store.setMountingStatus('DNSLeakTest', true);
 });
 </script>

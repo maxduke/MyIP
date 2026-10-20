@@ -29,7 +29,7 @@ const makeValidReport = () => ({
         ipinfo: {
             testedAt: '2026-07-14T08:00:00.000Z',
             cards: [
-                { source: 'IPCheck.ing IPv4', ip: '1.2.3.4', countryCode: 'US', region: 'California', city: 'Mountain View', asn: 'AS15169', isp: 'Google LLC', isProxy: 'no', ipType: 'residential', nativeIP: true, qualityScore: 85, proxyProtocol: 'SOCKS5', proxyProvider: 'ACME' },
+                { source: 'IPCheck.ing IPv4', ip: '1.2.3.4', countryCode: 'US', region: 'California', city: 'Mountain View', timezone: 'America/Los_Angeles', asn: 'AS15169', isp: 'Google LLC', anonymity: 'none', ipType: 'residential', nativeIP: true, qualityScore: 85, anonymityProtocol: 'SOCKS5', anonymityProvider: 'ACME' },
                 { source: 'Cloudflare IPv6', ip: '2001:db8::1', countryCode: '', city: '' },
             ],
         },
@@ -108,6 +108,21 @@ const makeValidReport = () => ({
             dnssec: 'partial',
             queries: [{ ip: '8.8.8.8', countryCode: 'US', asn: 'AS15169', org: 'Google', transport: 'udp', ecs: '1.2.3.0/24', do: true, cd: false }],
         },
+        persona: {
+            testedAt: '2026-07-14T08:00:00.000Z',
+            country: 'JP',
+            grade: 'C',
+            score: 72,
+            counts: {
+                total: 18, scored: 12, match: 9, mismatch: 2,
+                unnatural: 0, leak: 1, unknown: 3, notApplicable: 3,
+            },
+            results: [
+                { id: 'ip-country', axis: 'match', verdict: 'match' },
+                { id: 'gps-location', axis: 'leak', verdict: 'leak' },
+                { id: 'accept-language-header', axis: 'coherence', verdict: 'not-applicable' },
+            ],
+        },
     },
 });
 
@@ -146,6 +161,13 @@ describe('validateReport', () => {
         assert.match(result.errors[0], /report\.v/);
     });
 
+    it('is on version 2 and rejects version-1 reports', () => {
+        assert.equal(REPORT_VERSION, 2);
+        const report = makeValidReport();
+        report.v = 1;
+        assert.equal(validateReport(report).ok, false);
+    });
+
     it('rejects unknown envelope keys, unknown sections and unknown fields', () => {
         const withEnvelopeKey = { ...makeValidReport(), smuggled: 'data' };
         assert.match(validateReport(withEnvelopeKey).errors[0], /smuggled: unknown key/);
@@ -178,9 +200,23 @@ describe('validateReport', () => {
         badEnum.sections.connectivity.targets[0].status = 'flaky';
         assert.equal(validateReport(badEnum).ok, false);
 
+        for (const code of ['tor', 'relay', 'residential', 'suspected_residential', 'proxy', 'proxy_suspected', 'vpn', 'vpn_suspected', 'none']) {
+            const okProxyEnum = makeValidReport();
+            okProxyEnum.sections.ipinfo.cards[0].anonymity = code;
+            assert.equal(validateReport(okProxyEnum).ok, true, code);
+        }
+
         const badProxyEnum = makeValidReport();
-        badProxyEnum.sections.ipinfo.cards[0].isProxy = 'sign_in_required';
+        badProxyEnum.sections.ipinfo.cards[0].anonymity = 'sign_in_required';
         assert.equal(validateReport(badProxyEnum).ok, false);
+
+        // v1 field names are unknown keys now.
+        const legacyField = makeValidReport();
+        legacyField.sections.ipinfo.cards[0].isProxy = 'no';
+        assert.equal(validateReport(legacyField).ok, false);
+        const legacyCode = makeValidReport();
+        legacyCode.sections.ipinfo.cards[0].anonymity = 'no';
+        assert.equal(validateReport(legacyCode).ok, false);
 
         const badRange = makeValidReport();
         badRange.sections.invisibility.scores.proxy = 101;
@@ -221,6 +257,21 @@ describe('validateReport', () => {
         assert.equal(validateReport(badDate).ok, false);
     });
 
+    it('accepts IANA zone names and rejects anything else in timezone', () => {
+        for (const zone of ['UTC', 'Asia/Singapore', 'America/Argentina/Buenos_Aires', 'Etc/GMT+8']) {
+            const ok = makeValidReport();
+            ok.sections.ipinfo.cards[0].timezone = zone;
+            assert.equal(validateReport(ok).ok, true, `${zone} should validate`);
+        }
+
+        // '' has no meaning here — the builder omits the field instead.
+        for (const bad of ['', '+08:00', 'Asia/Singapore; DROP', 'Asia//Singapore', '/Singapore', 'x'.repeat(65)]) {
+            const report = makeValidReport();
+            report.sections.ipinfo.cards[0].timezone = bad;
+            assert.equal(validateReport(report).ok, false, `${bad} should be rejected`);
+        }
+    });
+
     it('rejects unexpected nulls but allows speced nullables', () => {
         const badNull = makeValidReport();
         badNull.sections.ipinfo.cards[0].ip = null;
@@ -248,7 +299,7 @@ describe('constants', () => {
         assert.deepEqual(REPORT_TTL_DAYS, [1, 3, 7]);
         assert.ok(REPORT_SECTION_IDS.includes('ipinfo'));
         assert.ok(REPORT_SECTION_IDS.includes('enhanceddnsleak'));
-        assert.equal(REPORT_SECTION_IDS.length, 11);
+        assert.equal(REPORT_SECTION_IDS.length, 12);
     });
 });
 

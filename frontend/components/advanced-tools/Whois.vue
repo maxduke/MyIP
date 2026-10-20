@@ -7,14 +7,12 @@
         <div class="space-y-2">
             <Label for="queryURLorIP">{{ t('whois.Note2') }}</Label>
             <div class="flex items-center gap-2">
-                <Input type="text" id="queryURLorIP" name="queryURLorIP" data-1p-ignore data-lpignore="true" class="font-mono"
-                    autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-                    :disabled="whoisCheckStatus === 'running'"
-                    :placeholder="t('whois.Placeholder')"
+                <Input type="text" id="queryURLorIP" name="queryURLorIP" data-1p-ignore data-lpignore="true"
+                    class="font-mono" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                    :disabled="whoisCheckStatus === 'running'" :placeholder="t('whois.Placeholder')"
                     v-model="queryURLorIP" @keyup.enter="onSubmit" :aria-invalid="errorMsg !== ''" />
-                <Button variant="action"
-                    :disabled="whoisCheckStatus === 'running' || !queryURLorIP"
-                    @click="onSubmit" class="cursor-pointer">
+                <Button variant="action" :disabled="whoisCheckStatus === 'running' || !queryURLorIP" @click="onSubmit"
+                    class="cursor-pointer">
                     <Spinner v-if="whoisCheckStatus === 'running'" />
                     <template v-else>
                         <Search class="size-4 shrink-0" />
@@ -27,7 +25,8 @@
         <!-- Result area -->
         <div v-if="whoisResults && Object.keys(whoisResults).length" class="space-y-3">
             <!-- Top success prompt bar -->
-            <div class="flex items-start gap-2 p-3 rounded-md border border-success/30 bg-success/10 text-sm text-success">
+            <div
+                class="flex items-start gap-2 p-3 rounded-md border border-success/30 bg-success/10 text-sm text-success">
                 <Info class="size-4 mt-0.5 shrink-0" />
                 <span class="leading-relaxed">{{ t('whois.Note3') }}</span>
             </div>
@@ -53,7 +52,7 @@
                 </AccordionItem>
             </Accordion>
 
-            <!-- ip type: single block raw output -->
+            <!-- ip / asn type: single block raw output -->
             <div v-else>
                 <pre
                     class="p-4 rounded-md bg-muted font-mono text-xs leading-relaxed overflow-x-auto whitespace-pre-wrap wrap-break-word">{{ filterIPWhoisRawData(whoisResults.__raw) }}</pre>
@@ -67,7 +66,8 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
 import { emitAppEvent } from '@/utils/app-events.js';
-import { isValidIP, isValidDomain } from '@/utils/valid-ip.js';
+import { isValidIP, isValidDomain, isUsablePublicIP } from '@/utils/valid-ip.js';
+import { parseAsnInput } from '@/utils/asn-input.js';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -96,10 +96,21 @@ const formatURL = (domain) => {
 };
 
 const validInput = (input) => {
+    // `AS` + digits is an AS number; a bare number is not accepted.
+    const asn = parseAsnInput(input, { requirePrefix: true });
+    if (asn !== null) {
+        type.value = 'asn';
+        return `AS${asn}`;
+    }
     if (formatURL(input)) {
         type.value = 'domain';
         return formatURL(input);
     } else if (isValidIP(input)) {
+        // only publicly routable space has a registry record
+        if (!isUsablePublicIP(input)) {
+            errorMsg.value = t('whois.reservedIP');
+            return false;
+        }
         type.value = 'ip';
         return input;
     } else {
@@ -121,7 +132,16 @@ const getWhoisResults = async (query) => {
     whoisCheckStatus.value = 'running';
     try {
         const response = await fetch(`/api/whois?q=${query}`);
-        if (!response.ok) throw new Error('Network response was not ok');
+        // A 4xx is the backend answering "no registry data for this input" —
+        // unsupported TLD, unregistered domain, malformed query.
+        if (!response.ok) {
+            if (response.status < 500) {
+                errorMsg.value = t('whois.noData');
+                whoisCheckStatus.value = 'idle';
+                return;
+            }
+            throw new Error(`Whois request failed with status ${response.status}`);
+        }
         const data = await response.json();
         getProviders(data);
         if (type.value === 'domain' && providers.value.length >= 1) {
@@ -130,7 +150,7 @@ const getWhoisResults = async (query) => {
             // data/achievement-rules.js.
             emitAppEvent('whois:lookup', { query });
             errorMsg.value = '';
-        } else if (type.value === 'ip' && data.__raw) {
+        } else if ((type.value === 'ip' || type.value === 'asn') && data.__raw) {
             whoisResults.value = data;
             errorMsg.value = '';
         } else {

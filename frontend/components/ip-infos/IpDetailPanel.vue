@@ -17,6 +17,15 @@
                 <Icon v-if="data.country_code" :icon="'circle-flags:' + data.country_code.toLowerCase()"
                     class="shrink-0 size-4" />
                 <span class="wrap-break-word">{{ data.country_name }}</span>
+                <JnTooltip v-if="canShowCountryTraffic" :text="t('Tooltips.ShowCountryTraffic')" side="left">
+                    <button type="button"
+                        class="shrink-0 -my-0.5 p-1 rounded-md hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                        @click="onTrafficClick"
+                        :aria-expanded="countryTrafficMode === 'inline' ? isMetaPanelActive('traffic') : undefined"
+                        :aria-label="'Show online activity pattern of ' + data.country_name">
+                        <Activity class="size-3.5" />
+                    </button>
+                </JnTooltip>
             </dd>
         </div>
 
@@ -39,13 +48,27 @@
                     <JnTooltip v-if="canShowMap" :text="t('Tooltips.ViewOnMap')" side="left">
                         <button type="button"
                             class="shrink-0 -my-0.5 p-1 rounded-md hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                            @click="openMapDialog" :aria-label="'View ' + data.ip + ' on map'">
+                            @click="onMapClick"
+                            :aria-expanded="mapMode === 'inline' ? isMetaPanelActive('map') : undefined"
+                            :aria-label="'View ' + data.ip + ' on map'">
                             <Map class="size-3.5" />
                         </button>
                     </JnTooltip>
                 </dd>
             </div>
-            <div class="col-span-2 md:col-span-3">
+            <!-- Timezone -->
+            <div v-if="data.timezone">
+                <dt class="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+                    <Clock class="size-3.5" />
+                    <span>{{ t('ipInfos.TimeZone') }}</span>
+                </dt>
+                <dd class="font-normal wrap-break-word" :title="zoneLocalTime" @mouseenter="refreshZoneLocalTime">
+                    {{ data.timezone }}
+                    <span class="text-muted-foreground">{{ zoneOffset }}</span>
+                </dd>
+            </div>
+
+            <div class="col-span-2" :class="data.timezone ? 'md:col-span-2' : 'md:col-span-3'">
                 <dt class="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
                     <EthernetPort class="size-3.5" />
                     <span>{{ t('ipInfos.ISP') }}</span>
@@ -55,17 +78,42 @@
         </template>
     </dl>
 
+    <!-- Inline expansion for the Map / Country-traffic panels ('inline' mode). -->
+    <Collapsible v-if="mapMode === 'inline' || countryTrafficMode === 'inline'" :open="isMetaPanelOpen"
+        @update:open="onMetaPanelOpenChange">
+        <CollapsibleContent>
+            <div class="px-4 pb-3">
+                <div class="rounded-md border bg-muted/40 p-3 text-sm">
+                    <LocationMapPanel v-if="activeMetaPanel === 'map'" :data="data" :isDarkMode="isDarkMode" />
+                    <CountryTrafficPanel v-else-if="activeMetaPanel === 'traffic'"
+                        :country-code="data.country_code || ''" :timezone="data.timezone" :isDarkMode="isDarkMode" />
+                </div>
+            </div>
+        </CollapsibleContent>
+    </Collapsible>
+
     <!-- Advanced block (IPCheck.ing source only): locked CTA for signed-out, label-value grid for signed-in. -->
     <div v-if="!collapsed" v-show="showAdvancedBlock" class="px-4 pb-3 border-t pt-3 space-y-2.5">
 
-        <!-- Signed-out: single CTA banner + 4-field preview grid with *** values. -->
-        <template v-if="allAdvancedLocked">
+        <!-- Gated: single CTA banner + 4-field preview grid with *** values.
+             Signed-out shows the sign-in copy; over-quota shows the monthly
+             quota copy + sponsor link instead. -->
+        <template v-if="allAdvancedLocked || allAdvancedQuotaExceeded">
             <span
                 class="w-full flex items-center justify-between gap-2 text-xs px-2.5 py-1.5 rounded-md bg-muted/60 text-muted-foreground transition-colors group">
                 <span class="flex items-center gap-1.5 min-w-0">
-                    <Lock class="size-3.5 shrink-0" />
-                    <span class="truncate">{{ t('ipInfos.advancedUnlockCta') }}</span>
+                    <component :is="allAdvancedQuotaExceeded ? Hourglass : Lock" class="size-3.5 shrink-0" />
+                    <span class="truncate">
+                        {{ allAdvancedQuotaExceeded ? t('ipInfos.advancedQuotaCta') : t('ipInfos.advancedUnlockCta') }}
+                    </span>
                 </span>
+                <!-- Opens the Benefits & Usage dialog (usage tab for signed-in
+                     users) — the sponsor path lives there, not a direct jump. -->
+                <button v-if="allAdvancedQuotaExceeded" type="button"
+                    class="shrink-0 underline underline-offset-2 hover:text-foreground cursor-pointer"
+                    @click="openUsageDialog">
+                    {{ t('user.ViewUsage') }}
+                </button>
             </span>
 
             <dl class="grid grid-cols-2 md:grid-cols-4 gap-x-3 gap-y-3 text-sm items-start">
@@ -79,66 +127,118 @@
             </dl>
         </template>
 
-        <!-- Signed-in: same vertical "label on top, value below" rhythm as the metadata grid. -->
-        <dl v-else class="grid grid-cols-2 md:grid-cols-2 gap-x-3 gap-y-3 text-sm items-start">
-            <div v-if="showTypeBadge">
-                <dt class="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
-                    <SignalHigh class="size-3.5" />
-                    <span>{{ t('ipInfos.type') }}</span>
-                </dt>
-                <dd class="font-normal wrap-break-word">{{ data.type }}</dd>
-            </div>
+        <!-- Signed-in: same vertical "label on top, value below" rhythm as the metadata grid,
+             plus the collapsible score-details panel under it (one child for space-y). -->
+        <div v-else>
+            <dl class="grid grid-cols-2 md:grid-cols-2 gap-x-3 gap-y-3 text-sm items-start">
+                <div v-if="showTypeBadge">
+                    <dt class="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+                        <SignalHigh class="size-3.5" />
+                        <span>{{ t('ipInfos.type') }}</span>
+                    </dt>
+                    <dd class="font-normal wrap-break-word">{{ data.type }}</dd>
+                </div>
 
-            <div v-if="showProxyBadge">
-                <dt class="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
-                    <ShieldCheck class="size-3.5" />
-                    <span>{{ t('ipInfos.isProxy') }}</span>
-                </dt>
-                <dd class="font-normal wrap-break-word">
-                    {{ data.isProxy }}
-                </dd>
-                <dd class="font-normal wrap-break-word">
-                    <span v-if="data.proxyProvider && data.proxyProvider !== 'unknown'"
-                        class="text-muted-foreground font-normal text-xs">{{ data.proxyProvider }} {{ data.proxyProtocol
-                        &&
-                        data.proxyProtocol !== 'unknown'
-                        ?
-                        '· ' + data.proxyProtocol : '' }}</span>
-                </dd>
-            </div>
+                <div v-if="showAnonymityBadge">
+                    <dt class="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+                        <ShieldCheck class="size-3.5" />
+                        <span>{{ t('ipInfos.anonymity.label') }}</span>
+                    </dt>
+                    <dd class="font-normal wrap-break-word">
+                        {{ data.anonymity }}
+                    </dd>
+                    <!-- Anonymizing service, when the API named one. -->
+                    <dd v-if="anonymityService" class="font-normal wrap-break-word">
+                        <span class="text-muted-foreground font-normal text-xs">{{ anonymityService }}</span>
+                    </dd>
+                </div>
 
-            <div v-if="showNativeBadge">
-                <dt class="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
-                    <House class="size-3.5" />
-                    <span>{{ t('ipInfos.advancedData.Nativeness') }}</span>
-                    <JnTooltip :text="t('ipInfos.advancedData.nativenessTooltip')" side="top" class="hidden md:block">
-                        <CircleQuestionMark class="size-3 cursor-help opacity-70" />
-                    </JnTooltip>
-                </dt>
-                <dd class="font-normal flex items-center gap-1 wrap-break-word">
-                    <component :is="data.isNativeIP === true ? Equal : EqualNot" class="size-3.5 shrink-0" />
-                    <span>{{ data.isNativeIP === true ? t('ipInfos.advancedData.NativeIPYes') :
-                        t('ipInfos.advancedData.NativeIPNo') }}</span>
-                </dd>
-            </div>
+                <div v-if="showNativeBadge">
+                    <dt class="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+                        <House class="size-3.5" />
+                        <span>{{ t('ipInfos.advancedData.Nativeness') }}</span>
+                        <JnTooltip :text="t('ipInfos.advancedData.nativenessTooltip')" side="top" class="hidden md:block">
+                            <CircleQuestionMark class="size-3 cursor-help opacity-70" />
+                        </JnTooltip>
+                    </dt>
+                    <dd class="font-normal flex items-center gap-1 wrap-break-word">
+                        <component :is="data.isNativeIP === true ? Equal : EqualNot" class="size-3.5 shrink-0" />
+                        <span>{{ data.isNativeIP === true ? t('ipInfos.advancedData.NativeIPYes') :
+                            t('ipInfos.advancedData.NativeIPNo') }}</span>
+                    </dd>
+                </div>
 
-            <div v-if="showQualityScore">
-                <dt class="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
-                    <Gauge class="size-3.5" />
-                    <span>{{ t('ipInfos.qualityScore') }}</span>
-                </dt>
-                <dd>
-                    <span v-if="data.qualityScore === 'unknown'" class="font-normal text-muted-foreground">
-                        {{ t('ipInfos.qualityScoreUnknown') }}
-                    </span>
-                    <div v-else class="flex items-center gap-2">
-                        <Progress :model-value="Number(data.qualityScore) || 0" class="h-2 flex-1 min-w-12"
-                            :indicator-class="qualityTone === 'ok-fast' ? 'bg-success' : qualityTone === 'ok-slow' ? 'bg-warning' : 'bg-destructive'" />
-                        <span class="text-sm font-normal tabular-nums shrink-0">{{ data.qualityScore }}/100</span>
+                <div v-if="showQualityScore">
+                    <dt class="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+                        <Gauge class="size-3.5" />
+                        <span>{{ t('ipInfos.qualityScore') }}</span>
+                    </dt>
+                    <dd class="flex items-center gap-2">
+                        <span v-if="data.qualityScore === 'unknown'" class="font-normal text-muted-foreground">
+                            {{ t('ipInfos.qualityScoreUnknown') }}
+                        </span>
+                        <template v-else>
+                            <Progress :model-value="Number(data.qualityScore) || 0" class="h-2 flex-1 min-w-12"
+                                :indicator-class="qualityTone === 'ok-fast' ? 'bg-success' : qualityTone === 'ok-slow' ? 'bg-warning' : 'bg-destructive'" />
+                            <span class="text-sm font-normal tabular-nums shrink-0">{{ data.qualityScore }}/100</span>
+                        </template>
+                        <!-- Score-details toggle -->
+                        <JnTooltip v-if="hasScoreDetails" :text="t('ipInfos.scoreDetails.toggle')" side="top">
+                            <Button variant="ghost" size="icon"
+                                :class="['size-6 -my-1 shrink-0 cursor-pointer', isScoreDetailsOpen && 'bg-muted text-foreground hover:bg-muted']"
+                                @click="toggleScoreDetails" :aria-expanded="isScoreDetailsOpen"
+                                :aria-label="t('ipInfos.scoreDetails.toggle')">
+                                <ChevronDown class="size-3.5 transition-transform duration-200"
+                                    :class="isScoreDetailsOpen && 'rotate-180'" />
+                            </Button>
+                        </JnTooltip>
+                    </dd>
+                </div>
+            </dl>
+
+            <!-- Score details: plain-language explanation (needs the `dimensions`
+                 block), then every attribute tag. Gated responses have neither. -->
+            <Collapsible v-if="hasScoreDetails" :open="isScoreDetailsOpen" @update:open="isScoreDetailsOpen = $event">
+                <CollapsibleContent>
+                    <div class="pt-3">
+                        <div class="rounded-md border bg-muted/40 p-3 space-y-3">
+                            <div v-if="scoreExplanation.length">
+                                <p class="text-xs text-muted-foreground mb-1.5">{{ t('ipInfos.scoreDetails.explainTitle') }}</p>
+                                <!-- One i18n template per sentence; slots keep the IP under the info-mask blur. -->
+                                <p class="text-xs leading-relaxed text-muted-foreground">
+                                    <template v-for="(sentence, i) in scoreExplanation" :key="sentence.key">
+                                        <I18nT :keypath="sentence.key" tag="span" scope="global">
+                                            <template #ip><span data-mask="ip" class="font-medium text-foreground">{{ sentence.params.ip }}</span></template>
+                                            <template #operator><span class="text-foreground">{{ sentence.params.operator }}</span></template>
+                                            <template #score><span class="font-medium text-foreground tabular-nums">{{ sentence.params.score }}</span></template>
+                                            <template #date>{{ sentence.params.date }}</template>
+                                        </I18nT>{{ i === scoreExplanation.length - 1 ? '' : sentenceGap }}
+                                    </template>
+                                </p>
+                            </div>
+
+                            <!-- All attributes: label + check / cross / question mark. -->
+                            <div v-if="scoreTagRows.length" :class="scoreExplanation.length && 'border-t pt-3'">
+                                <p class="text-xs text-muted-foreground mb-1.5">{{ t('ipInfos.scoreDetails.tagsTitle') }}</p>
+                                <dl class="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                                    <div v-for="tag in scoreTagRows" :key="tag.key"
+                                        class="flex items-center justify-between gap-2 min-w-0">
+                                        <dt class="text-muted-foreground min-w-0 wrap-break-word">
+                                            {{ t('ipInfos.scoreDetails.tags.' + tag.key) }}
+                                        </dt>
+                                        <!-- One neutral tone for every state: a tag is a fact, not a verdict. -->
+                                        <dd class="shrink-0 text-foreground">
+                                            <component :is="TAG_STATE_ICONS[tag.state]" class="size-3.5" aria-hidden="true" />
+                                            <span class="sr-only">{{ t('ipInfos.scoreDetails.tagState.' + tag.state) }}</span>
+                                        </dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </div>
                     </div>
-                </dd>
-            </div>
-        </dl>
+                </CollapsibleContent>
+            </Collapsible>
+        </div>
     </div>
 
     <!-- ASN block -->
@@ -183,7 +283,7 @@
             <CollapsibleContent>
                 <div class="pt-3">
                     <ASNInfo v-if="activePanel === 'info'" :index="index" :isDarkMode="isDarkMode" :asn="data.asn"
-                        :asnInfos="asnInfos" />
+                        :asnInfos="asnInfos" @open-profile="emit('open-tool')" />
                     <ASNHistory v-else-if="activePanel === 'history'" :prefix="ipPrefix"
                         :asnHistoryInfos="asnHistoryInfos" />
                     <ASNConnectivity v-else-if="activePanel === 'connectivity'" :asn="asnNumeric"
@@ -193,49 +293,37 @@
         </Collapsible>
     </div>
 
-    <!-- Map Dialog. Only rendered when enableMap=true (IPCard opts in, QueryIP opts out to avoid nested dialogs). -->
-    <Dialog v-if="enableMap" :open="isMapDialogOpen" @update:open="isMapDialogOpen = $event">
-        <DialogContent :title="data.ip" class="max-w-2xl">
-            <DialogHeader>
-                <template #title>
-                    <span class="flex items-center gap-2 min-w-0">
-                        <Icon v-if="data.country_code" :icon="'circle-flags:' + data.country_code.toLowerCase()"
-                            class="size-4 shrink-0" />
-                        <span class="truncate">{{ data.country_name }}<template v-if="data.city"> · {{ data.city
-                                }}
-                            </template>
-                        </span>
-                    </span>
-                </template>
-            </DialogHeader>
-            <div class="mb-2">
-                <span class="flex items-center gap-2 text-sm text-muted-foreground ">
-                    <Earth class="size-4" />
-                    <span class="text-sm text-muted-foreground">{{ t('ipInfos.Coordinates') }}</span>
-                </span>
-                <span class="font-mono shrink-0 truncate whitespace-nowrap">{{ data.longitude }}, {{ data.latitude
-                    }}</span>
-            </div>
-            <span>
-                <img :src="isDarkMode ? data.mapUrl_dark : data.mapUrl"
-                    class="w-full rounded-md border bg-muted aspect-2/1 object-cover" alt="Map">
-            </span>
-        </DialogContent>
-    </Dialog>
+    <!-- Dialog-mode shells for the same two panels (IPCard). -->
+    <CountryTraffic v-if="countryTrafficMode === 'dialog'" :open="isTrafficDialogOpen"
+        @update:open="isTrafficDialogOpen = $event" :country-code="data.country_code || ''"
+        :country-name="data.country_name" :timezone="data.timezone" :isDarkMode="isDarkMode" />
+
+    <LocationMap v-if="mapMode === 'dialog'" :open="isMapDialogOpen" @update:open="isMapDialogOpen = $event"
+        :data="data" :isDarkMode="isDarkMode" />
 </template>
 
 <script setup>
-// Shared display panel for IP info: Metadata grid + Advanced block + ASN row + optional Map Dialog.
+// Shared display panel for IP info: Metadata grid + Advanced block + ASN row, plus the Map and
+// Country-traffic panels (per-consumer 'dialog' / 'inline' / 'off' via mapMode / countryTrafficMode).
 // Used by IPCard (homepage card grid) and QueryIP (manual IP lookup dialog).
 // Hero IP is NOT part of this panel — consumers render their own hero row since affordances
 // (copy button, etc.) differ.
-import { ref, computed } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { ref, computed, watch } from 'vue';
+import { useMainStore } from '@/store';
+import { useI18n, I18nT } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
 import { fetchWithTimeout } from '@/utils/fetch-with-timeout.js';
+import { loadAsnInfoInto } from '@/composables/use-asn-info.js';
+import { loadAsnConnectivityInto } from '@/utils/asn-connectivity.js';
 import { toBgpPrefix } from '@/utils/bgp-prefix.js';
+import { getZoneUtcOffset, getZoneLocalTime, formatIsoDate } from '@/utils/time-utils.js';
+import { buildScoreExplanation, listScoreTags } from '@/utils/ip-score-details.js';
 import ASNInfo from './ASNInfo.vue';
 import ASNHistory from './ASNHistory.vue';
+import CountryTraffic from './CountryTraffic.vue';
+import CountryTrafficPanel from './CountryTrafficPanel.vue';
+import LocationMap from './LocationMap.vue';
+import LocationMapPanel from './LocationMapPanel.vue';
 // ASNConnectivity is heavy (dagre + SVG render); async-import so it
 // only enters the bundle when a user opens the Connectivity panel.
 import { defineAsyncComponent } from 'vue';
@@ -243,18 +331,19 @@ const ASNConnectivity = defineAsyncComponent(() => import('./ASNConnectivity.vue
 import { JnTooltip } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import { Progress } from '@/components/ui/progress';
-import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@iconify/vue';
-import { Earth } from '@lucide/vue';
 import {
+    Activity,
     Building2,
+    Check,
+    ChevronDown,
     CornerUpRight,
     Equal,
     EqualNot,
     EthernetPort,
     Gauge,
-    History,
+    Hourglass,
     House,
     Info,
     Network,
@@ -263,11 +352,14 @@ import {
     MapPin,
     ShieldCheck,
     SignalHigh,
+    X,
     CircleQuestionMark,
+    Clock,
     FolderClock,
 } from '@lucide/vue';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
+const store = useMainStore();
 
 const props = defineProps({
     data: { type: Object, required: true },
@@ -283,10 +375,24 @@ const props = defineProps({
     index: { type: Number, default: 0 },
     // IPCard on mobile with simpleMode enables this to hide everything but Country + hide ASN.
     collapsed: { type: Boolean, default: false },
-    // IPCard opts in to show the Map button (in the City cell) + the Map Dialog.
-    // QueryIP opts out — the parent is already a Dialog, stacking dialogs is confusing.
-    enableMap: { type: Boolean, default: false },
+    // How the Map (City cell) and Country-traffic (Country cell) affordances
+    // render: 'dialog' (IPCard), 'inline' — a Collapsible under the metadata
+    // grid (QueryIP, itself a Dialog; stacking dialogs is confusing) — or
+    // 'off' (default).
+    mapMode: { type: String, default: 'off' },
+    countryTrafficMode: { type: String, default: 'off' },
 });
+
+// Consumers rendering this panel inside a dialog listen to close themselves
+// first — the Benefits & Usage dialog (`view-usage`) or an Advanced Tools
+// drawer (`open-tool`, from ASN Info's profile link) would otherwise stack
+// on top of them.
+const emit = defineEmits(['view-usage', 'open-tool']);
+
+const openUsageDialog = () => {
+    emit('view-usage');
+    store.setTriggerUserBenefits(true);
+};
 
 // Single-select panel content for the ASN block: 'info' | 'history' | null.
 // Kept separate from the open state so close animations retain their content
@@ -294,44 +400,66 @@ const props = defineProps({
 const activePanel = ref(null);
 const isPanelOpen = ref(false);
 const isMapDialogOpen = ref(false);
+const isTrafficDialogOpen = ref(false);
+
+// The backend sends the zone name only; the offset follows DST, so it is
+// resolved here rather than travelling through the routes' 24h edge cache.
+const zoneOffset = computed(() => getZoneUtcOffset(props.data.timezone));
+
+// Hover title: the wall-clock time where the IP sits, re-read on each hover.
+const zoneLocalTime = ref('');
+const refreshZoneLocalTime = () => {
+    zoneLocalTime.value = getZoneLocalTime(props.data.timezone, locale.value);
+};
 
 // Advanced block only surfaces for the IPCheck.ing source (ipGeoSource === 0).
 const showAdvancedBlock = computed(() => props.ipGeoSource === 0 && Boolean(props.data));
 
 // Map button is gated on the deployment having a Google Maps key (configs.map) + location data.
-// enableMap is the consumer-level opt-in.
 const canShowMap = computed(() =>
-    props.enableMap && Boolean(props.configs.map) && Boolean(props.data.country_name)
+    props.mapMode !== 'off' && Boolean(props.configs.map) && Boolean(props.data.country_name)
 );
 
-// If every advanced field is masked behind login → show the single CTA + preview grid instead
-// of rendering four individual "sign in to unlock" rows.
+// Backend gating sentinels for the advanced fields (see transform-ip-data.js).
+const isGatedValue = (value) => value === 'sign_in_required' || value === 'quota_exceeded';
+
+// If every advanced field is masked → show the single CTA + preview grid instead
+// of rendering four individual gated rows. The two sentinels pick different copy.
 const allAdvancedLocked = computed(() =>
     props.data.type === 'sign_in_required' &&
-    props.data.isProxy === 'sign_in_required' &&
+    props.data.anonymity === 'sign_in_required' &&
     props.data.isNativeIP === 'sign_in_required' &&
     props.data.qualityScore === 'sign_in_required'
 );
+const allAdvancedQuotaExceeded = computed(() =>
+    props.data.type === 'quota_exceeded' &&
+    props.data.anonymity === 'quota_exceeded' &&
+    props.data.isNativeIP === 'quota_exceeded' &&
+    props.data.qualityScore === 'quota_exceeded'
+);
 
 const showTypeBadge = computed(() =>
-    props.data.type && props.data.type !== 'sign_in_required'
+    props.data.type && !isGatedValue(props.data.type)
     && props.data.type !== t('ipInfos.advancedData.type.unknownType')
 );
-const showProxyBadge = computed(() =>
-    props.data.isProxy && props.data.isProxy !== 'sign_in_required'
-    && props.data.isProxy !== t('ipInfos.advancedData.proxyUnknown')
+const showAnonymityBadge = computed(() =>
+    Boolean(props.data.anonymity) && !isGatedValue(props.data.anonymity)
+);
+// "Provider · protocol"; both are null unless the API named a service.
+const anonymityService = computed(() =>
+    [props.data.anonymityProvider, props.data.anonymityProtocol].filter(Boolean).join(' · ')
 );
 const showNativeBadge = computed(() =>
-    props.data.isNativeIP !== undefined && props.data.isNativeIP !== 'sign_in_required'
+    props.data.isNativeIP !== undefined && !isGatedValue(props.data.isNativeIP)
 );
 const showQualityScore = computed(() =>
-    props.data.qualityScore !== undefined && props.data.qualityScore !== 'sign_in_required'
+    props.data.qualityScore !== undefined && !isGatedValue(props.data.qualityScore)
 );
 
 // Locked field preview: the 4 advanced fields shown as "label + ***" for signed-out users.
 const lockedFieldList = computed(() => [
     { key: 'type', icon: SignalHigh, label: t('ipInfos.type') },
-    { key: 'proxy', icon: ShieldCheck, label: t('ipInfos.isProxy') },
+    { key: 'anonymity', icon: ShieldCheck, label: t('ipInfos.anonymity.label') },
     { key: 'native', icon: House, label: t('ipInfos.advancedData.Nativeness') },
     { key: 'quality', icon: Gauge, label: t('ipInfos.qualityScore') },
 ]);
@@ -345,9 +473,64 @@ const qualityTone = computed(() => {
     return 'fail';
 });
 
-const openMapDialog = () => {
-    isMapDialogOpen.value = true;
+// Score-details panel (IPCheck.ing source): explanation sentences (need
+// `dimensions`) and attribute rows. Both are empty for gated data, and the
+// toggle only shows when either has content.
+const scoreExplanation = computed(() => buildScoreExplanation(props.data, {
+    t,
+    formatDate: (day) => formatIsoDate(day, locale.value),
+}));
+const scoreTagRows = computed(() => listScoreTags(props.data.scoreTags));
+// Row state → icon; the question mark marks a suspected residential proxy.
+const TAG_STATE_ICONS = { yes: Check, no: X, suspected: CircleQuestionMark };
+const hasScoreDetails = computed(() =>
+    showAdvancedBlock.value && (scoreExplanation.value.length > 0 || scoreTagRows.value.length > 0)
+);
+// CJK sentences run together; others take a space.
+const sentenceGap = computed(() => (/^(zh|ja|ko)/.test(locale.value) ? '' : ' '));
+
+const isScoreDetailsOpen = ref(false);
+const toggleScoreDetails = () => {
+    if (!isScoreDetailsOpen.value) trackEvent('IPCheck', 'ScoreDetailsClick', 'Show Score Details');
+    isScoreDetailsOpen.value = !isScoreDetailsOpen.value;
+};
+// A different IP starts collapsed.
+watch(() => props.data.ip, () => { isScoreDetailsOpen.value = false; });
+
+// Consumer opt-in + a Cloudflare key on the deployment + a country to query.
+const canShowCountryTraffic = computed(() =>
+    props.countryTrafficMode !== 'off' && !props.collapsed
+    && Boolean(props.configs.cloudFlare) && Boolean(props.data.country_code)
+);
+
+// Single-select inline expansion under the metadata grid ('inline' mode) —
+// same open/content split as the ASN block below, so close animations keep
+// their content.
+const activeMetaPanel = ref(null);
+const isMetaPanelOpen = ref(false);
+const isMetaPanelActive = (name) => isMetaPanelOpen.value && activeMetaPanel.value === name;
+const toggleMetaPanel = (name) => {
+    if (isMetaPanelActive(name)) {
+        isMetaPanelOpen.value = false;
+        return;
+    }
+    activeMetaPanel.value = name;
+    isMetaPanelOpen.value = true;
+};
+const onMetaPanelOpenChange = (open) => {
+    isMetaPanelOpen.value = open;
+};
+
+const onMapClick = () => {
     trackEvent('IPCheck', 'ViewOnMapClick', props.data.source || 'unknown');
+    if (props.mapMode === 'inline') toggleMetaPanel('map');
+    else isMapDialogOpen.value = true;
+};
+
+const onTrafficClick = () => {
+    trackEvent('IPCheck', 'CountryTrafficClick', props.data.country_code || 'unknown');
+    if (props.countryTrafficMode === 'inline') toggleMetaPanel('traffic');
+    else isTrafficDialogOpen.value = true;
 };
 
 // BGP DFZ-floor prefix for the IP — /24 v4, /48 v6. Used both as the query
@@ -393,17 +576,11 @@ const onPanelOpenChange = (open) => {
     isPanelOpen.value = open;
 };
 
+// Fetch + versioning live in composables/use-asn-info.js; the cache is the
+// owner's (IpInfos / QueryIP), handed down as the asnInfos prop.
 const getASNInfo = async (asn) => {
     trackEvent('IPCheck', 'ASNInfoClick', 'Show ASN Info');
-    try {
-        if (props.asnInfos[asn]) return;
-        asn = asn.replace('AS', '');
-        const response = await fetchWithTimeout(`/api/cfradar?asn=${asn}`);
-        const data = await response.json();
-        props.asnInfos['AS' + asn] = data;
-    } catch (error) {
-        console.error('Error fetching ASN info:', error);
-    }
+    await loadAsnInfoInto(props.asnInfos, asn);
 };
 
 const getASNHistory = async (prefix) => {
@@ -429,23 +606,10 @@ const getASNHistory = async (prefix) => {
     }
 };
 
+// Fetch + versioning live in utils/asn-connectivity.js; the cache is the
+// owner's, handed down as asnConnectivityInfos.
 const getASNConnectivity = async (asn) => {
     trackEvent('IPCheck', 'ASNConnectivityClick', 'Show ASN Connectivity');
-    try {
-        if (props.asnConnectivityInfos[asn]) return;
-        const response = await fetchWithTimeout(
-            `/api/asn-connectivity?asn=${encodeURIComponent(asn)}`,
-            { timeoutMs: 5000 } // backend is sub-ms local lookup; tight cap is fine
-        );
-        if (!response.ok) {
-            props.asnConnectivityInfos[asn] = { error: true };
-            return;
-        }
-        const graph = await response.json();
-        props.asnConnectivityInfos[asn] = { graph };
-    } catch (error) {
-        console.error('Error fetching ASN connectivity:', error);
-        props.asnConnectivityInfos[asn] = { error: true };
-    }
+    await loadAsnConnectivityInto(props.asnConnectivityInfos, asn);
 };
 </script>
