@@ -4,12 +4,12 @@
   <Achievements ref="achievementsRef" />
   <Preferences />
   <main id="mainpart" class="mx-auto w-full px-4 jn-container">
-    <div class="rounded-md" tabindex="0">
-      <IPCheck ref="IPCheckRef" />
-      <Connectivity ref="connectivityRef" />
-      <WebRTC ref="webRTCRef" />
-      <DNSLeaks ref="dnsLeaksRef" />
-      <SpeedTest ref="speedTestRef" />
+    <div class="rounded-md">
+      <IPCheck />
+      <Connectivity />
+      <WebRTC />
+      <DNSLeaks />
+      <SpeedTest />
       <AdvancedTools ref="advancedToolsRef" />
     </div>
   </main>
@@ -60,7 +60,6 @@ const QueryIP = defineAsyncComponent(() => import('./widgets/QueryIP.vue'));
 const HelpModal = defineAsyncComponent(() => import('./widgets/Help.vue'));
 const IPHistory = defineAsyncComponent(() => import('./widgets/IPHistory.vue'));
 const ShareReport = defineAsyncComponent(() => import('./report/ShareReportDialog.vue'));
-import { useRoute } from 'vue-router';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 
@@ -73,25 +72,17 @@ import { useDocumentMeta } from '@/composables/use-document-meta.js';
 
 const { t } = useI18n();
 const store = useMainStore();
-const route = useRoute();
 const configs = computed(() => store.configs);
 const userPreferences = computed(() => store.userPreferences);
-// A tool drawer is open iff the home route carries a `?tool=` query (set by
-// Advanced.vue). Drives the `f` fullscreen shortcut gate.
-const isToolOpen = computed(() => !!route.query.tool);
 
-// Template refs
+// Template refs — UI chrome only; the test sections are reached through the
+// command bus (utils/app-commands.js), not refs.
 const userRef = ref(null);
 const achievementsRef = ref(null);
 const queryIPRef = ref(null);
 const helpModalRef = ref(null);
 const shareReportRef = ref(null);
-const speedTestRef = ref(null);
 const advancedToolsRef = ref(null);
-const IPCheckRef = ref(null);
-const connectivityRef = ref(null);
-const webRTCRef = ref(null);
-const dnsLeaksRef = ref(null);
 
 // Info mask
 const { infoMaskLevel, isInfosLoaded, showMaskButton, toggleInfoMask } = useInfoMask({
@@ -101,7 +92,6 @@ const { infoMaskLevel, isInfosLoaded, showMaskButton, toggleInfoMask } = useInfo
 
 // Refresh / initial load sequence
 const { loadingControl } = useRefreshOrchestrator({
-    refs: { IPCheckRef, connectivityRef, webRTCRef, dnsLeaksRef },
     store,
     t,
     userPreferences,
@@ -111,9 +101,8 @@ const { loadingControl } = useRefreshOrchestrator({
 // Shortcuts
 const { loadShortcuts } = useShortcuts({
     refs: {
-        queryIPRef, helpModalRef, shareReportRef,
-        speedTestRef, advancedToolsRef, IPCheckRef, connectivityRef, webRTCRef, dnsLeaksRef,
-        isInfosLoaded, isToolOpen, toggleInfoMask,
+        queryIPRef, helpModalRef, shareReportRef, advancedToolsRef,
+        isInfosLoaded, toggleInfoMask,
     },
     store, t, configs, userPreferences,
 });

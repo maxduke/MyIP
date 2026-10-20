@@ -10,11 +10,26 @@
       }
     },
     {
-      "src": "vercel-server.js",
+      "src": "vercel/server.js",
       "use": "@vercel/node",
       "config": {
         "includeFiles": [
-          "common/maxmind-db/*.mmdb"
+          "common/maxmind-db/GeoLite2-City.mmdb",
+          "common/maxmind-db/GeoLite2-ASN.mmdb",
+          "common/as-org-db/as-org2info.txt",
+          "common/as-rel-db/as-rel2.txt",
+          "common/peeringdb-db/peeringdb-index.json",
+          "common/oui-db/oui.csv",
+          "common/oui-db/mam.csv",
+          "common/oui-db/oui36.csv",
+          "common/oui-db/iab.csv",
+          "common/oui-db/cid.csv"
+        ],
+        "excludeFiles": [
+          "dist/**",
+          "common/*-db/.*",
+          "common/*-db/*.bak",
+          "common/*-db/*.next"
         ]
       }
     }
@@ -22,7 +37,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "/vercel-server.js"
+      "destination": "/vercel/server.js"
     },
     {
       "source": "/(.*)",

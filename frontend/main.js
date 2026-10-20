@@ -5,7 +5,7 @@ import App from './App.vue'
 import i18n, { loadActiveLocaleMessages } from './locales/i18n';
 import router from './router';
 import { analytics } from './utils/analytics';
-import { getTimezoneInfo } from './utils/timezone';
+import { getTimezoneInfo } from './utils/time-utils';
 import { isRunningAsPwa } from './utils/pwa';
 import { readAuthHint } from './utils/auth-hint';
 import { unregisterLegacyServiceWorker } from './utils/unregister-service-worker';
@@ -66,16 +66,18 @@ const store = useMainStore(pinia);
 app.use(i18n);
 app.use(router);
 
-// Sentry — build-time env gate: without the DSN the chunk neither ships nor
-// loads. The SDK chunk stays OFF the boot critical path: it loads after
-// mount (see the mount chain's finally below) so it never competes with the
-// locale pack the first render waits on. Until init, a tiny buffer catches
-// uncaught errors / rejections — and any of them triggers an immediate
-// load, so a boot that never reaches mount still reports. Perf data
-// survives the late init (buffered observers, backdated pageload span).
+// Sentry — build-time env gate: without the DSN, or in a dev server run, the
+// chunk neither ships nor loads (local runs would otherwise report every
+// experiment against the production project). The SDK chunk stays OFF the
+// boot critical path: it loads after mount (see the mount chain's finally
+// below) so it never competes with the locale pack the first render waits
+// on. Until init, a tiny buffer catches uncaught errors / rejections — and
+// any of them triggers an immediate load, so a boot that never reaches mount
+// still reports. Perf data survives the late init (buffered observers,
+// backdated pageload span).
 const earlyErrors = [];
 let loadSentry = () => {};
-if (import.meta.env.VITE_SENTRY_DSN_FRONTEND) {
+if (import.meta.env.VITE_SENTRY_DSN_FRONTEND && !import.meta.env.DEV) {
     const onEarlyError = (event) => {
         earlyErrors.push(event);
         loadSentry();
@@ -154,6 +156,12 @@ Promise.all([
     // probe auth once in the background so an already-signed-in user is
     // recognized and the next boot takes the exact path.
     if (store.isFireBaseSet && authHint === null) {
-        setTimeout(() => store.initializeAuthListener(), 3000);
+        // Probe failure means "treat as visitor" — never an error: an
+        // uncaught rejection here would reach Sentry as a crash signal.
+        setTimeout(() => {
+            store.initializeAuthListener().catch((error) => {
+                console.warn('Background auth probe failed, continuing as visitor:', error);
+            });
+        }, 3000);
     }
 });

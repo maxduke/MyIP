@@ -6,10 +6,10 @@
             <p>{{ t('securitychecklist.Note2') }}</p>
         </div>
 
-        <!-- Loading state -->
-        <div v-if="!fullList" class="flex items-center justify-center gap-2 py-8 text-sm">
-            <Spinner class="text-info" />
-            <span class="text-muted-foreground">{{ t('securitychecklist.Loading') }}</span>
+        <!-- Loading state (initial dataset fetch + locale switches); the
+             chunk phase before it shows ToolLoadingSkeleton instead. -->
+        <div v-if="!fullList" class="flex justify-center py-12">
+            <Spinner class="size-6 text-info" />
         </div>
 
         <template v-else>
@@ -257,6 +257,7 @@ import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
 import { emitAppEvent } from '@/utils/app-events.js';
+import { datasetLoaders, loadLocaleDataset } from '@/utils/locale-datasets.js';
 import { CircleProgressBar } from 'circle-progress.vue';
 import VueMarkdown from 'vue-markdown-render';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
@@ -316,13 +317,11 @@ const { t, locale } = useI18n();
 
 // The checklist dataset is large (~30 KB gzipped per language) and only this tool
 // reads it, so it's loaded on demand for the active locale instead of being baked
-// into the initial i18n bundle (see frontend/locales/i18n.js).
-const securityDataLoaders = {
-    en: () => import('@/locales/security-checklist/en.json'),
-    zh: () => import('@/locales/security-checklist/zh.json'),
-    fr: () => import('@/locales/security-checklist/fr.json'),
-    ru: () => import('@/locales/security-checklist/ru.json'),
-};
+// into the initial i18n bundle (see frontend/locales/i18n.js). The shared loader
+// walks the fallback chain, so a failed chunk degrades to the next language
+// instead of a spinner that never stops.
+const securityDataLoaders = datasetLoaders(import.meta.glob('../../locales/security-checklist/*.json'));
+const securityDataCache = new Map();
 
 const securityChecklist = ref(null);
 
@@ -330,10 +329,15 @@ const securityChecklist = ref(null);
 // surfaces the template's existing loading state during the swap.
 const loadSecurityChecklist = async () => {
     fullList.value = null;
-    const load = securityDataLoaders[locale.value] || securityDataLoaders.en;
-    const { default: data } = await load();
-    securityChecklist.value = data;
-    fullList.value = initSecurityList(securityChecklist.value);
+    const loc = locale.value;
+    const pack = await loadLocaleDataset(securityDataLoaders, loc, securityDataCache);
+    if (loc !== locale.value) return; // stale load — the locale changed mid-flight
+    if (!pack) {
+        console.error('Security checklist dataset unavailable in every locale');
+        return;
+    }
+    securityChecklist.value = pack.data;
+    fullList.value = initSecurityList(pack.data);
 };
 
 const store = useMainStore();

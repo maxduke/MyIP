@@ -5,13 +5,15 @@
 
 // Versioned localStorage key for userPreferences; bump the suffix when stored
 // values shouldn't merge onto a changed default. Shared with locales/i18n.js
-// (which reads the active language from storage at boot) so the key can't drift.
+// (which reads the active language from storage at boot) so the key can't
+// drift. Older keys (userPreferences_v6 / userPreferences) are neither read
+// nor migrated anymore — a visitor coming from that era simply starts from
+// defaults.
 export const PREFS_STORAGE_KEY = 'userPreferences_v7';
-export const LEGACY_PREFS_KEYS = ['userPreferences_v6', 'userPreferences'];
 
 export const DEFAULT_PREFERENCES = Object.freeze({
   theme: 'auto', // auto | light | dark
-  connectivityMultipleTests: false,
+  connectivityMultipleTests: true,
   simpleMode: false,
   // Per-module startup auto-run switches. IP info has no switch — it always
   // runs on load. See use-refresh-orchestrator.js.
@@ -21,13 +23,21 @@ export const DEFAULT_PREFERENCES = Object.freeze({
   popupConnectivityNotifications: false,
   ipCardsToShow: 2,
   ipGeoSource: 0,
-  // Local IP-history recorder (see use-ip-history.js). Days: 1–90.
+  // Local IP-history recorder (see use-ip-history.js). Days: 1–30.
   ipHistoryEnabled: true,
-  ipHistoryDays: 90,
-  lang: 'auto', // auto | zh | en | fr | tr
-  // User-defined extra targets for the Connectivity test grid. Each entry:
-  //   { id: 'custom-<timestamp>', name: string, url: string-with-trailing-? }
-  // See ConnectivityTest.vue for how these are merged with the built-in list.
+  ipHistoryDays: 30,
+  lang: 'auto', // auto | zh | en | fr | ru
+  // Multi-list Connectivity model: { schemaVersion, lists }. null until
+  // first load — store.loadPreferences() runs it through sanitizeLists().
+  connectivityLists: null,
+  // Which list the Connectivity section opens on; a stale id falls back
+  // to "Mine".
+  connectivityDefaultListId: 'mine',
+  // On: card titles open the site in a new tab; off: plain text.
+  connectivityCardTitleOpensSite: false,
+  // Legacy pre-connectivityLists keys, oldest last. Read once by the
+  // migration; kept for rollback, never written.
+  connectivityTargets: null,
   customConnectivityTargets: [],
 });
 
@@ -37,24 +47,4 @@ export const DEFAULT_PREFERENCES = Object.freeze({
  */
 export function createDefaultPreferences() {
   return { ...DEFAULT_PREFERENCES };
-}
-
-/**
- * Map a legacy preferences object onto the current schema: expand the single
- * `autoStart` switch into the three per-module switches, pass everything else
- * through. Pure — store.js does the localStorage read.
- *
- * @param {object|null} legacy parsed legacy preferences (or null/undefined)
- * @returns {object} a writable object ready to spread over the defaults
- */
-export function migrateLegacyPreferences(legacy) {
-  if (!legacy || typeof legacy !== 'object') return {};
-  const migrated = { ...legacy };
-  if (typeof legacy.autoStart === 'boolean') {
-    migrated.autoRunConnectivity = legacy.autoStart;
-    migrated.autoRunWebRTC = legacy.autoStart;
-    migrated.autoRunDnsLeak = legacy.autoStart;
-  }
-  delete migrated.autoStart;
-  return migrated;
 }

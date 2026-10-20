@@ -1,8 +1,8 @@
-import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import maxmind from 'maxmind';
 import logger from './logger.js';
+import { matchLocale } from './locale-registry.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,14 +14,27 @@ export const MAXMIND_ASN_DB = 'GeoLite2-ASN.mmdb';
 const cityDbPath = path.join(MAXMIND_DB_DIR, MAXMIND_CITY_DB);
 const asnDbPath = path.join(MAXMIND_DB_DIR, MAXMIND_ASN_DB);
 
+// The languages the City database carries `names` for — a property of the data
+// itself, not of the UI: registering a new front-end locale changes nothing
+// here, and this list only moves if MaxMind's own coverage does.
+export const SUPPORTED_LANGS = ['de', 'en', 'es', 'fr', 'ja', 'pt-BR', 'ru', 'zh-CN'];
+
+// Resolve any BCP-47 tag onto that set: exact match (canonical spelling wins),
+// then the base language, then a sibling of the same family — `zh-TW` reads
+// `zh-CN` names rather than falling all the way to English. Anything else, junk
+// included, lands on `en`. Family resolution is defined once, in the locale
+// registry; only the resolver is borrowed, never its list of UI locales.
+export const normalizeLang = (tag) => {
+    if (typeof tag !== 'string') return 'en';
+    return matchLocale(tag.trim(), SUPPORTED_LANGS) ?? 'en';
+};
+
 let cityLookup = null;
 let asnLookup = null;
 let reloadPromise = null;
-let watchersStarted = false;
-let reloadDebounceTimer = null;
 
 /**
- * Return the canonical MaxMind database paths used by the backend and updater.
+ * Return the canonical MaxMind database paths.
  */
 export function getMaxMindDbPaths() {
     return {
@@ -39,13 +52,6 @@ export function isMaxMindReady() {
 }
 
 /**
- * Report whether both database files are available to open.
- */
-export const areMaxMindDatabasesPresent = (dbPaths = getMaxMindDbPaths()) => (
-    fs.existsSync(dbPaths.cityDbPath) && fs.existsSync(dbPaths.asnDbPath)
-);
-
-/**
  * Open fresh MaxMind readers from the provided database paths.
  */
 export async function openMaxMindReaders(dbPaths = getMaxMindDbPaths()) {
@@ -60,12 +66,12 @@ export async function openMaxMindReaders(dbPaths = getMaxMindDbPaths()) {
 /**
  * Replace the active MaxMind readers after both databases are opened successfully.
  */
-export async function reloadMaxMindDatabases(reason = 'manual', dbPaths = getMaxMindDbPaths()) {
+export async function reloadMaxMindDatabases(reason = 'manual') {
     if (reloadPromise) {
         return reloadPromise;
     }
 
-    reloadPromise = openMaxMindReaders(dbPaths)
+    reloadPromise = openMaxMindReaders()
         .then(({ city, asn }) => {
             cityLookup = city;
             asnLookup = asn;
@@ -84,58 +90,28 @@ export async function reloadMaxMindDatabases(reason = 'manual', dbPaths = getMax
 }
 
 /**
- * Load readers when packaged databases exist, otherwise leave the source disabled.
+ * Bare ISO country code of an IP (null when unknown) plus the prefix length
+ * of the MaxMind network holding it, so a caller can walk a range one network
+ * at a time — the bgp-prefixes Radar view does, thousands of times per
+ * request. No formatting, no 503 throw: null when there is no answer — the
+ * City database isn't loaded, or the lookup failed — so the caller can tell
+ * it from an address MaxMind places in no country ({ country: null }).
  */
-export const initializeMaxMindIfPresent = async (
-    reason = 'startup',
-    dbPaths = getMaxMindDbPaths(),
-) => {
-    if (!areMaxMindDatabasesPresent(dbPaths)) {
-        return false;
-    }
-
+export const lookupCountryRange = (ip) => {
+    if (!cityLookup) return null;
     try {
-        await reloadMaxMindDatabases(reason, dbPaths);
-        return true;
+        const [record, prefixLength] = cityLookup.getWithPrefixLength(ip);
+        return { country: record?.country?.iso_code || null, prefixLength };
     } catch {
-        return false;
+        return null;
     }
 };
 
 /**
- * Watch database files and reload readers when another process publishes new files.
- */
-export function startMaxMindFileWatcher() {
-    if (watchersStarted) {
-        return;
-    }
-
-    watchersStarted = true;
-
-    // Debounce file events so City and ASN replacements are handled as one reload.
-    const scheduleReload = () => {
-        clearTimeout(reloadDebounceTimer);
-        reloadDebounceTimer = setTimeout(() => {
-            reloadMaxMindDatabases('file change').catch(() => {
-                // Keep the existing readers when a newly written database is invalid.
-            });
-        }, 1000);
-        reloadDebounceTimer.unref?.();
-    };
-
-    for (const filePath of [cityDbPath, asnDbPath]) {
-        fs.watchFile(filePath, { interval: 5000, persistent: false }, (current, previous) => {
-            if (current.mtimeMs !== previous.mtimeMs || current.size !== previous.size) {
-                scheduleReload();
-            }
-        });
-    }
-}
-
-/**
  * Look up an IP address and return the API response shape expected by the frontend.
+ * `lang` is any raw tag — normalization happens here, so no caller can skip it.
  */
-export function lookupMaxMind(ip, lang = 'en') {
+export function lookupMaxMind(ip, lang) {
     if (!isMaxMindReady()) {
         const error = new Error('MaxMind database is not ready');
         error.statusCode = 503;
@@ -145,7 +121,7 @@ export function lookupMaxMind(ip, lang = 'en') {
     const city = cityLookup.get(ip);
     const asn = asnLookup.get(ip);
 
-    return formatMaxMindResult(ip, lang, city, asn);
+    return formatMaxMindResult(ip, normalizeLang(lang), city, asn);
 }
 
 /**

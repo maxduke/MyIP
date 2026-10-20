@@ -14,10 +14,16 @@
           {{ t('about.Privacy') }}
         </RouterLink>
       </Button>
-      <Button v-if="isDocsConfigured" variant="link" size="default" as-child class="cursor-pointer">
-        <a :href="DOCS_URL+'/'+(locale === 'en' ? '' : locale)" target="_blank" rel="noopener"
-          @click="trackEvent('Footer', 'FooterClick', 'HelpCenter')">
+      <Button variant="link" size="default" as-child class="cursor-pointer">
+        <a :href="'https://docs.ipcheck.ing/knowledge-base/'+(locale === 'en' ? '' : locale)" target="_blank"
+          rel="noopener" @click="trackEvent('Footer', 'FooterClick', 'HelpCenter')">
           {{ t('about.HelpCenter') }}
+        </a>
+      </Button>
+      <Button variant="link" size="default" as-child class="cursor-pointer">
+        <a :href="'https://docs.ipcheck.ing/developer/'+(locale === 'en' ? '' : locale)" target="_blank" rel="noopener"
+          @click="trackEvent('Footer', 'FooterClick', 'Contribute')">
+          {{ t('about.Contribute') }}
         </a>
       </Button>
       <Button variant="link" size="default" @click="openAboutTab('changelog', 'Changelog')" class="cursor-pointer">
@@ -59,7 +65,7 @@
     <!-- About Sheet -->
     <Sheet :open="isOpen" @update:open="onOpenChange">
       <SheetContent side="right" :title="t('about.Title')"
-        :class="['flex flex-col p-0 gap-0', isMobile ? 'w-full max-w-full' : 'w-[500px] max-w-[500px]']">
+        :class="['flex flex-col p-0 gap-0 w-full max-w-full md:w-125 md:max-w-125']">
         <Tabs v-model="content" class="flex flex-col h-full">
           <!-- Top: tabs + close -->
           <div class="flex items-center justify-between gap-2 px-4 py-3 border-b shrink-0">
@@ -74,23 +80,19 @@
 
           <!-- Content area (independent scrolling) -->
           <div class="flex-1 overflow-y-auto px-5 py-5" ref="sheetBody">
-            <!-- About -->
+            <!-- About: sections come from aboutSections, each one's paragraphs an array
+                 in the locale file — adding or reordering copy is a locale-only edit. -->
             <TabsContent value="about" class="space-y-6 mt-0">
-              <section class="space-y-2">
-                <p v-for="i in 3" :key="i" class="text-sm leading-relaxed text-foreground/85">
-                  {{ t(`about.product${i}`) }}
-                </p>
-              </section>
-
-              <section>
-                <h3 class="text-base font-semibold mb-2">{{ t('about.meTitle') }}</h3>
-                <div class="space-y-2 mb-3">
-                  <p v-for="i in 3" :key="i" class="text-sm leading-relaxed text-foreground/85">
-                    {{ t(`about.me${i}`) }}
+              <section v-for="section in aboutSections" :key="section.key">
+                <h3 v-if="section.titleKey" class="text-base font-semibold mb-2">{{ t(section.titleKey) }}</h3>
+                <div class="space-y-2" :class="section.links && 'mb-3'">
+                  <p v-for="(paragraph, idx) in tm(`about.${section.key}`)" :key="idx"
+                    class="text-sm leading-relaxed text-foreground/85">
+                    {{ rt(paragraph) }}
                   </p>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <Button v-for="link in personalLinks" :key="link.href" variant="outline" size="sm" as-child
+                <div v-if="section.links" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Button v-for="link in section.links" :key="link.href" variant="outline" size="sm" as-child
                     class="justify-start">
                     <a :href="link.href" target="_blank" rel="noopener">
                       <Compass />
@@ -100,21 +102,18 @@
                   </Button>
                 </div>
               </section>
-
-              <section>
-                <h3 class="text-base font-semibold mb-2">{{ t('about.contactTitle') }}</h3>
-                <div class="text-sm leading-relaxed text-foreground/85" v-html="t('about.contact')"></div>
-              </section>
             </TabsContent>
 
             <!-- Changelog -->
-            <!-- Data lives in frontend/data/changelog.json (shared version / date, per-lang change text).
-                Badge labels and the section title stay in locale files as UI chrome. -->
+            <!-- Data lives in frontend/data/changelog.json (shared version, ISO date, per-lang change
+                text). Dates localize at render via formatIsoDate; badge labels and the section title
+                stay in locale files as UI chrome. -->
             <TabsContent value="changelog" class="space-y-6 mt-0">
               <section v-for="(version, vi) in changelogReversed" :key="vi">
                 <header class="flex items-baseline justify-between mb-2">
                   <h3 class="text-lg font-semibold tracking-tight">{{ version.version }}</h3>
-                  <span class="text-xs text-muted-foreground tabular-nums">{{ version.date }}</span>
+                  <span class="text-xs text-muted-foreground tabular-nums">{{ formatIsoDate(version.date, locale)
+                    }}</span>
                 </header>
                 <Separator class="mb-3" />
                 <ul class="space-y-2">
@@ -126,7 +125,7 @@
                       <CirclePlus v-if="item.type === 'add'" class="size-3.5" />
                       <BugOff v-if="item.type === 'fix'" class="size-3.5" />
                     </Badge>
-                    <span class="leading-relaxed">{{ item.change[locale] || item.change.en }}</span>
+                    <span class="leading-relaxed">{{ changeText(item.change) }}</span>
                   </li>
                 </ul>
               </section>
@@ -165,7 +164,8 @@ import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import changelogData from '@/data/changelog.json';
 import { trackEvent } from '@/utils/analytics';
-import { DOCS_URL, isDocsConfigured } from '@/composables/use-docs-assistant';
+import { formatIsoDate } from '@/utils/time-utils';
+import { fallbackChain } from '@/utils/locale-registry.js';
 import { Sheet, SheetContent, SheetClose } from '@/components/ui/sheet';
 import { JnTooltip } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
@@ -175,7 +175,7 @@ import { Separator } from '@/components/ui/separator';
 import { Compass, ExternalLink, CircleFadingArrowUp, CirclePlus, BugOff, Smile } from '@lucide/vue';
 import { Icon } from '@iconify/vue';
 
-const { t, locale } = useI18n();
+const { t, tm, rt, locale } = useI18n();
 
 const store = useMainStore();
 const isMobile = computed(() => store.isMobile);
@@ -185,6 +185,11 @@ const tabs = ['about', 'changelog', 'acknowledgement'];
 const content = ref('about');
 // Static data from JSON — reverse once via computed so the template stays tidy.
 const changelogReversed = computed(() => changelogData.slice().reverse());
+
+// Entries carry one string per language; history is only guaranteed for full
+// locales, so a beta one walks its fallback chain.
+const changeText = (change) => fallbackChain(locale.value).map((code) => change[code]).find(Boolean) ?? '';
+
 const sheetBody = ref(null);
 
 const personalLinks = [
@@ -194,13 +199,25 @@ const personalLinks = [
   { href: 'https://twitter.com/jason5ng32', labelKey: 'about.twitter' },
 ];
 
+// About tab layout: one entry per section, rendered in order. `key` names the
+// paragraph array under `about.` in the locale files; `titleKey` is omitted for
+// the lead-in section, and `links` appends a link grid under the paragraphs.
+const aboutSections = [
+  { key: 'project' },
+  { key: 'founder', titleKey: 'about.founderTitle', links: personalLinks },
+  { key: 'contact', titleKey: 'about.contactTitle' },
+];
+
 const acknowledgementsList = [
   { name: 'Setilis Hu', link: '' },
   { name: 'Seven Yu', link: 'https://github.com/dofy' },
   { name: 'Nikolai Tschacher', link: 'https://incolumitas.com/pages/about/' },
   { name: 'Project Alexandria (Cloudflare)', link: 'https://www.cloudflare.com/lp/project-alexandria/' },
   { name: 'Cloudflare Speedtest', link: 'https://github.com/cloudflare/speedtest' },
-  { name: 'DigitalOcean', link: 'https://www.digitalocean.com/?refcode=fd2634a3981b&utm_campaign=Referral_Invite&utm_medium=Referral_Program&utm_source=badge' },
+  { name: 'V.PS', link: 'https://v.ps/?utm_source=ipcheck.ing&utm_medium=acknowledgement&utm_campaign=footer' },
+  { name: 'RapidProxy', link: 'https://www.rapidproxy.io/?ref=myip' },
+  { name: 'SwiftProxy', link: 'https://www.swiftproxy.net/?ref=myip' },
+  { name: 'Proxy-Seller', link: 'https://proxy-seller.com/?partner=4FEC1644D12240F4' },
   { name: 'Sentry', link: 'https://www.sentry.io/' },
   { name: '1Password', link: 'https://www.1password.com/' },
   { name: 'Greptile', link: 'https://www.greptile.com/' },

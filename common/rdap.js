@@ -6,6 +6,7 @@
 //   - IPs: primary. RIR RDAP is plain HTTPS + JSON from the
 //     authoritative registry, with none of port-43's referral quirks
 //     (rwhois:// endpoints speak a protocol WHOIS clients can't follow).
+//   - ASNs: only source. RIR autnum objects, same bootstrap mechanism.
 //
 // Public API:
 //   rdapDomain(name)  →  { [host]: { __raw, ...rdapJson } }
@@ -13,6 +14,8 @@
 //     the result in without any frontend change.
 //   rdapIp(ip)        →  { __raw, ...rdapJson }
 //     Flat, like whoiser.ip() — the frontend only reads `__raw`.
+//   rdapAutnum(asn)   →  { asn, handle, name, rir, …, __raw }
+//     Flat like rdapIp, but parsed fields instead of the raw RDAP JSON.
 //
 // Bootstrap (IANA's TLD / address-space → RDAP endpoint maps) is cached
 // in-memory for 24h per file. Upstream calls go through `fetchUpstream`
@@ -20,7 +23,7 @@
 
 import { fetchUpstream } from './fetch-with-timeout.js';
 import { isIPv6 } from './valid-ip.js';
-import { expandIPv6 } from './bgp-prefix.js';
+import { ipToBigInt, parseCidr, prefixContains } from './ip-math.js';
 import logger from './logger.js';
 
 const BOOTSTRAP_BASE = 'https://data.iana.org/rdap/';
@@ -77,35 +80,6 @@ export async function rdapDomain(domain, { timeoutMs = 5000 } = {}) {
 
 // -- IP lookup -------------------------------------------------------------
 
-// Numeric value of an IP for prefix math. Returns null on junk — callers
-// validate first, but bootstrap CIDR bases also pass through here.
-const ipToBigInt = (ip) => {
-    if (typeof ip !== 'string') return null;
-    if (!ip.includes(':')) {
-        const parts = ip.split('.');
-        if (parts.length !== 4) return null;
-        let n = 0n;
-        for (const p of parts) {
-            if (!/^\d{1,3}$/.test(p)) return null;
-            n = (n << 8n) | BigInt(p);
-        }
-        return n;
-    }
-    const hextets = expandIPv6(ip);
-    if (!hextets) return null;
-    let n = 0n;
-    for (const h of hextets) n = (n << 16n) | BigInt(parseInt(h, 16));
-    return n;
-};
-
-const cidrContains = (cidr, ipBig, v6) => {
-    const [base, lenStr] = cidr.split('/');
-    const baseBig = ipToBigInt(base);
-    if (baseBig === null) return false;
-    const shift = (v6 ? 128n : 32n) - BigInt(lenStr);
-    return (ipBig >> shift) === (baseBig >> shift);
-};
-
 // Longest-prefix match of `ip` against an IANA ipv4/ipv6 bootstrap
 // `services` array (entries: [[cidr, …], [url, …]]). Exported for tests.
 export const findIpEndpoint = (services, ip) => {
@@ -117,10 +91,11 @@ export const findIpEndpoint = (services, ip) => {
     let bestLen = -1;
     for (const [cidrs, urls] of services) {
         for (const cidr of cidrs) {
-            if (cidr.includes(':') !== v6) continue;
-            const len = Number(cidr.split('/')[1]);
-            if (len <= bestLen || !cidrContains(cidr, ipBig, v6)) continue;
-            bestLen = len;
+            const block = parseCidr(cidr);
+            if (!block || (block.family === 6) !== v6) continue;
+            if (block.prefix <= bestLen
+                || !prefixContains(block.network, block.prefix, block.family, ipBig)) continue;
+            bestLen = block.prefix;
             best = urls.find((u) => u.startsWith('https://')) || urls[0];
         }
     }
@@ -149,6 +124,92 @@ export const rdapIp = async (ip, { timeoutMs = 5000 } = {}) => {
     const data = await res.json();
 
     return { ...data, __raw: formatIpNetwork(data) };
+};
+
+// -- Autnum lookup ---------------------------------------------------------
+
+// Match an ASN against IANA asn.json bootstrap services (entries:
+// [[range, …], [url, …]], ranges "N" or "N-M"). Exported for tests.
+export const findAutnumEndpoint = (services, asn) => {
+    for (const [ranges, urls] of services) {
+        for (const range of ranges) {
+            const [lo, hi] = range.split('-').map(Number);
+            if (asn >= lo && asn <= (hi ?? lo)) {
+                return urls.find((u) => u.startsWith('https://')) || urls[0];
+            }
+        }
+    }
+    return null;
+};
+
+// RDAP service host → registry display name. Unlisted hosts (an NIR, a
+// moved endpoint) fall back to the hostname itself.
+const RIR_BY_HOST = {
+    'rdap.arin.net': 'ARIN',
+    'rdap.db.ripe.net': 'RIPE NCC',
+    'rdap.apnic.net': 'APNIC',
+    'rdap.lacnic.net': 'LACNIC',
+    'rdap.afrinic.net': 'AFRINIC',
+};
+
+// Depth-first walk over an entity tree (RDAP nests contacts inside their
+// parent entity), returning the first entity carrying `role`.
+const findEntityByRole = (entities, role) => {
+    for (const e of entities || []) {
+        if (e.roles?.includes(role)) return e;
+        const nested = findEntityByRole(e.entities, role);
+        if (nested) return nested;
+    }
+    return null;
+};
+
+const vcardOrgName = (v) => (Array.isArray(v.org?.[0]) ? v.org[0].join(' ') : v.org?.[0]);
+
+// RDAP autnum document → the parsed fields plus the WHOIS-like `__raw`
+// block. `host` is the RDAP service that answered. Exported for tests.
+export const parseAutnum = (data, asn, host) => {
+    const events = {};
+    for (const e of data.events || []) events[e.eventAction] = e.eventDate;
+    const registrant = findEntityByRole(data.entities, 'registrant');
+    const registrantCard = registrant ? extractVcard(registrant) : {};
+    const abuseCard = extractVcard(findEntityByRole(data.entities, 'abuse'));
+    return {
+        asn,
+        handle: data.handle || null,
+        name: data.name || null,
+        rir: RIR_BY_HOST[host] || host || null,
+        status: data.status || [],
+        registered: events.registration || null,
+        lastChanged: events['last changed'] || null,
+        registrant: registrantCard.fn?.[0] || vcardOrgName(registrantCard) || null,
+        country: data.country || null,
+        abuse: abuseCard.email?.[0] || null,
+        __raw: formatAutnum(data),
+    };
+};
+
+// True for rdapAutnum's "no record" failures (unregistered ASN, no RDAP
+// service for its range) as opposed to an upstream fault.
+export const isAutnumMissing = (error) => /^(ASN not found|No RDAP endpoint for )/.test(error?.message || '');
+
+export const rdapAutnum = async (asn, { timeoutMs = 5000 } = {}) => {
+    const n = Number(String(asn).replace(/^AS/i, ''));
+    const bootstrap = await loadBootstrap('asn.json');
+    const base = findAutnumEndpoint(bootstrap.services, n);
+    if (!base) {
+        throw new Error(`No RDAP endpoint for AS${n}`);
+    }
+
+    const url = `${trimSlash(base)}/autnum/${n}`;
+    const res = await fetchUpstream(url, { timeoutMs });
+    if (res.status === 404) {
+        throw new Error(`ASN not found: AS${n}`);
+    }
+    if (!res.ok) {
+        logger.error({ asn: n, status: res.status }, 'RDAP autnum query failed');
+        throw new Error(`RDAP autnum query failed: ${res.status}`);
+    }
+    return parseAutnum(await res.json(), n, new URL(base).hostname);
 };
 
 // -- Format RDAP JSON into a WHOIS-like text block ------------------------
@@ -238,6 +299,44 @@ export const formatIpNetwork = (data) => {
     if (data.parentHandle) lines.push(`Parent: ${data.parentHandle}`);
     if (data.type)         lines.push(`NetType: ${data.type}`);
     if (data.country)      lines.push(`Country: ${data.country}`);
+
+    const ev = {};
+    for (const e of data.events || []) ev[e.eventAction] = e.eventDate;
+    if (ev.registration)    lines.push(`Created: ${ev.registration}`);
+    if (ev['last changed']) lines.push(`Updated: ${ev['last changed']}`);
+
+    if (data.status?.length) {
+        lines.push('Status:');
+        for (const s of data.status) lines.push(`  ${s}`);
+    }
+
+    lines.push(...formatEntitySections(
+        data.entities,
+        ['registrant', 'administrative', 'technical', 'abuse', 'noc', 'routing'],
+    ));
+
+    for (const remark of data.remarks || []) {
+        lines.push('');
+        lines.push(`${remark.title || 'Remarks'}:`);
+        for (const d of remark.description || []) lines.push(`  ${d}`);
+    }
+
+    return lines.join('\n');
+};
+
+// WHOIS-like text block for an RDAP autnum object, field names mirroring
+// RIR port-43 aut-num output. Exported for tests.
+export const formatAutnum = (data) => {
+    const lines = [];
+    const start = data.startAutnum;
+    const end = data.endAutnum;
+    if (start != null) {
+        lines.push(`ASNumber: ${end != null && end !== start ? `${start} - ${end}` : start}`);
+    }
+    if (data.name)   lines.push(`ASName: ${data.name}`);
+    if (data.handle) lines.push(`ASHandle: ${data.handle}`);
+    if (data.type)   lines.push(`Type: ${data.type}`);
+    if (data.country) lines.push(`Country: ${data.country}`);
 
     const ev = {};
     for (const e of data.events || []) ev[e.eventAction] = e.eventDate;

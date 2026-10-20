@@ -177,21 +177,18 @@ describe('store — preferences', () => {
     assert.ok('autoRunConnectivity' in s.userPreferences, 'default keys fill in missing slots');
   });
 
-  it('loadPreferences migrates a legacy v6 autoStart onto the per-module switches', () => {
+  it('loadPreferences ignores legacy pref keys entirely', () => {
     globalThis.localStorage.setItem(
       'userPreferences_v6',
       JSON.stringify({ lang: 'fr', autoStart: false }),
     );
     const s = useMainStore();
     s.loadPreferences();
-    assert.equal(s.userPreferences.lang, 'fr', 'other legacy keys carry over');
-    assert.equal(s.userPreferences.autoRunConnectivity, false);
-    assert.equal(s.userPreferences.autoRunWebRTC, false);
-    assert.equal(s.userPreferences.autoRunDnsLeak, false);
-    assert.ok(!('autoStart' in s.userPreferences), 'retired key dropped');
-    // Legacy key purged, value re-saved under the current key.
-    assert.equal(globalThis.localStorage.getItem('userPreferences_v6'), null);
-    assert.ok(globalThis.localStorage.getItem('userPreferences_v7'));
+    // Legacy migration was retired: v6 content must not leak into the store,
+    // and the stale key is left untouched (nothing reads it anymore).
+    assert.equal(s.userPreferences.lang, 'auto', 'legacy lang does not carry over');
+    assert.equal(s.userPreferences.autoRunConnectivity, true, 'defaults win');
+    assert.ok(!('autoStart' in s.userPreferences));
   });
 });
 
@@ -239,5 +236,122 @@ describe('store — getDbUrl delegates to buildDbUrl', () => {
     const result = s.getDbUrl(9999, '1.1.1.1', 'en');
     // buildDbUrl returns undefined/'' for no-match; we only guarantee falsy
     assert.ok(!result, `expected falsy result for unknown id, got ${result}`);
+  });
+});
+
+describe('store — linkedProviders', () => {
+  const signedInWith = (store, ...providerIds) => {
+    store.isSignedIn = true;
+    store.user = { providerData: providerIds.map((providerId) => ({ providerId })) };
+  };
+
+  it('is empty while signed out', () => {
+    const s = useMainStore();
+    s.user = null;
+    assert.deepEqual(s.linkedProviders, []);
+  });
+
+  it('names each provider and the icon the menu renders', () => {
+    const s = useMainStore();
+    signedInWith(s, 'google.com');
+    assert.deepEqual(s.linkedProviders, [
+      { providerId: 'google.com', label: 'Google', icon: 'ri:google-line' },
+    ]);
+  });
+
+  it('keeps Firebase order when several are present', () => {
+    const s = useMainStore();
+    signedInWith(s, 'github.com', 'google.com');
+    assert.deepEqual(s.linkedProviders.map((entry) => entry.label), ['GitHub', 'Google']);
+  });
+
+  it('falls back to the raw id for a provider the app does not offer', () => {
+    const s = useMainStore();
+    signedInWith(s, 'password');
+    // Shown rather than hidden: an account signing in some other way should
+    // not read as having no sign-in method at all.
+    assert.deepEqual(s.linkedProviders, [
+      { providerId: 'password', label: 'password', icon: null },
+    ]);
+  });
+});
+
+describe('store — handleSignInError', () => {
+  const google = { label: 'Google', other: 'GitHub' };
+  const github = { label: 'GitHub', other: 'Google' };
+  // i18n has no messages loaded here, so t() returns the key itself — which
+  // makes these tests about WHICH message each code picks.
+  const fail = (store, code, descriptor) => {
+    store.setAlert(false, '', '', '', 0);
+    store.handleSignInError({ code }, descriptor);
+    return store.alert;
+  };
+
+  it('stays silent when the visitor just closes the popup', () => {
+    const s = useMainStore();
+    for (const code of ['auth/popup-closed-by-user', 'auth/cancelled-popup-request', 'auth/user-cancelled']) {
+      assert.equal(fail(s, code, github).alertToShow, false, code);
+    }
+  });
+
+  it('warns and points at the other provider when the email is taken', () => {
+    const s = useMainStore();
+    for (const code of [
+      'auth/account-exists-with-different-credential',
+      'auth/email-already-in-use',
+      'auth/credential-already-in-use',
+    ]) {
+      const alert = fail(s, code, github);
+      assert.equal(alert.alertMessage, 'alert.SignInEmailTakenMessage', code);
+      assert.equal(alert.alertStyle, 'text-warning', code);
+    }
+  });
+
+  it('still surfaces unexpected failures as errors', () => {
+    const s = useMainStore();
+    const unknown = fail(s, 'auth/network-request-failed', google);
+    assert.equal(unknown.alertStyle, 'text-danger');
+    assert.ok(unknown.alertToShow);
+  });
+
+  it('survives an error object with no code at all', () => {
+    const s = useMainStore();
+    s.setAlert(false, '', '', '', 0);
+    s.handleSignInError(new Error('boom'), google);
+    assert.equal(s.alert.alertStyle, 'text-danger');
+  });
+});
+
+describe('store — quota snapshot', () => {
+  // The backend's /userinfo quota carries percentages only.
+  const snapshot = (features) => ({ quota: { isSponsor: false, features } });
+
+  it('quotaExceeded reads the exhausted flag, not the percentage', () => {
+    const s = useMainStore();
+    s.remoteUserInfo = snapshot({
+      ipinfo: { percent: 100, exhausted: true },
+      dns_leak_test: { percent: 99, exhausted: false },
+    });
+    assert.equal(s.quotaExceeded.ipinfo, true);
+    assert.equal(s.quotaExceeded.dns_leak_test, false);
+    // Absent features and a missing snapshot read as not exceeded.
+    assert.equal(s.quotaExceeded.persona_check, false);
+    s.remoteUserInfo = null;
+    assert.equal(s.quotaExceeded.ipinfo, false);
+  });
+
+  it('markQuotaExhausted pins a feature to exhausted after a 429', () => {
+    const s = useMainStore();
+    s.remoteUserInfo = snapshot({ invisibility_test: { percent: 42, exhausted: false } });
+    s.markQuotaExhausted('invisibility_test');
+    assert.deepEqual(s.remoteUserInfo.quota.features.invisibility_test, { percent: 100, exhausted: true });
+    assert.equal(s.quotaExceeded.invisibility_test, true);
+  });
+
+  it('markQuotaExhausted is a no-op without a snapshot for the feature', () => {
+    const s = useMainStore();
+    s.remoteUserInfo = snapshot({});
+    s.markQuotaExhausted('dns_leak_test');
+    assert.deepEqual(s.remoteUserInfo.quota.features, {});
   });
 });

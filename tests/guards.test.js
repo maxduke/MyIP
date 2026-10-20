@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { requireReferer, requireValidIP, requireValidPrefix, requireValidDomain, requireValidProviderId, requireValidReportId } from '../common/guards.js';
+import { requireReferer, requirePublicIP, requireValidPrefix, requireValidDomain, requireValidProviderId, requireValidRecordType, requireValidReportId, requireValidCountry, requireValidASN, normalizeAsnQuery } from '../common/guards.js';
 
 // Minimal (req, res, next) stubs — just enough to observe what the
 // middleware does.
@@ -49,8 +49,8 @@ describe('requireReferer', () => {
     });
 });
 
-describe('requireValidIP', () => {
-    const guard = requireValidIP();
+describe('requirePublicIP', () => {
+    const guard = requirePublicIP();
 
     it('calls next() when ip query param is a valid IPv4', () => {
         let nextCalled = false;
@@ -82,8 +82,30 @@ describe('requireValidIP', () => {
         assert.equal(nextCalled, false);
     });
 
+    it('rejects leading-zero IPv4 input before reaching an upstream handler', () => {
+        const res = makeRes();
+        let nextCalled = false;
+        guard(makeReq({ query: { ip: '8.8.8.08' } }), res, () => { nextCalled = true; });
+        assert.equal(res.statusCode, 400);
+        assert.equal(res.body.error, 'Invalid IP address');
+        assert.equal(nextCalled, false);
+    });
+
+    // Reserved space is well-formed but unanswerable by any upstream, so it
+    // gets its own message — rejected before the handler, never fetched.
+    for (const ip of ['10.0.0.1', '192.168.1.1', '127.0.0.1', '198.18.0.2', 'fd00::1', '::1']) {
+        it(`returns 400 "Not a public IP address" for ${ip}`, () => {
+            const res = makeRes();
+            let nextCalled = false;
+            guard(makeReq({ query: { ip } }), res, () => { nextCalled = true; });
+            assert.equal(res.statusCode, 400);
+            assert.equal(res.body.error, 'Not a public IP address');
+            assert.equal(nextCalled, false);
+        });
+    }
+
     it('honors a custom param name', () => {
-        const custom = requireValidIP('target');
+        const custom = requirePublicIP('target');
         let nextCalled = false;
         custom(makeReq({ query: { target: '8.8.8.8' } }), makeRes(), () => { nextCalled = true; });
         assert.equal(nextCalled, true);
@@ -127,6 +149,36 @@ describe('requireValidPrefix', () => {
         const res = makeRes();
         guard(makeReq({ query: { prefix: '8.8.8.0/33' } }), res, () => {});
         assert.equal(res.statusCode, 400);
+    });
+});
+
+describe('requireValidCountry', () => {
+    const guard = requireValidCountry();
+
+    it('calls next() and uppercases the code in place', () => {
+        let nextCalled = false;
+        const req = makeReq({ query: { country: 'iq' } });
+        guard(req, makeRes(), () => { nextCalled = true; });
+        assert.equal(nextCalled, true);
+        assert.equal(req.query.country, 'IQ');
+    });
+
+    it('returns 400 "No country provided" when country is missing', () => {
+        const res = makeRes();
+        let nextCalled = false;
+        guard(makeReq({ query: {} }), res, () => { nextCalled = true; });
+        assert.equal(res.statusCode, 400);
+        assert.equal(res.body.error, 'No country provided');
+        assert.equal(nextCalled, false);
+    });
+
+    it('returns 400 "Invalid country" for anything but two letters', () => {
+        for (const bad of ['USA', 'U', 'U1', 'us,de', 'ÜS']) {
+            const res = makeRes();
+            guard(makeReq({ query: { country: bad } }), res, () => {});
+            assert.equal(res.statusCode, 400, bad);
+            assert.equal(res.body.error, 'Invalid country', bad);
+        }
     });
 });
 
@@ -192,6 +244,42 @@ describe('requireValidReportId', () => {
     });
 });
 
+describe('requireValidRecordType', () => {
+    const guard = requireValidRecordType();
+
+    it('calls next() for a supported type', () => {
+        let nextCalled = false;
+        guard(makeReq({ query: { type: 'CAA' } }), makeRes(), () => { nextCalled = true; });
+        assert.equal(nextCalled, true);
+    });
+
+    it('uppercases the type in place so the handler switch matches', () => {
+        const req = makeReq({ query: { type: 'caa' } });
+        guard(req, makeRes(), () => {});
+        assert.equal(req.query.type, 'CAA');
+    });
+
+    it('rejects a missing type', () => {
+        const res = makeRes();
+        let nextCalled = false;
+        guard(makeReq({ query: {} }), res, () => { nextCalled = true; });
+        assert.equal(nextCalled, false);
+        assert.equal(res.statusCode, 400);
+        assert.deepEqual(res.body, { error: 'No record type provided' });
+    });
+
+    it('rejects a type the resolver does not handle, so DoH never forwards it', () => {
+        for (const type of ['ANY', 'DNSKEY', 'HTTPS', 'PTR', '../etc']) {
+            const res = makeRes();
+            let nextCalled = false;
+            guard(makeReq({ query: { type } }), res, () => { nextCalled = true; });
+            assert.equal(nextCalled, false, type);
+            assert.equal(res.statusCode, 400);
+            assert.deepEqual(res.body, { error: 'Invalid record type' });
+        }
+    });
+});
+
 describe('requireValidDomain', () => {
     const guard = requireValidDomain();
 
@@ -207,6 +295,15 @@ describe('requireValidDomain', () => {
         guard(req, makeRes(), () => { nextCalled = true; });
         assert.equal(nextCalled, true);
         assert.equal(req.query.domain, 'www.example.com');
+    });
+
+    it('supports a custom query parameter name', () => {
+        const hostnameGuard = requireValidDomain('hostname');
+        const req = makeReq({ query: { hostname: 'WWW.Example.COM' } });
+        let nextCalled = false;
+        hostnameGuard(req, makeRes(), () => { nextCalled = true; });
+        assert.equal(nextCalled, true);
+        assert.equal(req.query.hostname, 'www.example.com');
     });
 
     it('returns 400 when the domain is missing', () => {
@@ -225,6 +322,88 @@ describe('requireValidDomain', () => {
             guard(makeReq({ query: { domain: bad } }), res, () => { nextCalled = true; });
             assert.equal(res.statusCode, 400, `should reject "${bad}"`);
             assert.equal(nextCalled, false);
+        }
+    });
+});
+
+describe('requireValidASN', () => {
+    const guard = requireValidASN();
+
+    it('canonicalizes to the bare number string in place', () => {
+        for (const [input, expected] of [['13335', '13335'], ['AS13335', '13335'], ['as13335', '13335'],
+            ['AS013335', '13335'], ['0013335', '13335'], [' 13335 ', '13335'], ['1', '1'],
+            ['4294967295', '4294967295'], ['AS4294967295', '4294967295']]) {
+            const req = makeReq({ query: { asn: input } });
+            let nextCalled = false;
+            guard(req, makeRes(), () => { nextCalled = true; });
+            assert.equal(nextCalled, true, input);
+            assert.equal(req.query.asn, expected, input);
+        }
+    });
+
+    it('returns 400 "No ASN provided" when the param is missing', () => {
+        const res = makeRes();
+        let nextCalled = false;
+        guard(makeReq(), res, () => { nextCalled = true; });
+        assert.equal(res.statusCode, 400);
+        assert.equal(res.body.error, 'No ASN provided');
+        assert.equal(nextCalled, false);
+    });
+
+    it('returns 400 for AS0, values past 32 bits, overlong digit strings and non-ASNs', () => {
+        for (const bad of ['0', 'AS0', '000', '4294967296', 'AS99999999999', '00000000013335', '9'.repeat(400),
+            'ASN13335', '13335a', '-1', '1.5', 'AS 13335', 'not-an-asn', ['1', '2']]) {
+            const res = makeRes();
+            let nextCalled = false;
+            guard(makeReq({ query: { asn: bad } }), res, () => { nextCalled = true; });
+            assert.equal(res.statusCode, 400, `should reject "${bad}"`);
+            assert.equal(res.body.error, 'Invalid ASN');
+            assert.equal(nextCalled, false);
+        }
+    });
+
+    it('honours a custom param name', () => {
+        const req = makeReq({ query: { origin: 'AS64500' } });
+        let nextCalled = false;
+        requireValidASN('origin')(req, makeRes(), () => { nextCalled = true; });
+        assert.equal(nextCalled, true);
+        assert.equal(req.query.origin, '64500');
+    });
+});
+
+describe('normalizeAsnQuery', () => {
+    const guard = normalizeAsnQuery();
+
+    it('canonicalizes ASN-shaped values to AS<n> in place', () => {
+        for (const [input, expected] of [['AS13335', 'AS13335'], ['as13335', 'AS13335'], ['As13335', 'AS13335'],
+            ['AS013335', 'AS13335'], [' AS13335 ', 'AS13335'], ['AS4294967295', 'AS4294967295']]) {
+            const req = makeReq({ query: { q: input } });
+            let nextCalled = false;
+            guard(req, makeRes(), () => { nextCalled = true; });
+            assert.equal(nextCalled, true, input);
+            assert.equal(req.query.q, expected, input);
+        }
+    });
+
+    it('returns 400 for AS0 and values past 32 bits', () => {
+        for (const bad of ['AS0', 'as0', 'AS4294967296', 'AS99999999999']) {
+            const res = makeRes();
+            let nextCalled = false;
+            guard(makeReq({ query: { q: bad } }), res, () => { nextCalled = true; });
+            assert.equal(res.statusCode, 400, `should reject "${bad}"`);
+            assert.equal(res.body.error, 'Invalid ASN');
+            assert.equal(nextCalled, false);
+        }
+    });
+
+    it('passes IPs, domains, bare numbers, missing and array values through untouched', () => {
+        for (const query of [{ q: '1.1.1.1' }, { q: 'example.com' }, { q: 'ASN13335' }, {}, { q: ['AS1', 'AS2'] },
+            { q: '13335' }, { q: '0' }, { q: '99999999999' }]) {
+            const req = makeReq({ query: { ...query } });
+            let nextCalled = false;
+            guard(req, makeRes(), () => { nextCalled = true; });
+            assert.equal(nextCalled, true);
+            assert.deepEqual(req.query, query);
         }
     });
 });

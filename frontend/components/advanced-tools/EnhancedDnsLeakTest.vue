@@ -26,6 +26,17 @@
 
         <p v-if="errorMsg" class="text-sm text-destructive">{{ errorMsg }}</p>
 
+        <!-- Monthly quota exhausted: not an error — explain + sponsor path. -->
+        <div v-if="quotaExceeded"
+            class="flex items-start gap-2 p-3 rounded-md border border-warning/30 bg-warning/10 text-sm text-warning">
+            <Hourglass class="size-4 mt-0.5 shrink-0" />
+            <span>
+                {{ t('user.QuotaExceeded') }}
+                <button type="button" class="underline underline-offset-2 cursor-pointer"
+                    @click="openUsageDialog">{{ t('user.ViewUsage') }}</button>
+            </span>
+        </div>
+
         <!-- Flow progress: status dot + stage text + percent, then the bar. -->
         <Card v-if="showFlow">
             <CardContent class="px-4 py-6 space-y-3">
@@ -255,12 +266,14 @@
 
 <script setup>
 import { ref, reactive, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
 import { emitAppEvent } from '@/utils/app-events';
 import { authenticatedFetch } from '@/utils/authenticated-fetch';
 import getCountryName from '@/data/country-name.js';
+import { toApiTag } from '@/utils/locale-registry.js';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
@@ -277,11 +290,21 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-import { Play, Check, X, Info, Server, Hash, Route, MapPin, ShieldCheck, ShieldAlert } from '@lucide/vue';
+import { Play, Check, X, Hourglass, Info, Server, Hash, Route, MapPin, ShieldCheck, ShieldAlert } from '@lucide/vue';
 
 const { t } = useI18n();
 const store = useMainStore();
+const route = useRoute();
+const router = useRouter();
 const lang = computed(() => store.lang);
+
+// Open the Benefits & Usage dialog. Inside the Advanced Tools drawer the
+// dialog would stack on top of it — close the drawer first (it's driven by
+// the ?tool query; standalone pages don't carry it, nothing to close).
+const openUsageDialog = () => {
+    if (route.query.tool) router.push({ path: '/', query: {} });
+    store.setTriggerUserBenefits(true);
+};
 
 // NS-capture session config. Token + probe FQDNs are generated client-side;
 // the NS passively captures any {nonce}.{token}.{DOMAIN} that shows up.
@@ -295,6 +318,7 @@ const FETCH_MAX_ATTEMPTS = 3;
 // status: idle | firing | polling | fetching | done | error
 const status = ref('idle');
 const errorMsg = ref('');
+const quotaExceeded = ref(false);
 const result = ref(null);
 const dedupe = ref(true);
 
@@ -495,13 +519,8 @@ const animateProbes = async () => {
     }
 };
 
-// store.lang is 'zh' but the upstream keys on 'zh-CN' (same mapping as IpInfos/WebRtcTest).
-const apiLang = () => {
-    const current = lang.value;
-    if (current === 'zh') return 'zh-CN';
-    if (current && ['en', 'fr', 'ru', 'zh-CN'].includes(current)) return current;
-    return 'zh-CN';
-};
+// store.lang is a UI code ('zh'); the upstream keys on the apiTag ('zh-CN').
+const apiLang = () => toApiTag(lang.value);
 
 // authenticatedFetch attaches the Firebase ID token as Authorization; our
 // backend then forwards request headers to the upstream IPCheck.ing API.
@@ -519,7 +538,8 @@ const fetchResultWithRetry = async (token) => {
             return await fetchResultOnce(token);
         } catch (err) {
             lastErr = err;
-            if (err.message.includes('Sign in required') || err.message.includes('Invalid token')) {
+            if (err.message.includes('Sign in required') || err.message.includes('Invalid token')
+                || err.message.includes('quota_exceeded')) {
                 throw err;
             }
             console.warn(`[dnsleak] fetch attempt ${attempt}/${FETCH_MAX_ATTEMPTS} failed:`, err.message);
@@ -531,8 +551,16 @@ const fetchResultWithRetry = async (token) => {
 
 const runTest = async () => {
     if (!store.user) return;
+    // Frontend first line: skip the probe volley + polling entirely when the
+    // store's quota snapshot says the month is exhausted. The backend keeps
+    // enforcing the same limit (429) as the real guard.
+    if (store.quotaExceeded.dns_leak_test) {
+        quotaExceeded.value = true;
+        return;
+    }
     trackEvent('Section', 'StartClick', 'EnhancedDnsLeakTest');
     errorMsg.value = '';
+    quotaExceeded.value = false;
     result.value = null;
 
     try {
@@ -569,6 +597,14 @@ const runTest = async () => {
         emitAppEvent('enhanceddnsleak:finished', { ...result.value });
     } catch (error) {
         console.error('Enhanced DNS leak test failed:', error);
+        if (error.message.includes('quota_exceeded')) {
+            // Monthly quota exhausted — the hint box (with the sponsor path)
+            // replaces the generic error line.
+            quotaExceeded.value = true;
+            store.markQuotaExhausted('dns_leak_test');
+            status.value = 'error';
+            return;
+        }
         if (error.message.includes('Invalid token')) {
             errorMsg.value = t('user.InvalidUserToken');
         } else if (error.message.includes('Sign in required')) {
