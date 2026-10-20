@@ -112,6 +112,9 @@
         </CardContent>
       </Card>
     </div>
+
+    <!-- Section banner slot (data-driven; see InfoBanner.vue) -->
+    <InfoBanner section="webrtc" :settled="hasEverSettled" />
   </section>
 </template>
 
@@ -120,7 +123,8 @@ import { ref, computed, onMounted, onBeforeUnmount, reactive, watch } from 'vue'
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
-import { emitAppEvent } from '@/utils/app-events';
+import { emitAppEvent, waitForAppEvent } from '@/utils/app-events';
+import { useAppCommand } from '@/composables/use-app-command.js';
 import { JnTooltip } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -132,6 +136,7 @@ import { Play, MapPin, EthernetPort, Flower, Network, RotateCw, FileText, Chevro
 import { Icon } from '@iconify/vue';
 import FitText from '@/components/widgets/FitText.vue';
 import CopyButton from '@/components/widgets/CopyButton.vue';
+import InfoBanner from '@/components/widgets/InfoBanner.vue';
 import { INLINE_TIERS } from '@/composables/use-fit-text.js';
 
 const { t } = useI18n();
@@ -144,6 +149,9 @@ const { dotClass, textClass } = useStatusTone();
 const { lookupMaxmind } = useMaxmind();
 
 const isStarted = ref(false);
+// Sticky settled flag for the section's banner slot: true once a full STUN
+// pass finishes (including the WebRTC-unavailable path).
+const hasEverSettled = ref(false);
 const IPArray = ref([]);
 const stunServers = reactive([
   { id: 'google', url: 'stun.l.google.com:19302', ip: t('webrtc.StatusWait'), natType: t('webrtc.StatusWait'), country: t('webrtc.StatusWait'), country_code: '', org: t('webrtc.StatusWait'), sdpLog: [], sdpOpen: false },
@@ -171,7 +179,7 @@ const isWebRtcAvailable = typeof RTCPeerConnection === 'function';
 const toneOf = (stun) => stun.ip === t('webrtc.StatusUnavailable')
   ? 'ok-fast'
   : ipFieldTone(stun.ip, {
-    waitLabels: t('webrtc.StatusWait'),
+    waitLabels: [t('webrtc.StatusWait'), t('webrtc.StatusTesting')],
     errorLabels: t('webrtc.StatusError'),
   });
 
@@ -179,7 +187,7 @@ const toneOf = (stun) => stun.ip === t('webrtc.StatusUnavailable')
 // Fields may fail independently (e.g. IP success but country lookup fails),
 // so the check is run per-field in the template.
 const isFieldPending = (value) => isFieldPendingShared(value, {
-  waitLabels: t('webrtc.StatusWait'),
+  waitLabels: [t('webrtc.StatusWait'), t('webrtc.StatusTesting')],
   errorLabels: [t('webrtc.StatusError'), t('webrtc.StatusUnavailable')],
 });
 
@@ -382,6 +390,7 @@ const natTypeCodeOf = (candidate) => {
 // Domain event: snapshot of all STUN cards for the report collector (servers
 // still waiting carry no natTypeCode and are dropped by the builder).
 const emitWebrtcFinished = () => {
+  hasEverSettled.value = true;
   emitAppEvent('webrtc:finished', {
     servers: stunServers.map((server) => ({
       id: server.id,
@@ -418,12 +427,12 @@ const checkAllWebRTC = async (isRefresh) => {
   }
 
   const promises = stunServers.map((server) => {
-    server.ip = t('webrtc.StatusWait');
-    server.natType = t('webrtc.StatusWait');
+    server.ip = t('webrtc.StatusTesting');
+    server.natType = t('webrtc.StatusTesting');
     server.natTypeCode = undefined;
-    server.country = t('webrtc.StatusWait');
+    server.country = t('webrtc.StatusTesting');
     server.country_code = '';
-    server.org = t('webrtc.StatusWait');
+    server.org = t('webrtc.StatusTesting');
     return checkSTUNServer(server);
   });
 
@@ -434,6 +443,14 @@ const checkAllWebRTC = async (isRefresh) => {
     emitWebrtcFinished();
   });
 };
+
+// Command owner: run all STUN checks. Resolves with the next webrtc:finished
+// snapshot (also emitted when WebRTC is unavailable in this browser).
+useAppCommand('webrtc:run', ({ isRefresh = false } = {}) => {
+  const finished = waitForAppEvent('webrtc:finished');
+  checkAllWebRTC(isRefresh);
+  return finished;
+});
 
 onMounted(() => {
   store.setMountingStatus('WebRTC', true);
@@ -450,9 +467,4 @@ onBeforeUnmount(() => {
 watch(IPArray, () => {
   store.updateAllIPs(IPArray.value);
 }, { deep: true });
-
-defineExpose({
-  checkAllWebRTC,
-  stunServers,
-});
 </script>

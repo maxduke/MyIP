@@ -22,7 +22,7 @@
             <Card v-for="card in enabledCards" :key="card.slug"
                 :data-adv-slug="card.slug"
                 class="keyboard-shortcut-card jn-card jn-adv-card group relative overflow-visible transition-transform duration-300 ease-out hover:-translate-y-1.5 data-[keyboard-hover=true]:ring-2 data-[keyboard-hover=true]:ring-green-500/50">
-                <a :href="`/tools/${card.slug}`"
+                <a :href="card.noStandalone ? `/?tool=${card.slug}` : `/tools/${card.slug}`"
                     class="block cursor-pointer no-underline text-inherit"
                     @click="onCardClick($event, card.slug)"
                     @keydown.enter.prevent="openTool(card.slug)"
@@ -64,8 +64,10 @@
                     </span>
                     <span v-else class="flex-1" />
                     <!-- Open the current tool as a standalone page (hidden in a
-                         PWA window, which has no new-tab affordance) -->
-                    <a v-if="activeTool && !isPwa" :href="`/tools/${activeTool.slug}`" target="_blank" rel="noopener"
+                         PWA window, which has no new-tab affordance, and for
+                         noStandalone tools, which have no such page) -->
+                    <a v-if="activeTool && !isPwa && !activeTool.noStandalone" :href="`/tools/${activeTool.slug}`"
+                        target="_blank" rel="noopener"
                         class="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                         :title="t('advancedtools.OpenInNewTab')" :aria-label="t('advancedtools.OpenInNewTab')">
                         <SquareArrowOutUpRight class="size-4" />
@@ -81,6 +83,9 @@
                 </div>
             </DrawerContent>
         </Drawer>
+
+        <!-- Section banner slot (data-driven; see InfoBanner.vue) -->
+        <InfoBanner section="advanced" />
     </section>
 </template>
 
@@ -91,9 +96,12 @@ import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
 import { ADVANCED_TOOLS, TOOL_BY_SLUG } from '@/data/tools.js';
+import { isToolAvailable } from '@/utils/tool-availability.js';
 import { isRunningAsPwa } from '@/utils/pwa.js';
 import { Drawer, DrawerContent, DrawerClose } from '@/components/ui/drawer';
 import { Card, CardContent } from '@/components/ui/card';
+import { ToolLoadingSkeleton } from '@/components/ui/tool-loading-skeleton';
+import InfoBanner from '@/components/widgets/InfoBanner.vue';
 import { Maximize, Minimize, PanelBottomOpen, SquareArrowOutUpRight } from '@lucide/vue';
 
 const { t } = useI18n();
@@ -114,12 +122,9 @@ const router = useRouter();
 // is mapped from the registry's `emoji` so the template key stays stable.
 const cards = ADVANCED_TOOLS.map((tool) => ({ ...tool, icon: tool.emoji }));
 
-// Gate: the invisibility + enhanced DNS-leak tools only show on the original
-// site (they need the private API + sign-in). Reactive on configs, so they
-// appear the moment configs land — no fixed timeout needed.
-const enabledCards = computed(() =>
-    cards.filter((c) => !c.requiresOriginalSite || configs.value.originalSite),
-);
+// Deployment gates (original site / configs flag, see utils/tool-availability.js).
+// Reactive on configs, so gated cards appear the moment configs land.
+const enabledCards = computed(() => cards.filter((card) => isToolAvailable(card, configs.value)));
 
 // ── Drawer state, driven by the `?tool=<slug>` query on the home route ───────
 // `?tool=whois` ⇒ the drawer is open showing Whois. Closing clears the query.
@@ -130,13 +135,18 @@ const activeTool = computed(() => {
 const isOpen = computed(() => !!activeTool.value);
 
 // Resolve each tool's lazy component once and cache it, so re-renders don't
-// rebuild the async wrapper (which would remount the tool).
+// rebuild the async wrapper (which would remount the tool). The skeleton
+// covers the chunk download; `delay` keeps fast loads flash-free.
 const asyncToolCache = new Map();
 const activeComponent = computed(() => {
     const tool = activeTool.value;
     if (!tool) return null;
     if (!asyncToolCache.has(tool.slug)) {
-        asyncToolCache.set(tool.slug, defineAsyncComponent(tool.component));
+        asyncToolCache.set(tool.slug, defineAsyncComponent({
+            loader: tool.component,
+            loadingComponent: ToolLoadingSkeleton,
+            delay: 200,
+        }));
     }
     return asyncToolCache.get(tool.slug);
 });

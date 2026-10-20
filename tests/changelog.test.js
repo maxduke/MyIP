@@ -6,8 +6,11 @@ import { describe, it } from 'node:test';
 import fs from 'node:fs';
 
 import changelog from '../frontend/data/changelog.json' with { type: 'json' };
+import { FULL_LOCALE_CODES } from '../common/locale-registry.js';
 
-const REQUIRED_LOCALES = ['en', 'zh', 'fr', 'ru'];
+// Beta locales are exempt: back-translating the whole history is the single
+// biggest deterrent to a first translation PR.
+const REQUIRED_LOCALES = FULL_LOCALE_CODES;
 const VALID_TYPES = new Set(['add', 'improve', 'fix']);
 
 describe('changelog.json', () => {
@@ -21,6 +24,9 @@ describe('changelog.json', () => {
             assert.equal(typeof v.version, 'string', `missing version string`);
             assert.match(v.version, /^v\d+\.\d+/, `version ${v.version} should look like "vX.Y"`);
             assert.equal(typeof v.date, 'string', `${v.version} missing date`);
+            // ISO dates localize per viewer in the Footer; "Beta" marks the unreleased entry.
+            assert.match(v.date, /^(\d{4}-\d{2}-\d{2}|Beta)$/,
+                `${v.version} date must be ISO "YYYY-MM-DD" (or "Beta"), got "${v.date}"`);
             assert.ok(Array.isArray(v.content), `${v.version} content must be an array`);
             assert.ok(v.content.length > 0, `${v.version} content must be non-empty`);
         }

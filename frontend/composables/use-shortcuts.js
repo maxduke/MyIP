@@ -1,39 +1,50 @@
 // Keyboard shortcut registration
 //
 // Input:
-//   - refs: all components involved in the shortcut keys (see below for destructuring)
+//   - refs: UI chrome the shortcut keys drive (see below for destructuring) —
+//     test sections aren't here, they're reached via the command bus
 //   - store: main store
 //   - t: i18n translation function
 //   - configs: computed(() => store.configs)
 //   - userPreferences: computed(() => store.userPreferences)
 //
 // Output:
-//   - loadShortcuts(): should be called onMounted, internally will delay 2s to wait for configs to load,
-//     then register all mappings and pass keyMap to helpModalRef (for help modal)
+//   - loadShortcuts(): should be called onMounted; registers all mappings
+//     immediately and passes keyMap to helpModalRef (for help modal).
+//     Config-gated keys fill in reactively when /api/configs lands
 //
 // Note:
-//   - all scrolling + navigation actions use scrollToElement + advancedToolsRef.openTool(slug)
+//   - scrolling + navigation actions use scrollToElement + advancedToolsRef.openTool(slug);
+//     test-running keys dispatch commands on utils/app-commands.js
 //   - `h` key infoMask switch only executes when isInfosLoaded is true
+//   - every entry here is a home-page action. Overlays (Dialog / Sheet /
+//     Drawer) suspend the whole map while they are open — see
+//     utils/shortcut.js — so nothing needs a per-key "is something covering
+//     the page?" check.
 
-import { watch } from 'vue';
+import { getCurrentScope, onScopeDispose, watch } from 'vue';
 import { trackEvent } from '../utils/analytics.js';
 import { emitAppEvent } from '../utils/app-events.js';
-import { mappingKeys, keyMap, navigateCards } from '../utils/shortcut.js';
+import { dispatchAppCommand } from '../utils/app-commands.js';
+import { registerShortcuts, keyMap, navigateCards } from '../utils/shortcut.js';
 import { scrollToElement } from '../utils/scroll-to.js';
+import { hasPulseBackend } from '../utils/pulse-beacon.js';
 
-function buildShortcutConfig({ refs, store, t, configs, userPreferences }) {
+// A shortcut only kicks the run off — completion is the owner's business —
+// so a failed dispatch just logs.
+const runCommand = (name, payload) => {
+    dispatchAppCommand(name, payload).catch((error) => {
+        console.warn(`[shortcuts] ${name} failed:`, error);
+    });
+};
+
+const buildShortcutConfig = ({ refs, store, t, configs, userPreferences }) => {
     const {
         queryIPRef,
         helpModalRef,
         shareReportRef,
-        speedTestRef,
         advancedToolsRef,
-        IPCheckRef,
-        connectivityRef,
-        webRTCRef,
-        dnsLeaksRef,
         isInfosLoaded,
-        isToolOpen,
         toggleInfoMask,
     } = refs;
 
@@ -63,19 +74,28 @@ function buildShortcutConfig({ refs, store, t, configs, userPreferences }) {
             description: t('shortcutKeys.GoPrevious'),
         },
         {
-            // Open the currently J/K-highlighted card if it's an Advanced Tool
-            // (those carry data-adv-slug). No-op for any other card type —
-            // IP cards, Connectivity, WebRTC, etc. have their own refresh
-            // shortcuts rather than an "open" concept.
+            // Open the currently J/K-highlighted card: an Advanced Tool card
+            // (data-adv-slug) opens its tool; a Connectivity card opens its
+            // website via the card's own <a data-card-open> — which only
+            // exists with the open-website App Setting on, so target/rel and
+            // the preference gate all ride the real link. No-op for any
+            // other card type — IP cards, WebRTC, etc. have their own
+            // refresh shortcuts rather than an "open" concept.
             keys: 'o',
             action: () => {
                 const highlighted = document.querySelector(
                     '.keyboard-shortcut-card[data-keyboard-hover="true"]'
                 );
                 const slug = highlighted?.getAttribute('data-adv-slug');
-                if (!slug) return;
-                advancedToolsRef.value.openTool(slug);
-                trackEvent('ShortCut', 'ShortCut', 'OpenHighlightedTool');
+                if (slug) {
+                    advancedToolsRef.value.openTool(slug);
+                    trackEvent('ShortCut', 'ShortCut', 'OpenHighlightedTool');
+                    return;
+                }
+                const link = highlighted?.querySelector('a[data-card-open][href]');
+                if (!link) return;
+                link.click();
+                trackEvent('ShortCut', 'ShortCut', 'OpenHighlightedSite');
             },
             description: t('shortcutKeys.OpenHighlightedTool'),
         },
@@ -100,9 +120,8 @@ function buildShortcutConfig({ refs, store, t, configs, userPreferences }) {
             type: 'regex',
             action: (num) => {
                 if (num > userPreferences.value.ipCardsToShow) return;
-                const card = IPCheckRef.value.ipDataCards[num - 1];
                 scrollToElement('IPInfoCard-' + num, 70);
-                IPCheckRef.value.refreshCard(card, num - 1);
+                runCommand('ipinfo:refresh', { index: num - 1 });
                 trackEvent('ShortCut', 'ShortCut', 'IPCheck');
             },
             description: t('shortcutKeys.RefreshIPCard'),
@@ -111,7 +130,7 @@ function buildShortcutConfig({ refs, store, t, configs, userPreferences }) {
             keys: 'c',
             action: () => {
                 scrollToElement('Connectivity', 80);
-                connectivityRef.value.handelCheckStart('manual');
+                runCommand('connectivity:run', { trigger: 'manual' });
                 trackEvent('ShortCut', 'ShortCut', 'Connectivity');
             },
             description: t('shortcutKeys.RefreshConnectivityTests'),
@@ -120,7 +139,7 @@ function buildShortcutConfig({ refs, store, t, configs, userPreferences }) {
             keys: 'w',
             action: () => {
                 scrollToElement('WebRTC', 80);
-                webRTCRef.value.checkAllWebRTC(false);
+                runCommand('webrtc:run', { isRefresh: false });
                 trackEvent('ShortCut', 'ShortCut', 'WebRTC');
             },
             description: t('shortcutKeys.RefreshWebRTC'),
@@ -129,7 +148,7 @@ function buildShortcutConfig({ refs, store, t, configs, userPreferences }) {
             keys: 'd',
             action: () => {
                 scrollToElement('DNSLeakTest', 80);
-                dnsLeaksRef.value.checkAllDNSLeakTest(true);
+                runCommand('dnsleak:run', { isRefresh: true });
                 trackEvent('ShortCut', 'ShortCut', 'DNSLeakTest');
             },
             description: t('shortcutKeys.RefreshDNSLeakTest'),
@@ -138,13 +157,14 @@ function buildShortcutConfig({ refs, store, t, configs, userPreferences }) {
             keys: 's',
             action: () => {
                 scrollToElement('SpeedTest', 80);
-                speedTestRef.value.speedTestController();
+                runCommand('speedtest:toggle');
                 trackEvent('ShortCut', 'ShortCut', 'SpeedTest');
             },
             description: t('shortcutKeys.SpeedTestButton'),
         },
         { keys: 'l', action: () => goToAdvancedTool('pingtest', 'PingTest'), description: t('shortcutKeys.PingTest') },
         { keys: 'M', action: () => goToAdvancedTool('macchecker', 'MacChecker'), description: t('shortcutKeys.MacChecker') },
+        { keys: 'a', action: () => goToAdvancedTool('ipcalculator', 'IpCalculator'), description: t('shortcutKeys.IpCalculator') },
         { keys: 't', action: () => goToAdvancedTool('mtrtest', 'MTRTest'), description: t('shortcutKeys.MTRTest') },
         { keys: 'S', action: () => goToAdvancedTool('securitychecklist', 'SecurityChecklist'), description: t('shortcutKeys.SecurityChecklist') },
         { keys: 'r', action: () => goToAdvancedTool('ruletest', 'RuleTest'), description: t('shortcutKeys.RuleTest') },
@@ -153,16 +173,6 @@ function buildShortcutConfig({ refs, store, t, configs, userPreferences }) {
         { keys: 'b', action: () => goToAdvancedTool('browserinfo', 'BrowserInfo'), description: t('shortcutKeys.BrowserInfo') },
         { keys: 'W', action: () => goToAdvancedTool('whois', 'Whois'), description: t('shortcutKeys.Whois') },
         { keys: 'v', action: () => goToAdvancedTool('servicestatus', 'ServiceStatus'), description: t('shortcutKeys.ServiceStatus') },
-        {
-            keys: 'f',
-            action: () => {
-                if (isToolOpen.value) {
-                    advancedToolsRef.value.fullScreen();
-                    trackEvent('ShortCut', 'ShortCut', 'FullScreen');
-                }
-            },
-            description: t('shortcutKeys.fullScreenAdvancedTools'),
-        },
         {
             keys: 'q',
             // Async components (see Home.vue): ref is null until the chunk
@@ -218,34 +228,81 @@ function buildShortcutConfig({ refs, store, t, configs, userPreferences }) {
             action: () => goToAdvancedTool('enhanceddnsleaktest', 'EnhancedDnsLeakTest'),
             description: t('shortcutKeys.EnhancedDnsLeakTest'),
         });
+        // Uppercase P: lowercase `p` belongs to Earth Online.
+        config.push({
+            keys: 'P',
+            action: () => goToAdvancedTool('personacheck', 'PersonaCheck'),
+            description: t('shortcutKeys.PersonaCheck'),
+        });
+    }
+
+    // Uppercase A: lowercase `a` belongs to the IP calculator. Gated like the
+    // ASN Profile card itself (data/tools.js `requiresConfig`).
+    if (configs.value.cloudFlare) {
+        config.push({
+            keys: 'A',
+            action: () => goToAdvancedTool('asn', 'AsnProfile'),
+            description: t('shortcutKeys.AsnProfile'),
+        });
+    }
+
+    // Mirrors the Earth Online entry's visibility (widgets/Pulse.vue).
+    if (hasPulseBackend || configs.value.cloudFlare) {
+        config.push({
+            keys: 'p',
+            action: () => {
+                store.toggleSheet('pulse');
+                trackEvent('ShortCut', 'ShortCut', 'Pulse');
+            },
+            description: t('shortcutKeys.Pulse'),
+        });
     }
 
     return config;
-}
+};
 
-export function useShortcuts({ refs, store, t, configs, userPreferences }) {
+export const useShortcuts = ({ refs, store, t, configs, userPreferences }) => {
+    // Suspending the map behind an overlay is the primitives' job
+    // (composables/use-overlay-shortcuts.js), so nothing is wired here.
+    //
+    // Home is the only route that registers shortcuts; drop them when it
+    // unmounts, so keystrokes on /privacy or /r/:id can't reach refs that no
+    // longer point at anything.
+    let disposed = false;
+    if (getCurrentScope()) {
+        onScopeDispose(() => {
+            disposed = true;
+            registerShortcuts([]);
+        });
+    }
+
     const registerShortcutKeys = () => {
-        const shortcuts = buildShortcutConfig({ refs, store, t, configs, userPreferences });
-        shortcuts.forEach((entry) => mappingKeys(entry));
+        registerShortcuts(buildShortcutConfig({ refs, store, t, configs, userPreferences }));
     };
 
     const loadShortcuts = () => {
-        setTimeout(() => {
-            registerShortcutKeys();
-            // Help is an async component (Home.vue): on slow networks its
-            // chunk may land after this timer, so wait for the ref instead
-            // of silently skipping the keyMap hand-off.
-            if (refs.helpModalRef.value) {
-                refs.helpModalRef.value.keyMap = keyMap;
-            } else {
-                const stop = watch(refs.helpModalRef, (help) => {
-                    if (!help) return;
-                    help.keyMap = keyMap;
-                    stop();
-                });
-            }
-        }, 2000);
+        // Register immediately so the base keys work from the first paint;
+        // config-gated keys (originalSite's i/D/P, pulse's p) fill in when
+        // /api/configs lands (`{}` → data, once per page load) and the watcher
+        // rebuilds the map. keyMap is mutated in place (utils/shortcut.js),
+        // so the help modal's reference stays current across rebuilds.
+        registerShortcutKeys();
+        watch(configs, () => {
+            if (!disposed) registerShortcutKeys();
+        });
+        // Help is an async component (Home.vue): on slow networks its chunk
+        // may land later, so wait for the ref instead of silently skipping
+        // the keyMap hand-off.
+        if (refs.helpModalRef.value) {
+            refs.helpModalRef.value.keyMap = keyMap;
+        } else {
+            const stop = watch(refs.helpModalRef, (help) => {
+                if (!help) return;
+                help.keyMap = keyMap;
+                stop();
+            });
+        }
     };
 
     return { loadShortcuts };
-}
+};

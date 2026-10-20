@@ -3,16 +3,7 @@
 // Avoid the duplicate call to keep this a pure, fast function.
 
 function refererCheck(referer) {
-    const vercelDomains = [
-        process.env.VERCEL_URL,
-        process.env.VERCEL_BRANCH_URL,
-        process.env.VERCEL_PROJECT_PRODUCTION_URL,
-    ];
-    const allowedDomains = new Set([
-        'localhost',
-        ...(process.env.ALLOWED_DOMAINS || '').split(','),
-        ...vercelDomains,
-    ].map((domain) => domain?.trim()).filter(Boolean));
+    const allowedDomains = ['localhost', ...(process.env.ALLOWED_DOMAINS || '').split(',')];
 
     if (referer) {
         // Scanners send garbage Referer headers; a parse failure means
@@ -23,7 +14,7 @@ function refererCheck(referer) {
         } catch {
             return false;
         }
-        return allowedDomains.has(domain);
+        return allowedDomains.includes(domain);
     }
     return false;  // if no referer is provided, return false
 }

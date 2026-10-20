@@ -47,6 +47,7 @@ import { useMainStore } from '@/store';
 import { isAnalyticsEnabled } from '@/utils/analytics';
 import { isDocsConfigured } from '@/composables/use-docs-assistant.js';
 import { useDocumentMeta } from '@/composables/use-document-meta.js';
+import { datasetLoaders, loadLocaleDataset } from '@/utils/locale-datasets.js';
 import Footer from '@/components/Footer.vue';
 import StandalonePageHeader from '@/components/StandalonePageHeader.vue';
 import { Spinner } from '@/components/ui/spinner';
@@ -56,7 +57,7 @@ const store = useMainStore();
 const { isFireBaseSet } = storeToRefs(store);
 
 // Bump when the policy text changes materially.
-const LAST_UPDATED = '2026-07-28';
+const LAST_UPDATED = '2026-08-20';
 
 // Sentry telemetry is a build-time decision (see frontend/AGENTS.md): the
 // section only renders on deployments actually built with a DSN.
@@ -71,45 +72,45 @@ const isReportSharingEnabled = computed(() => store.configs?.reportSharing === t
 // section never describes a feature this deployment doesn't ship.
 const isDocsAssistantEnabled = computed(() => isDocsConfigured && store.configs?.originalSite === true);
 
-// Privacy copy is loaded on demand per locale (mirrors the security-checklist
-// dataset pattern), then merged into i18n so t() / tm() can resolve it.
-const privacyLoaders = {
-  en: () => import('@/locales/privacy/en.json'),
-  zh: () => import('@/locales/privacy/zh.json'),
-  fr: () => import('@/locales/privacy/fr.json'),
-  ru: () => import('@/locales/privacy/ru.json'),
-};
+// Persona Check is the one tool whose measurements leave the browser, so it
+// gets its own section — gated exactly like the tool itself (originalSite in
+// data/tools.js), which keeps the section off deployments without it.
+const isPersonaCheckEnabled = computed(() => store.configs?.originalSite === true);
 
-const loaded = new Set();
+// Privacy copy is loaded on demand per locale (same loader as the security
+// checklist dataset), then merged into i18n so t() / tm() can resolve it.
+// A pack is complete or absent (tests/locale-packs.test.js), so whichever
+// pack the chain resolves to is merged under the ACTIVE locale — the page
+// reveals with one language, never a mix, and never raw keys unless the whole
+// chain is unreachable.
+const privacyLoaders = datasetLoaders(import.meta.glob('../locales/privacy/*.json'));
+const privacyCache = new Map();
+const merged = new Set();
 const ready = ref(false);
 
-// Merge one locale's privacy copy into i18n (memoized). Does NOT touch `ready` —
-// the caller decides when to reveal, so a background fallback load can't race the
-// active locale and paint the wrong language.
-const loadPrivacy = async (loc) => {
-  if (loaded.has(loc)) return;
-  const load = privacyLoaders[loc] || privacyLoaders.en;
-  const { default: msgs } = await load();
-  mergeLocaleMessage(loc, msgs);
-  loaded.add(loc);
-};
-
-// Reveal only after the ACTIVE locale's copy is merged — otherwise the en
-// fallback load could resolve first and paint English (t() falling back) until
-// the next re-render. The en fallback (covering any key the active locale might
-// miss) loads in the background and doesn't gate the reveal.
 watch(locale, async (loc) => {
   ready.value = false;
-  await loadPrivacy(loc);
-  if (loc === locale.value) ready.value = true; // ignore a stale load if locale changed mid-flight
-  if (loc !== 'en') loadPrivacy('en');
+  const pack = await loadLocaleDataset(privacyLoaders, loc, privacyCache);
+  if (loc !== locale.value) return; // stale load — the locale changed mid-flight
+  if (pack) {
+    if (!merged.has(loc)) mergeLocaleMessage(loc, pack.data);
+    merged.add(loc);
+  } else {
+    console.error('Privacy copy unavailable in every locale; rendering keys');
+  }
+  ready.value = true;
 }, { immediate: true });
 
 // Ordered section ids, gated on which collection actually happens here. The
 // "why" section explains the reason for whichever collection is active.
 const order = computed(() => {
   const ids = ['tools'];
+  // Earth Online — gated on the pulse beacon backend (build-time), where all its
+  // collection (beacon / status sends) happens; the outage-only mode
+  // collects nothing, so no section.
+  if ((import.meta.env ?? {}).VITE_PULSE_BEACON_URL) ids.push('pulse');
   if (isReportSharingEnabled.value) ids.push('sharedReports');
+  if (isPersonaCheckEnabled.value) ids.push('personaCheck');
   if (isDocsAssistantEnabled.value) ids.push('docsAssistant');
   if (isAnalyticsEnabled) ids.push('analytics');
   if (isFireBaseSet.value) ids.push('account');

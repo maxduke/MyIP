@@ -1,12 +1,15 @@
 // Express middleware that factors out the boilerplate every api/ handler
-// used to repeat at the top of its function body: referer check, IP presence
-// check, IP validity check. Mount once in backend-server.js; handlers stop
-// carrying the defensive checks and can't accidentally forget them.
+// used to repeat at the top of its function body: referer check, param
+// presence check, param validity check. Mount once in backend-server.js;
+// handlers stop carrying the defensive checks and can't accidentally forget
+// them.
 
 import { refererCheck } from './referer-check.js';
-import { isValidIP, isValidDomain } from './valid-ip.js';
+import { isValidIP, isValidDomain, isUsablePublicIP } from './valid-ip.js';
 import { isValidBgpPrefix } from './bgp-prefix.js';
 import { STATUS_PROVIDER_IDS } from './service-status-providers.js';
+import { DNS_RECORD_TYPE_SET } from './dns-record-types.js';
+import { parseAsnInput } from './asn-input.js';
 
 // Reject requests without an allowed referer. The error message variant
 // preserves the existing user-facing wording.
@@ -20,16 +23,23 @@ export const requireReferer = (req, res, next) => {
     next();
 };
 
-// Reject requests without a valid IP in the specified query param.
-// Factory so handlers that use a non-default param name (none today, but
-// leaving the door open) can say `requireValidIP('query')` etc.
-export const requireValidIP = (paramName = 'ip') => (req, res, next) => {
+// Reject requests whose IP query param isn't a publicly routable address.
+// Every `?ip=` route asks an external service about that address — a
+// registry, a geolocation source — and reserved space has no answer there,
+// so it never reaches an upstream call. Malformed input and reserved space
+// get distinct messages; the two failures need different fixes.
+// Factory so a route using another param name (none today, but leaving the
+// door open) can say `requirePublicIP('target')`.
+export const requirePublicIP = (paramName = 'ip') => (req, res, next) => {
     const ip = req.query[paramName];
     if (!ip) {
         return res.status(400).json({ error: 'No IP address provided' });
     }
     if (!isValidIP(ip)) {
         return res.status(400).json({ error: 'Invalid IP address' });
+    }
+    if (!isUsablePublicIP(ip)) {
+        return res.status(400).json({ error: 'Not a public IP address' });
     }
     next();
 };
@@ -65,19 +75,51 @@ export const requireValidPrefix = (paramName = 'prefix') => (req, res, next) => 
     next();
 };
 
-// Reject requests without a valid ASN (numeric, with optional 'AS' prefix).
-// Used by /api/asn-connectivity; other ASN-taking handlers (cf-radar) still
-// validate inline for historical reasons.
+// Reject requests without a valid ASN (AS1 … AS4294967295, up to ten
+// digits, optional 'AS' prefix — parseAsnInput in common/asn-input.js) and
+// rewrite it in place to the canonical number string (`AS013335` → `13335`),
+// so the edge cache sees one key. Used by /api/asn-connectivity,
+// /api/asn-profile and, per-view, the /api/cfradar dispatcher.
 export const requireValidASN = (paramName = 'asn') => (req, res, next) => {
     const raw = req.query[paramName];
     if (!raw) {
         return res.status(400).json({ error: 'No ASN provided' });
     }
-    const numeric = String(raw).replace(/^AS/i, '');
-    if (!/^[0-9]+$/.test(numeric)) {
+    const asn = parseAsnInput(raw);
+    if (asn === null) {
         return res.status(400).json({ error: 'Invalid ASN' });
     }
-    req.query[paramName] = numeric;
+    req.query[paramName] = String(asn);
+    next();
+};
+
+// Canonicalize an ASN-shaped value (`AS13335`, `as13335` — the `AS` prefix
+// is required) to `AS<n>` in place, rejecting AS0 and anything past 32 bits.
+// Any other value, a bare number included, passes through untouched —
+// /api/whois also takes IPs and domains, which its handler validates.
+export const normalizeAsnQuery = (paramName = 'q') => (req, res, next) => {
+    const raw = req.query[paramName];
+    if (typeof raw !== 'string' || !/^AS\d+$/i.test(raw.trim())) return next();
+    const asn = parseAsnInput(raw, { requirePrefix: true });
+    if (asn === null) {
+        return res.status(400).json({ error: 'Invalid ASN' });
+    }
+    req.query[paramName] = `AS${asn}`;
+    next();
+};
+
+// Reject requests without a two-letter country code; uppercases in place so
+// the edge cache sees one canonical key. Syntactic only — an unassigned code
+// just yields an empty upstream series.
+export const requireValidCountry = (paramName = 'country') => (req, res, next) => {
+    const raw = req.query[paramName];
+    if (!raw) {
+        return res.status(400).json({ error: 'No country provided' });
+    }
+    if (!/^[A-Za-z]{2}$/.test(raw)) {
+        return res.status(400).json({ error: 'Invalid country' });
+    }
+    req.query[paramName] = String(raw).toUpperCase();
     next();
 };
 
@@ -89,6 +131,21 @@ export const requireValidReportId = (paramName = 'id') => (req, res, next) => {
     if (!id || !/^[A-Za-z0-9_-]{22}$/.test(id)) {
         return res.status(400).json({ error: 'Invalid report id' });
     }
+    next();
+};
+
+// Whitelist ?type= against the record types the resolver actually handles.
+// Without it the DoH branch forwards any string verbatim to four third-party
+// endpoints, which makes this route a query proxy for types we never support.
+export const requireValidRecordType = (paramName = 'type') => (req, res, next) => {
+    const type = req.query[paramName];
+    if (!type) {
+        return res.status(400).json({ error: 'No record type provided' });
+    }
+    if (!DNS_RECORD_TYPE_SET.has(String(type).toUpperCase())) {
+        return res.status(400).json({ error: 'Invalid record type' });
+    }
+    req.query[paramName] = String(type).toUpperCase();
     next();
 };
 

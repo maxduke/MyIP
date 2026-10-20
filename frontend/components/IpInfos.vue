@@ -22,6 +22,10 @@
           :asnConnectivityInfos="asnConnectivityInfos" @refresh-card="refreshCard" />
       </div>
     </div>
+
+    <!-- Section banner slot — renders nothing unless a data file for this
+        section exists (see InfoBanner.vue). -->
+    <InfoBanner section="ipinfo" :settled="cardsHaveSettled" />
   </section>
 </template>
 
@@ -31,12 +35,16 @@ import { ref, computed, onMounted, reactive, watch } from 'vue';
 import { useMainStore } from '@/store';
 import { useI18n } from 'vue-i18n';
 import { trackEvent } from '@/utils/analytics';
-import { isValidIP } from '@/utils/valid-ip.js';
+import { isUsablePublicIP } from '@/utils/valid-ip.js';
+import { toApiTag } from '@/utils/locale-registry.js';
 import { transformDataFromIPapi } from '@/utils/transform-ip-data.js';
 import { getIPFromIPIP, getIPFromCloudflare_V4, getIPFromCloudflare_V6, getIPFromIPChecking64, getIPFromIPChecking4, getIPFromIPChecking6 } from '@/utils/getips';
-import { emitAppEvent } from '@/utils/app-events';
-import { authenticatedFetch } from '@/utils/authenticated-fetch';
+import { emitAppEvent, waitForAppEvent } from '@/utils/app-events';
+import { useAppCommand } from '@/composables/use-app-command.js';
+import { useAsnInfo } from '@/composables/use-asn-info.js';
+import { authenticatedFetch, fetchErrorLabel, logSourceFetchFailure } from '@/utils/authenticated-fetch';
 import IPCard from './ip-infos/IPCard.vue';
+import InfoBanner from './widgets/InfoBanner.vue';
 
 
 const { t } = useI18n();
@@ -56,6 +64,7 @@ const createDefaultCard = () => ({
   country_name: "",
   region: "",
   city: "",
+  timezone: "",
   latitude: "",
   longitude: "",
   isp: "",
@@ -101,8 +110,8 @@ const ipDataCards = reactive([
   },
 ]);
 
-// Default ASN information
-const asnInfos = ref({
+// ASN information (Radar summary) session cache, with a default entry.
+const { asnInfos } = useAsnInfo({
   "AS888888": {
     "asnName": "Google", "asnOrgName": "GOGL-ARIN", "estimatedUsers": "888888", "IPv4_Pct": "95.35", "IPv6_Pct": "4.65", "HTTP_Pct": "3.16", "HTTPS_Pct": "96.84", "Desktop_Pct": "58.88", "Mobile_Pct": "41.12", "Bot_Pct": "98.46", "Human_Pct": "1.54"
   }
@@ -121,6 +130,8 @@ const IPArray = ref([]);
 const ipGeoSource = ref(userPreferences.value.ipGeoSource);
 const usingSource = ref(userPreferences.value.ipGeoSource);
 const fetchStatus = reactive([]);
+// Timing gate for the sponsor slot: flips once every visible card settled.
+const cardsHaveSettled = ref(false);
 
 // Middleware
 let pendingIPDetailsRequests = new Map();
@@ -206,10 +217,18 @@ const loadCardDetails = async (cardID, ip) => {
   }
 };
 
-// Single-card path (refresh button).
+// Single-card path (refresh button), and the per-card body of checkAllIPs.
 const fetchIP = async (cardID, getFromSource) => {
   const { ip } = await resolveIP(cardID, getFromSource);
-  if (ip !== null) await loadCardDetails(cardID, ip);
+  if (ip === null) return; // resolveIP already settled the card
+  if (isUsablePublicIP(ip)) {
+    await loadCardDetails(cardID, ip);
+  } else {
+    // A source can hand back reserved space (DNS hijack, captive portal, LAN
+    // echo). The address stays on the card — the visitor really did get it —
+    // but the geo phase is skipped: /api/* rejects non-public IPs with 400.
+    markFetched(cardID);
+  }
 };
 
 // Report data fetch status, and send to store
@@ -223,6 +242,7 @@ const trackFetchStatus = (status) => {
     }
   }
   if (allHasFetched) {
+    cardsHaveSettled.value = true;
     store.setLoadingStatus('IPInfo', true);
     // Domain event: full snapshot of the visible cards, re-emitted whenever a
     // card settles after this point (single-card refresh included). The report
@@ -234,16 +254,17 @@ const trackFetchStatus = (status) => {
         country_code: card.country_code,
         region: card.region,
         city: card.city,
+        timezone: card.timezone,
         asn: card.asn,
         isp: card.isp,
         // IPCheck.ing-source enrichments (locale-free codes; absent on other
         // sources or when the field is sign-in-gated).
-        proxyCode: card.proxyCode,
+        anonymityCode: card.anonymityCode,
         ipTypeCode: card.ipTypeCode,
         isNativeIP: card.isNativeIP,
         qualityScore: card.qualityScore,
-        proxyProtocol: card.proxyProtocol,
-        proxyProvider: card.proxyProvider,
+        anonymityProtocol: card.anonymityProtocol,
+        anonymityProvider: card.anonymityProvider,
       })),
     });
   }
@@ -253,6 +274,10 @@ const trackFetchStatus = (status) => {
 // allSettled so one card can't sink the batch (fetchIP already swallows per-card
 // errors — this is belt-and-suspenders). Cards paint independently as they land.
 const checkAllIPs = async () => {
+  // A whole-grid pass means no card is settled: clear the completion flags so
+  // ipinfo:finished (and the ipinfo:refresh command riding on it) waits for
+  // every card to land again, instead of re-firing on the first one.
+  fetchStatus.splice(0);
   const ipSources = [
     [0, getIPFromIPChecking4],
     [1, getIPFromIPChecking6],
@@ -272,10 +297,7 @@ const fetchIPDetails = async (cardIndex, ip, sourceID = null) => {
   sourceID = sourceID || ipGeoSource.value;
   const card = ipDataCards[cardIndex];
   card.ip = ip;
-  let setLang = lang.value;
-  if (setLang === 'zh') {
-    setLang = 'zh-CN';
-  }
+  const setLang = toApiTag(lang.value);
 
   // Check if the IP data is already in the cache
   if (ipDataCache.has(ip)) {
@@ -327,7 +349,7 @@ const fetchIPDetails = async (cardIndex, ip, sourceID = null) => {
           return;
         }
       } catch (error) {
-        console.error("Error fetching IP details from source " + source.id + ":", error);
+        logSourceFetchFailure(`Error fetching IP details from source ${source.id} (${fetchErrorLabel(error)}):`, error);
         currentSourceIndex = (currentSourceIndex + 1) % sources.length;
         attempts++;
       }
@@ -361,14 +383,16 @@ const selectIPGeoSource = async () => {
   });
   ipDataCache.clear();
 
-  // Query every card that holds a valid IP against the chosen source, in
-  // parallel. Captured once so an in-flight fetchIPDetails mutating
+  // Query every card that holds a publicly routable IP against the chosen
+  // source, in parallel — a card's ip slot can hold an error label or an
+  // address from reserved space, neither of which the geo routes accept.
+  // chosenSource is captured once so an in-flight fetchIPDetails mutating
   // ipGeoSource.value can't shift the source mid-batch.
   const chosenSource = ipGeoSource.value;
   await Promise.allSettled(
     ipDataCards
       .map((card, index) => ({ card, index }))
-      .filter(({ card }) => isValidIP(card.ip))
+      .filter(({ card }) => isUsablePublicIP(card.ip))
       .map(({ card, index }) => fetchIPDetails(index, card.ip, chosenSource))
   );
 };
@@ -418,14 +442,21 @@ watch(IPArray, () => {
   store.updateAllIPs(IPArray.value);
 });
 
-onMounted(() => {
-  store.setMountingStatus('IPInfo', true);
+// Command owner: refresh one card ({ index }) or the whole grid. Resolves
+// with the next ipinfo:finished snapshot — the grid re-emits it whenever a
+// card settles, single-card refreshes included.
+useAppCommand('ipinfo:refresh', ({ index } = {}) => {
+  const finished = waitForAppEvent('ipinfo:finished');
+  if (Number.isInteger(index) && ipDataCards[index]) {
+    refreshCard(ipDataCards[index], index);
+  } else {
+    checkAllIPs();
+  }
+  return finished;
 });
 
-defineExpose({
-  checkAllIPs,
-  ipDataCards,
-  refreshCard,
+onMounted(() => {
+  store.setMountingStatus('IPInfo', true);
 });
 
 </script>

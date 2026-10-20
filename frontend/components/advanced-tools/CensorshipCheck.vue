@@ -37,8 +37,8 @@
                     <CardContent class="p-0">
                         <header class="flex items-center justify-between gap-2 px-4 py-3 border-b">
                             <h3 class="text-sm font-semibold m-0">{{ t('censorshipcheck.HistoryTitle') }}</h3>
-                            <span class="text-xs text-muted-foreground font-mono">{{ ooniData.since }} → {{
-                                ooniData.until }}</span>
+                            <span class="text-xs text-muted-foreground">{{ formatIsoDate(ooniData.since, locale) }} → {{
+                                formatIsoDate(ooniData.until, locale) }}</span>
                         </header>
                         <ul class="divide-y">
                             <li v-for="c in flagged" :key="c.country" class="px-4 py-2.5 space-y-1.5">
@@ -104,14 +104,16 @@
 
                     <div class="grid grid-cols-1 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x">
                         <!-- Left: suggestion sections (flagged / high-risk / open) +
-                             the picker's own continent catalog. -->
-                        <div class="col-span-1" :class="runStarted
-                                ? 'max-h-72 overflow-y-auto md:max-h-none md:overflow-visible md:relative md:min-h-96'
-                                : 'max-h-72 md:max-h-128 overflow-y-auto'">
-                            <div class="px-4 py-3"
-                                :class="runStarted ? 'md:absolute md:inset-0 md:overflow-y-auto' : ''">
-                                <GlobalpingCountryPicker v-model="selectedCountries" :sections="pickerSections"
-                                    :max="MAX_TEST_COUNTRIES" :disabled="running" />
+                             the picker's own continent catalog. Scroll container
+                             stays padding-free (sticky top-0 can't cover a
+                             scroll container's own padding) -->
+                        <div class="col-span-1" :class="runStarted ? 'md:relative md:min-h-96' : ''">
+                            <div class="max-h-72 overflow-y-auto"
+                                :class="runStarted ? 'md:max-h-none md:absolute md:inset-0' : 'md:max-h-128'">
+                                <div class="px-4 py-3">
+                                    <GlobalpingCountryPicker v-model="selectedCountries" :sections="pickerSections"
+                                        :max="MAX_TEST_COUNTRIES" :disabled="running" />
+                                </div>
                             </div>
                         </div>
 
@@ -186,6 +188,7 @@ import { useGlobalpingMeasurement } from '@/composables/use-globalping-measureme
 import GlobalpingCountryPicker from './GlobalpingCountryPicker.vue';
 import { isValidDomain } from '@/utils/valid-ip.js';
 import getCountryName from '@/data/country-name.js';
+import { formatIsoDate } from '@/utils/time-utils.js';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -197,7 +200,7 @@ import {
 } from '@lucide/vue';
 import { Label } from '@/components/ui/label';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 const store = useMainStore();
 const lang = computed(() => store.lang);

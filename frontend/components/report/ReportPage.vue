@@ -67,6 +67,7 @@ import { useRoute, RouterLink } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useMainStore } from '@/store';
 import { fetchWithTimeout } from '@/utils/fetch-with-timeout.js';
+import { isoToDateTime } from '@/utils/time-utils.js';
 import { REPORT_VERSION, REPORT_SECTION_IDS } from '@/utils/report-schema.js';
 import { reportToMarkdown } from '@/utils/report-export.js';
 import { useDocumentMeta } from '@/composables/use-document-meta.js';
@@ -86,6 +87,7 @@ import ReportRuletest from './sections/ReportRuletest.vue';
 import ReportBrowserinfo from './sections/ReportBrowserinfo.vue';
 import ReportInvisibility from './sections/ReportInvisibility.vue';
 import ReportEnhanceddnsleak from './sections/ReportEnhanceddnsleak.vue';
+import ReportPersona from './sections/ReportPersona.vue';
 import { FileText, FileQuestion, Bot } from '@lucide/vue';
 
 const SECTION_COMPONENTS = {
@@ -100,9 +102,10 @@ const SECTION_COMPONENTS = {
     browserinfo: ReportBrowserinfo,
     invisibility: ReportInvisibility,
     enhanceddnsleak: ReportEnhanceddnsleak,
+    persona: ReportPersona,
 };
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const route = useRoute();
 const store = useMainStore();
 
@@ -115,12 +118,9 @@ const presentSectionIds = computed(() =>
     REPORT_SECTION_IDS.filter((id) => report.value?.sections?.[id]));
 
 const generatedAtDisplay = computed(() =>
-    report.value ? new Date(report.value.generatedAt).toLocaleString() : '');
+    report.value ? isoToDateTime(report.value.generatedAt, locale.value) : '');
 
-const expiresAtDisplay = computed(() => {
-    const stamp = Date.parse(expiresAt.value);
-    return Number.isNaN(stamp) ? '' : new Date(stamp).toLocaleString();
-});
+const expiresAtDisplay = computed(() => isoToDateTime(expiresAt.value, locale.value));
 
 const STALE_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
 const isStale = computed(() =>
@@ -145,7 +145,8 @@ const loadReport = async () => {
         // The API serves { expiresAt, report }; expiresAt is best-effort.
         const payload = await response.json();
         const data = payload?.report;
-        // Older viewers can't know how to render a newer schema.
+        // A viewer renders only its own schema version; older and newer
+        // links both land in the unsupported state.
         if (data?.v !== REPORT_VERSION || !data.sections) {
             errorKey.value = 'reportPage.Unsupported';
             state.value = 'error';
